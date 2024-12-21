@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+	 <link rel="stylesheet" href="css/styles.css"> 
     <title>盈盈与灿灿的恋爱日记</title>
     <!--<link rel="shortcut icon" href="../../assets/images/icon/favicon.ico" type="image/x-icon">-->
     <style>
@@ -149,12 +150,19 @@ img {
 
 @keyframes moveRight {
     from {
-        transform: translateX(calc(-100vw)); /* 使用视口宽度单位vw，将初始位置设置在窗口最左边外侧 */
+        transform: translateX(calc(-88vw)); /* 使用视口宽度单位vw，将初始位置设置在窗口最左边外侧 */
     }
     to {
-        transform: translateX(calc(100vw)); /* 使用视口宽度单位vw，移动到窗口最右边外侧 */
+        transform: translateX(calc(88vw)); /* 使用视口宽度单位vw，移动到窗口最右边外侧 */
     }
 }
+
+.dropdown-container {
+            position: absolute;
+            top: 0; /* 距离顶部为0，靠上 */
+            right: 0; /* 距离右边为0，靠右 */
+            /* 可以根据实际需求设置宽度等其他样式 */
+        }
     </style>
 </head>
 
@@ -177,6 +185,13 @@ img {
         <strong><span id="second">00</span>秒</strong>
         <strong><span></span>啦</strong>
     </div>
+	<div class="dropdown-container">
+         
+        <select class="horizontal-dropdown" id="menu1">
+		    <option value="index.html">主页</option>
+            <option value="History/index1.html">第一历史</option>        
+        </select>      
+     </div>
     <div class="box"><img src="img/loveyy.jpg" alt="star"></div>
     <div class="bordrside"></div>
     <div>
@@ -188,7 +203,23 @@ img {
     </div>
 
     <script>
+        
+		 document.addEventListener('DOMContentLoaded', function () {
+            // 获取id为menu1的select下拉菜单元素
+            var menu1 = document.getElementById('menu1');
+            // 为其添加change事件监听器
+            menu1.addEventListener('change', function () {
+                window.location.href = menu1.value;
+            });
 
+            // 获取id为menu2的select下拉菜单元素
+            var menu2 = document.getElementById('menu2');
+            // 为其添加change事件监听器
+            menu2.addEventListener('change', function () {
+                window.location.href = menu2.value;
+            });
+        });
+		
         setInterval(function () {
             //获取DOM标签
             var day = document.getElementById('day');
