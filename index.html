@@ -7,162 +7,166 @@
     <title>盈盈与灿灿的恋爱日记</title>
     <!--<link rel="shortcut icon" href="../../assets/images/icon/favicon.ico" type="image/x-icon">-->
     <style>
-        html,
-        body {
-            height: 100%;
-            padding: 0;
-            margin: 0;
-        }
+html,
+body {
+    height: 100%; /* 设置html和body元素高度占满整个可视窗口 */
+    padding: 0; /* 去除元素默认内边距 */
+    margin: 0; /* 去除元素默认外边距 */
+}
 
-        /*.drawHeart {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            z-index: 2;
-        }*/
-        canvas {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-        }
-
-        .pinkboard {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            z-index: 5;
-        }
-
-        .heart {
-            position: absolute;
-            box-shadow: 0 0 40px #d5093c;
-            animation: beat .8s ease infinite normal;
-            background: linear-gradient(-90deg, #F50A45 0%, #d5093c 40%);
-        }
-
-        .left, .right {
-            top: 25px;
-            width: 22px;
-            height: 20px;
-            border-radius: 50%;
-            z-index: 6;
-        }
-
-        .left {
-            left: 35px;
-        }
-
-        .right {
-            left: 50px;
-            z-index: -1;
-        }
-
-        .bottom {
-            position: absolute;
-            top: 35px;
-            left: 45px;
-            width: 18px;
-            height: 18px;
-            transform: rotate(45deg);
-            z-index: -1;
-        }
-
-        #frame {
-            width: 50px;
-            height: 40px;
-            float: left;
-            display: flex
-        }
-
-        .heart {
-            position: absolute;
-            box-shadow: 0 0 40px #d5093c;
-            animation: beat .8s ease infinite normal;
-            background: linear-gradient(-90deg, #F50A45 0%, #d5093c 40%);
-        }
-
-        @keyframes beat {
-            0% {
-                transform: scale(1) rotate(225deg);
-                box-shadow: 0 0 40px #d5093c;
-            }
-
-            50% {
-                transform: scale(1.1) rotate(225deg);
-                box-shadow: 0 0 70px #d5093c;
-            }
-
-            100% {
-                transform: scale(1) rotate(225deg);
-                box-shadow: 0 0 40px #d5093c;
-            }
-        }
-
-        #dyc {
-            margin: 20px;
-            float: left;
-            top: 0px;
-            display: flex;
-            margin: 0px;
-            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-            font-style: italic;
-        }
-
-        #zy {
-            float: left;
-            display: flex;
-            margin: 0px;
-            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-            font-style: italic;
-        }
-
-        .time-item {
-            margin: 0px;
-            color: #FA8BFF;
-        }
-
-        .bordrside {
-            margin: 0px;
-            height: 5px;
-            background-color: #85FFBD;
-            background-image: linear-gradient(45deg, #85FFBD 0%, #FFFB7D 50%, #ffffff 100%);
-        }
-
-        h2 {
-            margin: 0px;
-        }
-      .box {
+/* 
+.drawHeart {
     position: absolute;
     width: 100%;
-    height: 135px;
-    overflow: hidden;
-    display: flex;
-    justify-content: flex-start;
+    height: 100%;
+    z-index: 2;
+} 
+* 此处代码被注释掉，从类名推测可能与特定功能（也许和爱心绘制相关）有关，但当前未生效，需结合完整页面逻辑确定是否启用及用途 */
+
+canvas {
+    position: absolute; /* 将canvas元素设置为绝对定位 */
+    width: 100%; /* 使其宽度占满整个窗口宽度 */
+    height: 100%; /* 使其高度占满整个窗口高度 */
+}
+
+.pinkboard {
+    position: absolute; /* 以绝对定位方式布局该元素 */
+    width: 100%; /* 宽度占满整个窗口宽度 */
+    height: 100%; /* 高度占满整个窗口高度 */
+    z-index: 5; /* 设置元素层级为5，控制其在页面叠放顺序中的显示位置 */
+}
+
+.heart {
+    position: absolute; /* 把爱心元素设为绝对定位，便于精确控制其在页面的位置 */
+    box-shadow: 0 0 40px #d5093c; /* 给爱心元素添加阴影效果，阴影水平和垂直偏移均为0，模糊半径40px，颜色为指定十六进制值 */
+    animation: beat.8s ease infinite normal; /* 应用名为beat的动画，持续0.8秒，缓动效果为ease，无限循环，正向播放 */
+    background: linear-gradient(-90deg, #F50A45 0%, #d5093c 40%); /* 设置爱心元素背景为线性渐变，渐变方向及起止颜色按参数指定 */
+}
+
+.left,
+.right {
+    top: 25px; /* 设置元素距离顶部25px的位置 */
+    width: 22px; /* 元素宽度为22px */
+    height: 20px; /* 元素高度为20px */
+    border-radius: 50%; /* 元素边框设置为50%圆角，呈现圆形外观 */
+    z-index: 6; /* 设定元素层级为6，用于控制叠放顺序 */
+}
+
+.left {
+    left: 35px; /* 设置元素距离页面左边35px的位置 */
+}
+
+.right {
+    left: 50px; /* 设置元素距离页面左边50px的位置 */
+    z-index: -1; /* 设置元素层级为-1，控制其在特定布局下的显示层次 */
+}
+
+.bottom {
+    position: absolute; /* 采用绝对定位布局该元素 */
+    top: 35px; /* 元素距离顶部35px的位置 */
+    left: 45px; /* 元素距离页面左边45px的位置 */
+    width: 18px; /* 元素宽度为18px */
+    height: 18px; /* 元素高度为18px */
+    transform: rotate(45deg); /* 将元素顺时针旋转45度 */
+    z-index: -1; /* 设置元素层级为-1，影响其在页面中的叠放显示 */
+}
+
+#frame {
+    width: 50px; /* 设置元素宽度为50px */
+    height: 40px; /* 设置元素高度为40px */
+    float: left; /* 使元素向左浮动布局 */
+    display: flex; /* 启用flex布局，便于控制内部元素排列 */
+}
+
+.heart {
+    position: absolute; /* 把爱心元素设为绝对定位，便于精确控制其在页面的位置 */
+    box-shadow: 0 0 40px #d5093c; /* 给爱心元素添加阴影效果，阴影水平和垂直偏移均为0，模糊半径40px，颜色为指定十六进制值 */
+    animation: beat.8s ease infinite normal; /* 应用名为beat的动画，持续0.8秒，缓动效果为ease，无限循环，正向播放 */
+    background: linear-gradient(-90deg, #F50A45 0%, #d5093c 40%); /* 设置爱心元素背景为线性渐变，渐变方向及起止颜色按参数指定 */
+}
+
+@keyframes beat {
+    0% {
+        transform: scale(1) rotate(225deg); /* 动画开始时，爱心元素缩放为原始大小并旋转225度 */
+        box-shadow: 0 0 40px #d5093c; /* 此时的阴影效果按此参数设置 */
+    }
+
+    50% {
+        transform: scale(1.1) rotate(225deg); /* 动画进行到50%，爱心元素在横纵方向放大10%并保持旋转角度 */
+        box-shadow: 0 0 70px #d5093c; /* 调整阴影模糊半径为70px */
+    }
+
+    100% {
+        transform: scale(1) rotate(225deg); /* 动画结束时，爱心元素恢复原始缩放大小及旋转角度 */
+        box-shadow: 0 0 40px #d5093c; /* 阴影效果也恢复初始设置 */
+    }
+}
+
+#dyc {
+    margin: 20px; /* 最初设置元素外边距为20px，后续有重置情况，具体作用依布局调整而定 */
+    float: left; /* 让元素向左浮动布局 */
+    top: 0px; /* 元素距离顶部0px的位置 */
+    display: flex; /* 启用flex布局，利于控制内部元素排列 */
+    margin: 0px; /* 最终重置外边距为0px */
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif; /* 设置文本字体样式 */
+    font-style: italic; /* 将文本设置为斜体样式 */
+}
+
+#zy {
+    float: left; /* 使元素向左浮动布局 */
+    display: flex; /* 启用flex布局，便于控制内部元素排列 */
+    margin: 0px; /* 设置元素外边距为0px */
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif; /* 设定文本字体样式 */
+    font-style: italic; /* 将文本设置为斜体样式 */
+}
+
+.time-item {
+    margin: 0px; /* 设置元素外边距为0px，避免多余空白间隔 */
+    color: #FA8BFF; /* 设置文本颜色为指定十六进制值 */
+}
+
+.bordrside {
+    margin: 0px; /* 设置元素外边距为0px */
+    height: 5px; /* 元素高度为5px */
+    background-color: #85FFBD; /* 设置元素背景颜色为指定十六进制值 */
+    background-image: linear-gradient(45deg, #85FFBD 0%, #FFFB7D 50%, #ffffff 100%); /* 设置元素背景为线性渐变，按参数指定方向及颜色过渡 */
+}
+h2 {
+    margin: 0px; /* 设置元素外边距为0px，避免多余空白影响布局 */
+}
+
+.box {
+    position: absolute; /* 将元素设置为绝对定位 */
+    width: 100%; /* 元素宽度占满整个窗口宽度 */
+    height: 135px; /* 元素固定高度为135px */
+    overflow: hidden; /* 隐藏超出元素范围的内容 */
+    display: flex; /* 启用flex布局，便于控制内部元素排列 */
+    justify-content: flex-start; /* 内部元素在水平方向从最左边开始排列 */
 }
 
 img {
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
-    animation: moveRight 15s linear infinite;
+    max-width: 100%; /* 图片宽度自适应容器，最大不超过容器宽度，保持图片比例 */
+    max-height: 100%; /* 图片高度自适应容器，最大不超过容器高度，保持图片比例 */
+    width: auto; /* 根据图片自身宽高比例及容器大小自动计算宽度 */
+    height: auto; /* 根据图片自身宽高比例及容器大小自动计算高度 */
+    animation: moveRight 15s linear infinite; /* 应用名为moveRight的动画，持续15秒，线性运动，无限循环 */
 }
 
 @keyframes moveRight {
     from {
-        transform: translateX(calc(-88vw)); /* 使用视口宽度单位vw，将初始位置设置在窗口最左边外侧 */
+        transform: translateX(calc(-28vw)); /* 动画开始时，图片在窗口最左边外侧（使用视口宽度单位vw定位） */
     }
     to {
-        transform: translateX(calc(88vw)); /* 使用视口宽度单位vw，移动到窗口最右边外侧 */
+        transform: translateX(calc(100vw)); /* 动画结束时，图片移动到窗口最右边外侧（使用视口宽度单位vw定位） */
     }
 }
 
 .dropdown-container {
-            position: absolute;
-            top: 0; /* 距离顶部为0，靠上 */
-            right: 0; /* 距离右边为0，靠右 */
-            /* 可以根据实际需求设置宽度等其他样式 */
-        }
+    position: absolute; /* 将下拉菜单容器设置为绝对定位 */
+    top: 0; /* 使其距离页面顶部为0，靠上布局 */
+    right: 0; /* 使其距离页面右边为0，靠右布局 */
+    /* 可根据实际需求设置宽度等其他样式 */
+}
     </style>
 </head>
 
@@ -203,474 +207,530 @@ img {
     </div>
 
     <script>
-        
-		 document.addEventListener('DOMContentLoaded', function () {
-            // 获取id为menu1的select下拉菜单元素
-            var menu1 = document.getElementById('menu1');
-            // 为其添加change事件监听器
-            menu1.addEventListener('change', function () {
-                window.location.href = menu1.value;
-            });
+    // 当DOM内容加载完成后执行以下函数
+document.addEventListener('DOMContentLoaded', function () {
+    // 获取id为menu1的select下拉菜单元素
+    var menu1 = document.getElementById('menu1');
+    // 为其添加change事件监听器，当菜单选项改变时
+    menu1.addEventListener('change', function () {
+        // 将页面的URL设置为所选选项的值，实现页面跳转
+        window.location.href = menu1.value;
+    });
+});
 
-            // 获取id为menu2的select下拉菜单元素
-            var menu2 = document.getElementById('menu2');
-            // 为其添加change事件监听器
-            menu2.addEventListener('change', function () {
-                window.location.href = menu2.value;
-            });
-        });
-		
-        setInterval(function () {
-            //获取DOM标签
-            var day = document.getElementById('day');
-            var hour = document.getElementById('hour');
-            var minute = document.getElementById('minute');
-            var second = document.getElementById('second');
-            //计时器setInterval
-            //new Date()获取本地时间
-            var today = new Date();
-            //添加结束时间
-            var stopTime = new Date("2023/02/04 12:00:00");
-            //获取时间戳（毫秒）
-            var t = today.getTime() - stopTime.getTime();
-            // 方法一
-            //转换为天数
-            var d = 0; var h = 0; var m = 0; var s = 0;
-            if (t >= 0) {
-                t = t / 1000;
-                d = Math.floor(t / 60 / 60 / 24);
-                h = Math.floor(t / 60 / 60 % 24);
-                m = Math.floor(t / 60 % 60);
-                s = Math.floor(t % 60);
-                //console.log(t + ":" + d + "," + h + ":" + m + ":" + s)
-            }
-            day.innerHTML = d;
-            hour.innerHTML = h;
-            minute.innerHTML = m;
-            second.innerHTML = s;
-            //计时器setInterval 每1000毫秒调用一次函数function
-        }, 1000);
+// 每隔1000毫秒（1秒）执行一次以下函数，用于更新时间显示
+setInterval(function () {
+    // 获取DOM中用于显示天数、小时数、分钟数、秒数的元素
+    var day = document.getElementById('day');
+    var hour = document.getElementById('hour');
+    var minute = document.getElementById('minute');
+    var second = document.getElementById('second');
 
-        /*
-        * Settings
-        */
-        var settings = {
-            particles: {
-                length: 500, // maximum amount of particles
-                duration: 2, // particle duration in sec
-                velocity: 100, // particle velocity in pixels/sec
-                effect: -0.75, // play with this for a nice effect
-                size: 30, // particle size in pixels
-            },
-        };
+    // 获取当前本地时间
+    var today = new Date();
+    // 设置一个结束时间（这里是固定的时间，可根据实际需求调整）
+    var stopTime = new Date("2023/02/04 12:00:00");
 
-        /*
-        * RequestAnimationFrame polyfill by Erik M?ller
-        */
-        (function () {
-            var b = 0; var c = ["ms", "moz", "webkit", "o"];
-            for (var a = 0; a < c.length && !window.requestAnimationFrame; ++a) {
-                window.requestAnimationFrame = window[c[a] + "RequestAnimationFrame"];
-                window.cancelAnimationFrame = window[c[a] + "CancelAnimationFrame"] || window[c[a] + "CancelRequestAnimationFrame"]
-            } if (!window.requestAnimationFrame) { window.requestAnimationFrame = function (h, e) { var d = new Date().getTime(); var f = Math.max(0, 16 - (d - b)); var g = window.setTimeout(function () { h(d + f) }, f); b = d + f; return g } }
-            if (!window.cancelAnimationFrame) {
-                window.cancelAnimationFrame = function (d) {
-                    clearTimeout(d)
-                }
-            }
-        }()
+    // 获取当前时间与结束时间的时间差（单位为毫秒），并转换为秒
+    var t = today.getTime() - stopTime.getTime();
+
+    // 以下用于将时间差转换为对应的天数、小时数、分钟数、秒数
+    var d = 0;
+    var h = 0;
+    var m = 0;
+    var s = 0;
+    if (t >= 0) {
+        t = t / 1000;
+        d = Math.floor(t / 60 / 60 / 24);
+        h = Math.floor(t / 60 / 60 % 24);
+        m = Math.floor(t / 60 % 60);
+        s = Math.floor(t % 60);
+        // console.log(t + ":" + d + "," + h + ":" + m + ":" + s)
+    }
+    // 更新页面上对应的天数、小时数、分钟数、秒数的显示内容
+    day.innerHTML = d;
+    hour.innerHTML = h;
+    minute.innerHTML = m;
+    second.innerHTML = s;
+    // 每1000毫秒（1秒）调用一次此函数，实现时间的动态更新
+}, 1000);
+
+/*
+* Settings
+* 定义整个页面效果相关的一些设置参数，如粒子相关的数量、持续时间、速度、效果、大小等属性
+*/
+var settings = {
+    particles: {
+        length: 500, // 最大颗粒量
+        duration: 2, // 持续时间
+        velocity: 100, // 速度
+        effect: -0.75, // 
+        size: 30, // 粒子直径
+    },
+};
+
+/*
+* 
+* 对requestAnimationFrame进行垫片处理（兼容不同浏览器），如果浏览器原生不支持该方法，则使用自定义的实现方式来模拟同样的功能，确保动画流畅性
+*/
+(function () {
+    var b = 0;
+    var c = ["ms", "moz", "webkit", "o"];
+    for (var a = 0; a < c.length &&!window.requestAnimationFrame; ++a) {
+        window.requestAnimationFrame = window[c[a] + "RequestAnimationFrame"];
+        window.cancelAnimationFrame = window[c[a] + "CancelAnimationFrame"] || window[c[a] + "CancelRequestAnimationFrame"]
+    }
+    if (!window.requestAnimationFrame) {
+        window.requestAnimationFrame = function (h, e) {
+            var d = new Date().getTime();
+            var f = Math.max(0, 16 - (d - b));
+            var g = window.setTimeout(function () {
+                h(d + f)
+            }, f);
+            b = d + f;
+            return g
+        }
+    }
+    if (!window.cancelAnimationFrame) {
+        window.cancelAnimationFrame = function (d) {
+            clearTimeout(d)
+        }
+    }
+}());
+
+/*
+* Point class
+* 定义一个点（Point）类，用于表示二维平面上的坐标点，包含坐标属性以及一些对坐标点进行操作的方法，如克隆、设置长度、归一化等方法
+*/
+var Point = (function () {
+    function Point(x, y) {
+        this.x = (typeof x!== 'undefined')? x : 0;
+        this.y = (typeof y!== 'undefined')? y : 0;
+    }
+    Point.prototype.clone = function () {
+        return new Point(this.x, this.y);
+    };
+    Point.prototype.length = function (length) {
+        if (typeof length == 'undefined')
+            return Math.sqrt(this.x * this.x + this.y * this.y);
+        this.normalize();
+        this.x *= length;
+        this.y *= length;
+        return this;
+    };
+    Point.prototype.normalize = function () {
+        var length = this.length();
+        this.x /= length;
+        this.y /= length;
+        return this;
+    }
+    return Point;
+})();
+
+/*
+* Particle class
+* 定义粒子（Particle）类，每个粒子有位置、速度、加速度以及年龄等属性，并且包含初始化、更新、绘制等方法，用于模拟粒子的运动和显示效果
+*/
+var Particle = (function () {
+    function Particle() {
+        this.position = new Point();
+        this.velocity = new Point();
+        this.acceleration = new Point();
+        this.age = 0;
+    }
+    Particle.prototype.initialize = function (x, y, dx, dy) {
+        this.position.x = x;
+        this.position.y = y;
+        this.velocity.x = dx;
+        this.velocity.y = dy;
+        this.acceleration.x = dx * settings.particles.effect;
+        this.acceleration.y = dy * settings.particles.effect;
+        this.age = 0;
+    };
+    Particle.prototype.update = function (deltaTime) {
+        this.position.x += this.velocity.x * deltaTime;
+        this.position.y += this.velocity.y * deltaTime;
+        this.velocity.x += this.acceleration.x * deltaTime;
+        this.velocity.y += this.acceleration.y * deltaTime;
+        this.age += deltaTime;
+    };
+    Particle.prototype.draw = function (context, image) {
+        function ease(t) {
+            return (--t) * t * t + 1;
+        }
+        var size = image.width * ease(this.age / settings.particles.duration);
+        context.globalAlpha = 1 - this.age / settings.particles.duration;
+        context.drawImage(image, this.position.x - size / 2, this.position.y - size / 2, size, size);
+    };
+    return Particle;
+})();
+
+/*
+* ParticlePool class
+* 定义粒子池（ParticlePool）类，用于管理一组粒子，包括添加粒子、更新粒子状态以及绘制粒子等功能，通过循环队列的方式来高效地处理粒子的生命周期
+*/
+var ParticlePool = (function () {
+    var particles,
+        firstActive = 0,
+        firstFree = 0,
+        duration = settings.particles.duration;
+
+    function ParticlePool(length) {
+        // 创建并填充粒子池，初始化所有粒子
+        particles = new Array(length);
+        for (var i = 0; i < particles.length; i++)
+            particles[i] = new Particle();
+    }
+    ParticlePool.prototype.add = function (x, y, dx, dy) {
+        particles[firstFree].initialize(x, y, dx, dy);
+
+        // 处理循环队列，更新空闲粒子和活跃粒子的索引
+        firstFree++;
+        if (firstFree == particles.length) firstFree = 0;
+        if (firstActive == firstFree) firstActive++;
+        if (firstActive == particles.length) firstActive = 0;
+    };
+    ParticlePool.prototype.update = function (deltaTime) {
+        var i;
+
+        // 更新活跃粒子的状态
+        if (firstActive < firstFree) {
+            for (i = firstActive; i < firstFree; i++)
+                particles[i].update(deltaTime);
+        }
+        if (firstFree < firstActive) {
+            for (i = firstActive; i < particles.length; i++)
+                particles[i].update(deltaTime);
+            for (i = 0; i < firstFree; i++)
+                particles[i].update(deltaTime);
+        }
+
+        // 移除已超过生命周期的不活跃粒子，更新活跃粒子索引
+        while (particles[firstActive].age >= duration && firstActive!= firstFree) {
+            firstActive++;
+            if (firstActive == particles.length) firstActive = 0;
+        }
+
+
+    };
+    ParticlePool.prototype.draw = function (context, image) {
+        // 绘制活跃粒子
+        if (firstActive < firstFree) {
+            for (i = firstActive; i < firstFree; i++)
+                particles[i].draw(context, image);
+        }
+        if (firstFree < firstActive) {
+            for (i = firstActive; i < particles.length; i++)
+                particles[i].draw(context, image);
+            for (i = 0; i < firstFree; i++)
+                particles[i].draw(context, image);
+        }
+    };
+    return ParticlePool;
+})();
+
+/*
+* Putting it all together
+* 将前面定义的粒子相关的类和功能整合起来，用于在名为pinkboard的canvas上实现粉色粒子的特效展示，包括获取心形路径上的点、创建粒子图像、渲染粒子等功能
+*/
+(function (canvas) {
+    var context = canvas.getContext('2d'),
+        particles = new ParticlePool(settings.particles.length),
+        particleRate = settings.particles.length / settings.particles.duration, // particles/sec
+        time;
+
+    // 根据给定的参数t获取心形曲线上对应的点坐标，用于确定粒子的初始位置
+    function pointOnHeart(t) {
+        return new Point(
+            160 * Math.pow(Math.sin(t), 3),
+            130 * Math.cos(t) - 50 * Math.cos(2 * t) - 20 * Math.cos(3 * t) - 10 * Math.cos(4 * t) + 25
         );
+    }
 
-        /*
-        * Point class
-        */
-        var Point = (function () {
-            function Point(x, y) {
-                this.x = (typeof x !== 'undefined') ? x : 0;
-                this.y = (typeof y !== 'undefined') ? y : 0;
-            }
-            Point.prototype.clone = function () {
-                return new Point(this.x, this.y);
-            };
-            Point.prototype.length = function (length) {
-                if (typeof length == 'undefined')
-                    return Math.sqrt(this.x * this.x + this.y * this.y);
-                this.normalize();
-                this.x *= length;
-                this.y *= length;
-                return this;
-            };
-            Point.prototype.normalize = function () {
-                var length = this.length();
-                this.x /= length;
-                this.y /= length;
-                return this;
-            };
-            return Point;
-        })();
+    // 创建粒子图像，使用一个临时的canvas来绘制形状并生成图像数据
+    var image = (function () {
+        var canvas = document.createElement('canvas'),
+            context = canvas.getContext('2d');
+        canvas.width = settings.particles.size;
+        canvas.height = settings.particles.size;
 
-        /*
-        * Particle class
-        */
-        var Particle = (function () {
-            function Particle() {
-                this.position = new Point();
-                this.velocity = new Point();
-                this.acceleration = new Point();
-                this.age = 0;
-            }
-            Particle.prototype.initialize = function (x, y, dx, dy) {
-                this.position.x = x;
-                this.position.y = y;
-                this.velocity.x = dx;
-                this.velocity.y = dy;
-                this.acceleration.x = dx * settings.particles.effect;
-                this.acceleration.y = dy * settings.particles.effect;
-                this.age = 0;
-            };
-            Particle.prototype.update = function (deltaTime) {
-                this.position.x += this.velocity.x * deltaTime;
-                this.position.y += this.velocity.y * deltaTime;
-                this.velocity.x += this.acceleration.x * deltaTime;
-                this.velocity.y += this.acceleration.y * deltaTime;
-                this.age += deltaTime;
-            };
-            Particle.prototype.draw = function (context, image) {
-                function ease(t) {
-                    return (--t) * t * t + 1;
-                }
-                var size = image.width * ease(this.age / settings.particles.duration);
-                context.globalAlpha = 1 - this.age / settings.particles.duration;
-                context.drawImage(image, this.position.x - size / 2, this.position.y - size / 2, size, size);
-            };
-            return Particle;
-        })();
-
-        /*
-        * ParticlePool class
-        */
-        var ParticlePool = (function () {
-            var particles,
-                firstActive = 0,
-                firstFree = 0,
-                duration = settings.particles.duration;
-
-            function ParticlePool(length) {
-                // create and populate particle pool
-                particles = new Array(length);
-                for (var i = 0; i < particles.length; i++)
-                    particles[i] = new Particle();
-            }
-            ParticlePool.prototype.add = function (x, y, dx, dy) {
-                particles[firstFree].initialize(x, y, dx, dy);
-
-                // handle circular queue
-                firstFree++;
-                if (firstFree == particles.length) firstFree = 0;
-                if (firstActive == firstFree) firstActive++;
-                if (firstActive == particles.length) firstActive = 0;
-            };
-            ParticlePool.prototype.update = function (deltaTime) {
-                var i;
-
-                // update active particles
-                if (firstActive < firstFree) {
-                    for (i = firstActive; i < firstFree; i++)
-                        particles[i].update(deltaTime);
-                }
-                if (firstFree < firstActive) {
-                    for (i = firstActive; i < particles.length; i++)
-                        particles[i].update(deltaTime);
-                    for (i = 0; i < firstFree; i++)
-                        particles[i].update(deltaTime);
-                }
-
-                // remove inactive particles
-                while (particles[firstActive].age >= duration && firstActive != firstFree) {
-                    firstActive++;
-                    if (firstActive == particles.length) firstActive = 0;
-                }
-
-
-            };
-            ParticlePool.prototype.draw = function (context, image) {
-                // draw active particles
-                if (firstActive < firstFree) {
-                    for (i = firstActive; i < firstFree; i++)
-                        particles[i].draw(context, image);
-                }
-                if (firstFree < firstActive) {
-                    for (i = firstActive; i < particles.length; i++)
-                        particles[i].draw(context, image);
-                    for (i = 0; i < firstFree; i++)
-                        particles[i].draw(context, image);
-                }
-            };
-            return ParticlePool;
-        })();
-
-        /*
-        * Putting it all together
-        */
-        (function (canvas) {
-            var context = canvas.getContext('2d'),
-                particles = new ParticlePool(settings.particles.length),
-                particleRate = settings.particles.length / settings.particles.duration, // particles/sec
-                time;
-
-            // get point on heart with -PI <= t <= PI
-            function pointOnHeart(t) {
-                return new Point(
-                    160 * Math.pow(Math.sin(t), 3),
-                    130 * Math.cos(t) - 50 * Math.cos(2 * t) - 20 * Math.cos(3 * t) - 10 * Math.cos(4 * t) + 25
-                );
-            }
-
-            // creating the particle image using a dummy canvas
-            var image = (function () {
-                var canvas = document.createElement('canvas'),
-                    context = canvas.getContext('2d');
-                canvas.width = settings.particles.size;
-                canvas.height = settings.particles.size;
-                // helper function to create the path
-                function to(t) {
-                    var point = pointOnHeart(t);
-                    point.x = settings.particles.size / 2 + point.x * settings.particles.size / 350;
-                    point.y = settings.particles.size / 2 - point.y * settings.particles.size / 350;
-                    return point;
-                }
-                // create the path
-                context.beginPath();
-                var t = -Math.PI;
-                var point = to(t);
-                context.moveTo(point.x, point.y);
-                while (t < Math.PI) {
-                    t += 0.01; // baby steps!
-                    point = to(t);
-                    context.lineTo(point.x, point.y);
-                }
-                context.closePath();
-                // create the fill
-                context.fillStyle = '#ea80b0';
-                context.fill();
-                // create the image
-                var image = new Image();
-                image.src = canvas.toDataURL();
-                return image;
-            })();
-
-            // render that thing!
-            function render() {
-                // next animation frame
-                requestAnimationFrame(render);
-
-                // update time
-                var newTime = new Date().getTime() / 1000,
-                    deltaTime = newTime - (time || newTime);
-                time = newTime;
-
-                // clear canvas
-                context.clearRect(0, 0, canvas.width, canvas.height);
-
-                // create new particles
-                var amount = particleRate * deltaTime;
-                for (var i = 0; i < amount; i++) {
-                    var pos = pointOnHeart(Math.PI - 2 * Math.PI * Math.random());
-                    var dir = pos.clone().length(settings.particles.velocity);
-                    particles.add(canvas.width / 2 + pos.x, canvas.height / 2 - pos.y, dir.x, -dir.y);
-                }
-
-                // update and draw particles
-                particles.update(deltaTime);
-                particles.draw(context, image);
-            }
-
-            // handle (re-)sizing of the canvas
-            function onResize() {
-                canvas.width = canvas.clientWidth;
-                canvas.height = canvas.clientHeight;
-            }
-            window.onresize = onResize;
-
-            // delay rendering bootstrap
-            setTimeout(function () {
-                onResize();
-                render();
-            }, 10);
-        })(document.getElementById('pinkboard'));
-
-        //动态多个
-        var hearts = [];
-        var canvas = document.getElementById('drawHeart');
-        var wW = window.innerWidth;
-        var wH = window.innerHeight;
-        // 创建画布
-        var ctx = canvas.getContext('2d');
-        // 创建图片对象
-        var heartImage = new Image();
-        heartImage.src = 'img/heart.svg';
-        var num = 100;
-
-        init();
-
-        window.addEventListener('resize', function () {
-            wW = window.innerWidth;
-            wH = window.innerHeight;
-        });
-        // 初始化画布大小
-        function init() {
-            canvas.width = wW;
-            canvas.height = wH;
-            for (var i = 0; i < num; i++) {
-                hearts.push(new Heart(i % 5));
-            }
-            requestAnimationFrame(render);
+        // 辅助函数，用于将心形曲线上的点转换为在临时canvas中的坐标点
+        function to(t) {
+            var point = pointOnHeart(t);
+            point.x = settings.particles.size / 2 + point.x * settings.particles.size / 350;
+            point.y = settings.particles.size / 2 - point.y * settings.particles.size / 350;
+            return point;
         }
 
-        function getColor() {
-            var val = Math.random() * 10;
-            if (val > 0 && val <= 1) {
-                return '#00f';
-            } else if (val > 1 && val <= 2) {
-                return '#f00';
-            } else if (val > 2 && val <= 3) {
-                return '#0f0';
-            } else if (val > 3 && val <= 4) {
-                return '#368';
-            } else if (val > 4 && val <= 5) {
-                return '#666';
-            } else if (val > 5 && val <= 6) {
-                return '#333';
-            } else if (val > 6 && val <= 7) {
-                return '#f50';
-            } else if (val > 7 && val <= 8) {
-                return '#e96d5b';
-            } else if (val > 8 && val <= 9) {
-                return '#5be9e9';
-            } else {
-                return '#d41d50';
-            }
+        // 在临时canvas上开始绘制路径
+        context.beginPath();
+        var t = -Math.PI;
+        var point = to(t);
+        context.moveTo(point.x, point.y);
+        while (t < Math.PI) {
+            t += 0.01; // 逐步增加参数t，以绘制更精细的心形路径
+            point = to(t);
+            context.lineTo(point.x, point.y);
+        }
+        context.closePath();
+
+        // 设置填充颜色并填充绘制好的路径，形成心形形状
+        context.fillStyle = '#ea80b0';
+        context.fill();
+
+        // 根据绘制好的临时canvas创建一个Image对象，用于后续在正式的canvas上绘制粒子
+        var image = new Image();
+        image.src = canvas.toDataURL();
+        return image;
+    })();
+
+    // 渲染函数，用于执行整个粒子特效的渲染逻辑
+    function render() {
+        // 请求下一帧动画，不断循环调用render函数来实现动画效果
+        requestAnimationFrame(render);
+
+        // 获取当前时间，并计算与上一帧的时间差（deltaTime），用于更新粒子状态
+        var newTime = new Date().getTime() / 1000;
+        var deltaTime = newTime - (time || newTime);
+        time = newTime;
+
+        // 清除canvas内容，为新的一帧绘制做准备
+        context.clearRect(0, 0, canvas.width, canvas.height);
+
+        // 根据时间差计算需要新创建的粒子数量，并添加到粒子池中
+        var amount = particleRate * deltaTime;
+        for (var i = 0; i < amount; i++) {
+            var pos = pointOnHeart(Math.PI - 2 * Math.PI * Math.random());
+            var dir = pos.clone().length(settings.particles.velocity);
+            particles.add(canvas.width / 2 + pos.x, canvas.height / 2 - pos.y, dir.x, -dir.y);
         }
 
-        function getText() {
-            var val = Math.random() * 10;
-            if (val > 1 && val <= 2) {
-                return '守护最好的盈盈';
-            } else if (val > 2 && val <= 3) {
-                return '我家盈盈最可爱';
-            }  else if (val >3 && val <= 4) {
-                return '我们会一直幸福的';
-            } else if (val > 4 && val <= 5) {
-                return '执子之手与子偕老';
-            } else if (val > 5 && val <= 6) {
-                return '愿有岁月可回首，且以深情共白头';
-            } else if (val > 6 && val <= 7) {
-                return '愿我如星君如月 夜夜流光相皎洁';
-            } else if (val > 7 && val <= 8) {
-                return 'I LOVE YOU';
-            } else {
-                return '身无彩凤双飞翼，心有灵犀一点通';
-            }
-        }
+        // 更新粒子状态并绘制粒子到canvas上
+        particles.update(deltaTime);
+        particles.draw(context, image);
+    }
 
-        function Heart(type) {
-            this.type = type;
-            // 初始化生成范围
-            this.x = Math.random() * wW;
-            this.y = Math.random() * wH;
+    // 处理canvas尺寸变化的函数，当窗口大小改变时，更新canvas的宽度和高度
+    function onResize() {
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
+    }
+    window.onresize = onResize;
 
-            this.opacity = Math.random() * .5 + .5;
+    // 延迟一小段时间后执行初始化操作（调整canvas尺寸并开始渲染）
+    setTimeout(function () {
+        onResize();
+        render();
+    }, 10);
+})(document.getElementById('pinkboard'));
 
-            // 偏移量
-            this.vel = {
-                x: (Math.random() - .5) * 5,
-                y: (Math.random() - .5) * 5
-            }
+// 用于存储多个爱心对象的数组，用于实现多个动态爱心的效果
+var hearts = [];
+// 获取id为drawHeart的canvas元素
+var canvas = document.getElementById('drawHeart');
+// 获取窗口的内宽度和内高度
+var wW = window.innerWidth;
+var wH = window.innerHeight;
+// 获取canvas的2D绘图上下文
+var ctx = canvas.getContext('2d');
+// 创建一个用于绘制爱心的Image对象，加载对应的图片资源（这里假设是heart.svg）
+var heartImage = new Image();
+heartImage.src = 'img/heart.svg';
+// 定义要生成的爱心数量
+var num = 100;
 
-            this.initialW = wW * .5;
-            this.initialH = wH * .5;
-            // 缩放比例
-            this.targetScale = Math.random() * .15 + .02; // 最小0.02
-            this.scale = Math.random() * this.targetScale;
+init();
 
-            // 文字位置
-            this.fx = Math.random() * wW;
-            this.fy = Math.random() * wH;
-            this.fs = Math.random() * 10;
-            this.text = getText();
+// 当窗口大小改变时，更新窗口的内宽度和内高度
+window.addEventListener('resize', function () {
+    wW = window.innerWidth;
+    wH = window.innerHeight;
+});
 
-            this.fvel = {
-                x: (Math.random() - .5) * 5,
-                y: (Math.random() - .5) * 5,
-                f: (Math.random() - .5) * 2
-            }
-        }
+// 初始化函数，用于设置canvas大小并创建多个爱心对象
+function init() {
+    canvas.width = wW;
+    canvas.height = wH;
+    for (var i = 0; i < num; i++) {
+        hearts.push(new Heart(i % 5));
+    }
+    requestAnimationFrame(render);
+}
 
-        Heart.prototype.draw = function () {
-            ctx.save();
-            ctx.globalAlpha = this.opacity;
-            ctx.drawImage(heartImage, this.x, this.y, this.width, this.height);
-            ctx.scale(this.scale + 1, this.scale + 1);
-            if (!this.type) {
-                // 设置文字属性
-                ctx.fillStyle = getColor();
-                ctx.font = 'italic ' + this.fs + 'px sans-serif';
-                // 填充字符串
-                ctx.fillText(this.text, this.fx, this.fy);
-            }
-            ctx.restore();
-        }
-        Heart.prototype.update = function () {
-            this.x += this.vel.x;
-            this.y += this.vel.y;
+// 随机获取一种颜色的函数，根据随机值返回不同的颜色代码
+function getColor() {
+    var val = Math.random() * 10;
+    if (val > 0 && val <= 1) {
+        return '#00f';
+    } else if (val > 1 && val <= 2) {
+        return '#f00';
+    } else if (val > 2 && val <= 3) {
+        return '#0f0';
+    } else if (val > 3 && val <= 4) {
+        return '#368';
+    } else if (val > 4 && val <= 5) {
+        return '#666';
+    } else if (val > 5 && val <= 6) {
+        return '#333';
+    } else if (val > 6 && val <= 7) {
+        return '#f50';
+    } else if (val > 7 && val <= 8) {
+        return '#e96d5b';
+    } else if (val > 8 && val <= 9) {
+        return '#5be9e9';
+    } else {
+        return '#d41d50';
+    }
+}
+   
+// 随机获取一段文本的函数，根据随机值返回不同的文本内容
+function getText() {
+    var val = Math.random() * 10;
+    if (val > 1 && val <= 2) {
+        return '守护最好的盈盈';
+    } else if (val > 2 && val <= 3) {
+        return '我家盈盈最可爱';
+    } else if (val > 3 && val <= 4) {
+        return '我们会一直幸福的';
+    } else if (val > 4 && val <= 5) {
+        return '执子之手与子偕老';
+    } else if (val > 5 && val <= 6) {
+        return '愿有岁月可回首，且以深情共白头';
+    } else if (val > 6 && val <= 7) {
+        return '愿我如星君如月 夜夜流光相皎洁';
+    } else if (val > 7 && val <= 8) {
+        return 'I LOVE YOU';
+    } else {
+        return '身无彩凤双飞翼，心有灵犀一点通';
+    }
+}
 
-            if (this.x - this.width > wW || this.x + this.width < 0) {
-                // 重新初始化位置
-                this.scale = 0;
-                this.x = Math.random() * wW;
-                this.y = Math.random() * wH;
-            }
-            if (this.y - this.height > wH || this.y + this.height < 0) {
-                // 重新初始化位置
-                this.scale = 0;
-                this.x = Math.random() * wW;
-                this.y = Math.random() * wH;
-            }
+// 定义Heart类，用于表示单个爱心对象，包含了爱心相关的各种属性及绘制、更新方法等
+function Heart(type) {
+    this.type = type;
+    // 初始化生成范围，随机设置爱心在窗口中的初始x坐标
+    this.x = Math.random() * wW;
+    // 随机设置爱心在窗口中的初始y坐标
+    this.y = Math.random() * wH;
 
-            // 放大
-            this.scale += (this.targetScale - this.scale) * .1;
-            this.height = this.scale * this.initialH;
-            this.width = this.height * 1.4;
+    // 随机设置爱心的透明度，范围在0.5到1之间
+    this.opacity = Math.random() * 0.5 + 0.5;
 
-            // -----文字-----
-            this.fx += this.fvel.x;
-            this.fy += this.fvel.y;
-            this.fs += this.fvel.f;
+    // 定义爱心在x和y方向上的速度向量，速度值在一定范围内随机
+    this.vel = {
+        x: (Math.random() - 0.5) * 5,
+        y: (Math.random() - 0.5) * 5
+    };
 
-            if (this.fs > 50) {
-                this.fs = 2;
-            }
+    // 记录窗口初始宽度和高度，用于后续计算爱心尺寸等相关操作
+    this.initialW = wW * 0.5;
+    this.initialH = wH * 0.5;
+    // 随机设置爱心的目标缩放比例，范围在0.02到0.17之间
+    this.targetScale = Math.random() * 0.15 + 0.02; 
+    // 初始化爱心当前缩放比例为一个随机值（基于目标缩放比例范围）
+    this.scale = Math.random() * this.targetScale;
 
-            if (this.fx - this.fs > wW || this.fx + this.fs < 0) {
-                // 重新初始化位置
-                this.fx = Math.random() * wW;
-                this.fy = Math.random() * wH;
-            }
-            if (this.fy - this.fs > wH || this.fy + this.fs < 0) {
-                // 重新初始化位置
-                this.fx = Math.random() * wW;
-                this.fy = Math.random() * wH;
-            }
-        }
+    // 随机设置文字显示的x坐标位置
+    this.fx = Math.random() * wW;
+    // 随机设置文字显示的y坐标位置
+    this.fy = Math.random() * wH;
+    // 随机设置文字的字号大小
+    this.fs = Math.random() * 10;
+    // 获取一段随机的文本内容，用于显示在爱心上
+    this.text = getText();
 
-        function render() {
-            ctx.clearRect(0, 0, wW, wH);
-            for (var i = 0; i < hearts.length; i++) {
-                hearts[i].draw();
-                hearts[i].update();
-            }
-            requestAnimationFrame(render);
-        }
+    // 定义文字在x、y方向上的速度以及字号大小变化的速度向量，各方向速度值在一定范围内随机
+    this.fvel = {
+        x: (Math.random() - 0.5) * 5,
+        y: (Math.random() - 0.5) * 5,
+        f: (Math.random() - 0.5) * 2
+    };
+}
+
+// Heart类的draw方法，用于在canvas上绘制爱心及其相关文字内容
+Heart.prototype.draw = function () {
+    ctx.save();
+    // 设置全局透明度，使用该爱心对象自身的透明度属性值
+    ctx.globalAlpha = this.opacity;
+    // 在指定坐标位置绘制爱心图片，根据当前的缩放比例等计算实际绘制的宽度和高度
+    ctx.drawImage(heartImage, this.x, this.y, this.width, this.height);
+    // 对canvas绘图上下文进行缩放操作，基于当前爱心的缩放比例，用于绘制放大或缩小后的爱心
+    ctx.scale(this.scale + 1, this.scale + 1);
+    if (!this.type) {
+        // 如果满足条件（这里可能根据type属性区分不同类型爱心，当前非特定类型时）
+        // 设置文字的填充颜色，通过调用getColor函数随机获取一种颜色
+        ctx.fillStyle = getColor();
+        // 设置文字的字体样式，包含斜体、字号大小以及字体类型
+        ctx.font = 'italic'+ this.fs +'px sans-serif';
+        // 在指定坐标位置填充文字内容（显示文本）
+        ctx.fillText(this.text, this.fx, this.fy);
+    }
+    ctx.restore();
+};
+
+// Heart类的update方法，用于更新爱心及其相关文字的状态，如位置、缩放比例、字号大小等
+Heart.prototype.update = function () {
+    // 根据x方向速度更新爱心的x坐标位置
+    this.x += this.vel.x;
+    // 根据y方向速度更新爱心的y坐标位置
+    this.y += this.vel.y;
+
+    // 判断爱心是否超出窗口右侧边界或者左侧边界，如果超出则重新初始化爱心的位置和缩放比例
+    if (this.x - this.width > wW || this.x + this.width < 0) {
+        this.scale = 0;
+        this.x = Math.random() * wW;
+        this.y = Math.random() * wH;
+    }
+    // 判断爱心是否超出窗口下侧边界或者上侧边界，如果超出则重新初始化爱心的位置和缩放比例
+    if (this.y - this.height > wH || this.y + this.height < 0) {
+        this.scale = 0;
+        this.x = Math.random() * wW;
+        this.y = Math.random() * wH;
+    }
+
+    // 逐步更新爱心的缩放比例，使其朝着目标缩放比例变化，变化速度相对较缓（乘以0.1）
+    this.scale += (this.targetScale - this.scale) * 0.1;
+    // 根据当前缩放比例和初始高度计算爱心实际显示的高度
+    this.height = this.scale * this.initialH;
+    // 根据爱心高度计算爱心宽度（这里保持一定的宽高比例关系，宽度是高度的1.4倍）
+    this.width = this.height * 1.4;
+
+    // -----文字相关状态更新-----
+    // 根据文字在x方向的速度更新文字的x坐标位置
+    this.fx += this.fvel.x;
+    // 根据文字在y方向的速度更新文字的y坐标位置
+    this.fy += this.fvel.y;
+    // 根据文字字号大小变化的速度更新文字字号大小
+    this.fs += this.fvel.f;
+
+    // 如果文字字号大小超过50，则重置为2，避免字号过大
+    if (this.fs > 50) {
+        this.fs = 2;
+    }
+
+    // 判断文字是否超出窗口右侧边界或者左侧边界，如果超出则重新初始化文字的位置
+    if (this.fx - this.fs > wW || this.fx + this.fs < 0) {
+        this.fx = Math.random() * wW;
+        this.fy = Math.random() * wH;
+    }
+    // 判断文字是否超出窗口下侧边界或者上侧边界，如果超出则重新初始化文字的位置
+    if (this.fy - this.fs > wH || this.fy + this.fs < 0) {
+        this.fx = Math.random() * wW;
+        this.fy = Math.random() * wH;
+    }
+};
+
+// 渲染函数，用于循环更新并绘制所有爱心及其文字内容，实现动态效果
+function render() {
+    // 清除整个canvas绘图区域，准备绘制新一帧画面
+    ctx.clearRect(0, 0, wW, wH);
+    for (var i = 0; i < hearts.length; i++) {
+        hearts[i].draw();
+        hearts[i].update();
+    }
+    // 请求下一帧动画，使得该函数不断循环调用，保持动画持续运行
+    requestAnimationFrame(render);
+}		 
     </script>
 </body>
 
