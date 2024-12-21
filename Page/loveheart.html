@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Canvas</title>
+</head>
+<body>
+<canvas id="myCanvas" width="1000" height="600"></canvas>
+<script>
+var a=50;
+var centerX=300;
+var centerY=300;
+var pi=3.14;
+var canvas=document.getElementById('myCanvas');
+var ctx=canvas.getContext('2d');
+ctx.globalAlpha=0.5;
+ctx.beginPath();
+Getcoordinate();
+ctx.fillStyle='red';
+ctx.strokeStyle='black';
+ctx.fill();
+function Getcoordinate(){
+ctx.moveTo(centerX,centerY);
+for(let i=0;i<=50;i++){
+let angle=(i/50) * 360;
+let x=centerX+a * (1+Math.sin((angle/180) * pi))* Math.cos((angle/180)*pi);
+let y=centerY+a * (1+Math.sin((angle/180) * pi))* Math.sin((angle/180)*pi);
+ctx.lineTo(x,y);
+}
+}
+function draw(){
+ctx.clearRect(0,0,canvas.width,canvas.height);//清除画布
+centerX+=20;
+ctx.beginPath();
+Getcoordinate();
+ctx.fillStyle='red';
+ctx.strokeStyle='black';
+ctx.fill();
+}
+//定时更新画布
+setInterval(draw,500);
+</script>
+</body>
+</html>
