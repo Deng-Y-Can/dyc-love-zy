@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>朝花夕拾</title>
+    <style>
+        /* 整体页面背景色 */
+        body {
+            background-color: #f5f5dc;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* 电视容器样式，占屏幕百分之六十左右大小 */
+        #tv-container {
+            width: 60vw;
+            height: 60vh;
+            box-sizing: border-box;
+            padding: 20px;
+            border: 20px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            background-color: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            transition: all 0.3s ease; /* 添加过渡效果，使缩放更平滑 */
+        }
+
+        /* 视频播放器与图片展示容器样式 */
+        #media-player {
+            width: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #000;
+            overflow: hidden;
+            transform-origin: top left; /* 设置缩放原点为左上角，更符合视觉习惯 */
+        }
+
+        /* 控制按钮区域样式 */
+        #controls {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            z-index: 10;
+        }
+
+        /* 按钮样式通用设置 */
+        button,
+        select {
+            padding: 5px 10px;
+            margin: 0 5px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease; /* 添加过渡效果，使按钮状态变化更平滑 */
+            font-size: 12px; /* 统一设置字体大小 */
+            color: white; /* 统一设置字体颜色为白色 */
+        }
+
+        /* 播放/暂停按钮样式 */
+        #play-pause-btn {
+            background-color: #ffa500; /* 改为橘黄色 */
+        }
+
+        /* 鼠标悬停在播放/暂停按钮上的样式 */
+        #play-pause-btn:hover {
+            background-color: #cc8400;
+        }
+
+        /* 上一个/下一个按钮样式 */
+        #prev-btn,
+        #next-btn {
+            background-color: #ffa500; /* 改为橘黄色 */
+        }
+
+        /* 鼠标悬停在上一个/下一个按钮上的样式 */
+        #prev-btn:hover,
+        #next-btn:hover {
+            background-color: #cc8400;
+        }
+
+        /* 静音按钮样式 */
+        #mute-btn {
+            background-image: url('unmute-icon.png'); /* 替换为实际的静音图标路径 */
+            background-size: cover;
+            width: 25px;
+            height: 25px;
+            margin: 0 5px;
+            border-radius: 3px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease; /* 添加过渡效果，使按钮状态变化更平滑 */
+        }
+
+        /* 静音时按钮样式 */
+        #mute-btn.muted {
+            background-image: url('mute-icon.png'); /* 替换为实际的静音图标路径 */
+        }
+
+        /* 静音按钮鼠标悬停样式 */
+        #mute-btn:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 倍速选择下拉框样式 */
+        #speed-select {
+            background-color: #ffa500; /* 改为橘黄色 */
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        /* 倍速选择下拉框鼠标悬停样式 */
+        #speed-select:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 屏幕大小调整滑块样式 */
+        #size-slider {
+            width: 120px;
+            margin: 0 5px;
+            height: 4px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: linear-gradient(to right, #ffa500, #ffa500);
+            border-radius: 3px;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.3s ease; /* 添加过渡效果，使滑块状态变化更平滑 */
+        }
+
+        #size-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #ffa500;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease; /* 添加过渡效果，使滑块状态变化更平滑 */
+        }
+
+        #size-slider::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            background: #ffa500;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease; /* 添加过渡效果，使滑块状态变化更平滑 */
+        }
+
+        /* 屏幕大小调整滑块鼠标悬停样式 */
+        #size-slider:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 屏幕亮度调整滑块样式 */
+        #brightness-slider {
+            width: 120px;
+            margin: 0 5px;
+            height: 4px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: linear-gradient(to right, #fff, #000);
+            border-radius: 3px;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.3s ease; /* 添加过渡效果，使滑块状态变化更平滑 */
+        }
+
+        #brightness-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #ffa500;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease; /* 添加过渡效果，使滑块状态变化更平滑 */
+        }
+
+        #brightness-slider::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            background: #ffa500;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease; /* 添加过渡效果，使滑块状态变化更平滑 */
+        }
+
+        /* 屏幕亮度调整滑块鼠标悬停样式 */
+        #brightness-slider:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 进度条样式 */
+        #progress-bar {
+            width: 200px;
+            margin: 0 5px;
+            height: 4px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: linear-gradient(to right, #ffa500, #ffa500);
+            border-radius: 3px;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.3s ease; /* 添加过渡效果，使进度条状态变化更平滑 */
+        }
+
+        #progress-bar::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #ffa500;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease; /* 添加过渡效果，使滑块状态变化更平滑 */
+        }
+
+        #progress-bar::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            background: #ffa500;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease; /* 添加过渡效果，使滑块状态变化更平滑 */
+        }
+
+        /* 进度条鼠标悬停样式 */
+        #progress-bar:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="tv-container">
+        <div id="media-player"></div>
+        <div id="controls">
+            <button id="prev-btn">上一个</button>
+            <button id="play-pause-btn">暂停</button>
+            <button id="next-btn">下一个</button>
+            <button id="mute-btn"></button>
+            <select id="speed-select">
+                <option value="0.5">0.5倍</option>
+                <option value="1">1倍</option>
+                <option value="1.5">1.5倍</option>
+                <option value="2">2倍</option>
+                <option value="3">3倍</option>
+            </select>
+            <input type="range" id="size-slider" min="0.5" max="2" value="1" step="0.1">
+            <input type="range" id="brightness-slider" min="0" max="100" value="50">
+            <input type="range" id="progress-bar" min="0" max="100" value="0">
+        </div>
+    </div>
+    <script>
+        // 获取相关DOM元素
+        const tvContainer = document.getElementById('tv-container');
+        const mediaPlayer = document.getElementById('media-player');
+        const prevBtn = document.getElementById('prev-btn');
+        const playPauseBtn = document.getElementById('play-pause-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const muteBtn = document.getElementById('mute-btn');
+        const speedSelect = document.getElementById('speed-select');
+        const sizeSlider = document.getElementById('size-slider');
+        const brightnessSlider = document.getElementById('brightness-slider');
+        const progressBar = document.getElementById('progress-bar');
+
+        // 假设多媒体文件数组，实际应用中需要通过读取文件夹获取（可借助后端或相关库）
+        const mediaFiles = ['Moscow.mp4']; // 替换为实际的多媒体文件名列表
+        let currentIndex = 0;
+
+        // 创建视频播放器和图片展示元素
+        const videoPlayer = document.createElement('video');
+        const imgPlayer = document.createElement('img');
+
+        // 加载并播放当前媒体文件
+        function loadAndPlayMedia() {
+            const currentFile = mediaFiles[currentIndex];
+            const fileExtension = currentFile.split('.').pop().toLowerCase();
+            if (fileExtension === 'mp4' || fileExtension === 'avi' || fileExtension === 'mov') {
+                // 是视频文件
+                mediaPlayer.innerHTML = '';
+                mediaPlayer.appendChild(videoPlayer);
+                videoPlayer.src = currentFile;
+                videoPlayer.load();
+                videoPlayer.play();
+            } else if (fileExtension === 'jpg' || fileExtension === 'png' || fileExtension === 'gif') {
+                // 是图片文件
+                mediaPlayer.innerHTML = '';
+                mediaPlayer.appendChild(imgPlayer);
+                imgPlayer.src = currentFile;
+            }
+        }
+
+        // 上一个媒体文件按钮点击事件处理函数
+        prevBtn.addEventListener('click', function () {
+            currentIndex = (currentIndex - 1 + mediaFiles.length) % mediaFiles.length;
+            loadAndPlayMedia();
+        });
+
+        // 暂停/播放按钮点击事件处理函数
+        playPauseBtn.addEventListener('click', function () {
+            if (videoPlayer.src) {
+                if (videoPlayer.paused) {
+                    videoPlayer.play();
+                    playPauseBtn.textContent = '暂停';
+                } else {
+                    videoPlayer.pause();
+                    playPauseBtn.textContent = '播放';
+                }
+            }
+        });
+
+        // 下一个媒体文件按钮点击事件处理函数
+        nextBtn.addEventListener('click', function () {
+            currentIndex = (currentIndex + 1) % mediaFiles.length;
+            loadAndPlayMedia();
+        });
+
+        // 倍速选择下拉框变化事件处理函数
+        speedSelect.addEventListener('change', function () {
+            if (videoPlayer.src) {
+                videoPlayer.playbackRate = parseFloat(speedSelect.value);
+            }
+        });
+
+        // 静音按钮点击事件处理函数
+        muteBtn.addEventListener('click', function () {
+            if (videoPlayer.src) {
+                if (videoPlayer.muted) {
+                    videoPlayer.muted = false;
+                    muteBtn.classList.remove('muted');
+                } else {
+                    videoPlayer.muted = true;
+                    muteBtn.classList.add('muted');
+                }
+            }
+        });
+
+        // 屏幕大小调整滑块变化事件处理函数
+        sizeSlider.addEventListener('input', function () {
+            const scale = parseFloat(sizeSlider.value);
+            tvContainer.style.transform = `scale(${scale})`;
+            mediaPlayer.style.transform = `scale(${scale})`;
+        });
+
+        // 屏幕亮度调整滑块变化事件处理函数
+        brightnessSlider.addEventListener('input', function () {
+            const brightness = brightnessSlider.value;
+            if (videoPlayer.src) {
+                videoPlayer.style.filter = `brightness(${brightness}%)`;
+            }
+            if (imgPlayer.src) {
+                imgPlayer.style.filter = `brightness(${brightness}%)`;
+            }
+        });
+
+        // 更新进度条显示以及进度条拖动事件处理
+        videoPlayer.addEventListener('timeupdate', function () {
+            const progress = (videoPlayer.currentTime / videoPlayer.duration) * 100;
+            progressBar.value = progress;
+        });
+
+        progressBar.addEventListener('input', function () {
+            const newTime = (progressBar.value / 100) * videoPlayer.duration;
+            videoPlayer.currentTime = newTime;
+        });
+
+        // 页面加载完成后加载并播放第一个媒体文件
+        window.onload = function () {
+            loadAndPlayMedia();
+        };
+    </script>
+</body>
+
+</html>
