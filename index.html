@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
 	<link rel="stylesheet" href="css/styles.css"> 
     <title>盈盈与灿灿的恋爱日记</title>
-    <!--<link rel="shortcut icon" href="../../assets/images/icon/favicon.ico" type="image/x-icon">-->
     <style>
 html,
 body {
@@ -525,7 +524,7 @@ var ParticlePool = (function () {
     setTimeout(function () {
         onResize();
         render();
-    }, 10);
+    }, 50);
 })(document.getElementById('pinkboard'));
 
 // 用于存储多个爱心对象的数组，用于实现多个动态爱心的效果
@@ -541,7 +540,7 @@ var ctx = canvas.getContext('2d');
 var heartImage = new Image();
 heartImage.src = 'img/heart.svg';
 // 定义要生成的爱心数量
-var num = 100;
+var num = 200;
 
 init();
 
@@ -589,7 +588,7 @@ function getColor() {
    
 // 随机获取一段文本的函数，根据随机值返回不同的文本内容
 function getText() {
-    var val = Math.random() * 10;
+    var val = Math.random() * 12;
     if (val > 1 && val <= 2) {
         return '守护最好的盈盈';
     } else if (val > 2 && val <= 3) {
@@ -604,6 +603,10 @@ function getText() {
         return '愿我如星君如月 夜夜流光相皎洁';
     } else if (val > 7 && val <= 8) {
         return 'I LOVE YOU';
+    } else if (val > 8 && val <= 9) {
+        return '2025 俺们来啦';
+    } else if (val > 9 && val <= 10) {
+        return '岁岁平，岁岁安，岁岁平安';
     } else {
         return '身无彩凤双飞翼，心有灵犀一点通';
     }
@@ -639,7 +642,7 @@ function Heart(type) {
     // 随机设置文字显示的y坐标位置
     this.fy = Math.random() * wH;
     // 随机设置文字的字号大小
-    this.fs = Math.random() * 15;
+    this.fs =Math.random() * 10;
     // 获取一段随机的文本内容，用于显示在爱心上
     this.text = getText();
 
@@ -658,6 +661,7 @@ Heart.prototype.draw = function () {
     ctx.globalAlpha = this.opacity;
     // 在指定坐标位置绘制爱心图片，根据当前的缩放比例等计算实际绘制的宽度和高度
     ctx.drawImage(heartImage, this.x, this.y, this.width, this.height);
+	
     // 对canvas绘图上下文进行缩放操作，基于当前爱心的缩放比例，用于绘制放大或缩小后的爱心
     ctx.scale(this.scale + 1, this.scale + 1);
     if (!this.type) {
@@ -665,7 +669,9 @@ Heart.prototype.draw = function () {
         // 设置文字的填充颜色，通过调用getColor函数随机获取一种颜色
         ctx.fillStyle = getColor();
         // 设置文字的字体样式，包含斜体、字号大小以及字体类型
-        ctx.font = 'italic'+ this.fs +'px sans-serif';
+		
+       ctx.font = 'italic ' + this.fs + 'px sans-serif';
+		
         // 在指定坐标位置填充文字内容（显示文本）
         ctx.fillText(this.text, this.fx, this.fy);
     }
@@ -706,10 +712,12 @@ Heart.prototype.update = function () {
     this.fy += this.fvel.y;
     // 根据文字字号大小变化的速度更新文字字号大小
     this.fs += this.fvel.f;
+	
+
 
     // 如果文字字号大小超过50，则重置为2，避免字号过大
-    if (this.fs > 50) {
-        this.fs = 2;
+    if (this.fs > 55) {
+        this.fs = 12;
     }
 
     // 判断文字是否超出窗口右侧边界或者左侧边界，如果超出则重新初始化文字的位置
