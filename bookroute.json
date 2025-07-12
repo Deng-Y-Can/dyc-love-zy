@@ -1,52 +1,52 @@
 {
   "Name": "book",
-  "Path": "E:\\home\\github\\dyc-love-zy\\dyc-love-zy\\Page\\Books\\book",
+  "Path": "E:\\home\\github\\dyc-love-zy\\dyc-love-zy\\book",
   "Type": "Directory",
   "Children": [
     {
       "Name": "养生",
-      "Path": "E:\\home\\github\\dyc-love-zy\\dyc-love-zy\\Page\\Books\\book\\养生",
+      "Path": "E:\\home\\github\\dyc-love-zy\\dyc-love-zy\\book\\养生",
       "Type": "Directory",
       "Children": [
         {
           "Name": "216种常用中药饮片彩色图谱.doc",
-          "Path": "E:\\home\\github\\dyc-love-zy\\dyc-love-zy\\Page\\Books\\book\\养生\\216种常用中药饮片彩色图谱.doc",
+          "Path": "E:\\home\\github\\dyc-love-zy\\dyc-love-zy\\book\\养生\\216种常用中药饮片彩色图谱.doc",
           "Type": "File",
           "Children": null
         },
         {
           "Name": "不生病的智慧  .doc",
-          "Path": "E:\\home\\github\\dyc-love-zy\\dyc-love-zy\\Page\\Books\\book\\养生\\不生病的智慧  .doc",
+          "Path": "E:\\home\\github\\dyc-love-zy\\dyc-love-zy\\book\\养生\\不生病的智慧  .doc",
           "Type": "File",
           "Children": null
         },
         {
           "Name": "中国常用中药材.pdf",
-          "Path": "E:\\home\\github\\dyc-love-zy\\dyc-love-zy\\Page\\Books\\book\\养生\\中国常用中药材.pdf",
+          "Path": "E:\\home\\github\\dyc-love-zy\\dyc-love-zy\\book\\养生\\中国常用中药材.pdf",
           "Type": "File",
           "Children": null
         },
         {
           "Name": "中草药彩色图谱.pdf",
-          "Path": "E:\\home\\github\\dyc-love-zy\\dyc-love-zy\\Page\\Books\\book\\养生\\中草药彩色图谱.pdf",
+          "Path": "E:\\home\\github\\dyc-love-zy\\dyc-love-zy\\book\\养生\\中草药彩色图谱.pdf",
           "Type": "File",
           "Children": null
         },
         {
           "Name": "外科资料.doc",
-          "Path": "E:\\home\\github\\dyc-love-zy\\dyc-love-zy\\Page\\Books\\book\\养生\\外科资料.doc",
+          "Path": "E:\\home\\github\\dyc-love-zy\\dyc-love-zy\\book\\养生\\外科资料.doc",
           "Type": "File",
           "Children": null
         },
         {
           "Name": "民间实用土方上.doc",
-          "Path": "E:\\home\\github\\dyc-love-zy\\dyc-love-zy\\Page\\Books\\book\\养生\\民间实用土方上.doc",
+          "Path": "E:\\home\\github\\dyc-love-zy\\dyc-love-zy\\book\\养生\\民间实用土方上.doc",
           "Type": "File",
           "Children": null
         },
         {
           "Name": "食酒茶巧治百病.pdf",
-          "Path": "E:\\home\\github\\dyc-love-zy\\dyc-love-zy\\Page\\Books\\book\\养生\\食酒茶巧治百病.pdf",
+          "Path": "E:\\home\\github\\dyc-love-zy\\dyc-love-zy\\book\\养生\\食酒茶巧治百病.pdf",
           "Type": "File",
           "Children": null
         }
