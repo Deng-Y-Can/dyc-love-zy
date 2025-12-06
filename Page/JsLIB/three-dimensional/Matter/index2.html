@@ -1,0 +1,2071 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matter.js 物理模拟实验室 - 完整版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        #container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+        }
+        
+        /* 左侧控制面板 */
+        #leftPanel {
+            width: 300px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 2px solid #4361ee;
+        }
+        
+        /* 中间模拟区域 */
+        #simulationArea {
+            flex: 1;
+            position: relative;
+            background: #0d1525;
+        }
+        
+        #canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* 右侧信息面板 */
+        #rightPanel {
+            width: 300px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 20px;
+            overflow-y: auto;
+            border-left: 2px solid #4361ee;
+        }
+        
+        /* 控制面板样式 */
+        .panel-section {
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .panel-section h3 {
+            color: #4cc9f0;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        button {
+            padding: 12px 10px;
+            background: linear-gradient(135deg, #4361ee, #3a0ca3);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        button:hover {
+            background: linear-gradient(135deg, #4cc9f0, #4361ee);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 201, 240, 0.4);
+        }
+        
+        .danger-btn {
+            background: linear-gradient(135deg, #f72585, #b5179e);
+        }
+        
+        .danger-btn:hover {
+            background: linear-gradient(135deg, #ff4d9d, #f72585);
+            box-shadow: 0 5px 15px rgba(247, 37, 133, 0.4);
+        }
+        
+        .slider-group {
+            margin: 15px 0;
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            color: #e6e6e6;
+        }
+        
+        .slider-value {
+            color: #4cc9f0;
+            font-weight: bold;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #4361ee;
+            cursor: pointer;
+        }
+        
+        /* 统计信息样式 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-box {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #4cc9f0;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: #90e0ef;
+        }
+        
+        /* 物体列表样式 */
+        .object-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        
+        .object-item {
+            padding: 10px;
+            margin-bottom: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            border-left: 4px solid #3a0ca3;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .object-item:hover {
+            background: rgba(67, 97, 238, 0.3);
+        }
+        
+        .object-item.selected {
+            border-left-color: #4cc9f0;
+            background: rgba(76, 201, 240, 0.3);
+        }
+        
+        /* 颜色选择器 */
+        .color-picker {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 10px 0;
+        }
+        
+        .color-option {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.3s;
+        }
+        
+        .color-option:hover {
+            transform: scale(1.2);
+        }
+        
+        .color-option.selected {
+            border-color: white;
+            transform: scale(1.2);
+        }
+        
+        /* 画布覆盖信息 */
+        .canvas-overlay {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            z-index: 10;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* 提示信息 */
+        .hint-box {
+            background: rgba(67, 97, 238, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            border-left: 4px solid #4361ee;
+        }
+        
+        .hint-box h4 {
+            color: #4cc9f0;
+            margin-bottom: 5px;
+        }
+        
+        /* 标签样式 */
+        .tab-container {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .tab.active {
+            border-bottom-color: #4cc9f0;
+            color: #4cc9f0;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* 物体信息面板 */
+        #objectInfo {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #4361ee;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4cc9f0;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <!-- 左侧控制面板 -->
+        <div id="leftPanel">
+            <h2 style="color: #4cc9f0; margin-bottom: 20px; text-align: center;">🎮 控制面板</h2>
+            
+            <div class="tab-container">
+                <div class="tab active" onclick="switchTab('shapes')">形状</div>
+                <div class="tab" onclick="switchTab('physics')">物理</div>
+                <div class="tab" onclick="switchTab('tools')">工具</div>
+            </div>
+            
+            <!-- 形状创建标签 -->
+            <div id="shapesTab" class="tab-content active">
+                <div class="panel-section">
+                    <h3>基本形状</h3>
+                    <div class="button-grid">
+                        <button onclick="addBox()"><span>⬜</span> 方块</button>
+                        <button onclick="addCircle()"><span>🔵</span> 圆形</button>
+                        <button onclick="addTriangle()"><span>🔺</span> 三角形</button>
+                        <button onclick="addPolygon()"><span>⬢</span> 多边形</button>
+                    </div>
+                </div>
+                
+                <div class="panel-section">
+                    <h3>特殊结构</h3>
+                    <div class="button-grid">
+                        <button onclick="addStack()"><span>🗃️</span> 方块堆</button>
+                        <button onclick="addPyramid()"><span>🏔️</span> 金字塔</button>
+                        <button onclick="addChain()"><span>⛓️</span> 链条</button>
+                        <button onclick="addRagdoll()"><span>🧍</span> 布娃娃</button>
+                        <button onclick="addCar()"><span>🚗</span> 小车</button>
+                        <button onclick="addCatapult()"><span>⚔️</span> 投石机</button>
+                    </div>
+                </div>
+                
+                <div class="panel-section">
+                    <h3>约束系统</h3>
+                    <div class="button-grid">
+                        <button onclick="addSpring()"><span>🦾</span> 弹簧</button>
+                        <button onclick="addRope()"><span>🧵</span> 绳子</button>
+                        <button onclick="addComposite()"><span>🧩</span> 复合体</button>
+                        <button onclick="addGear()"><span>⚙️</span> 齿轮</button>
+                    </div>
+                </div>
+                
+                <div class="panel-section">
+                    <h3>物体颜色</h3>
+                    <div class="color-picker" id="colorPicker">
+                        <div class="color-option selected" style="background: #ff4757;" data-color="#ff4757"></div>
+                        <div class="color-option" style="background: #2ed573;" data-color="#2ed573"></div>
+                        <div class="color-option" style="background: #1e90ff;" data-color="#1e90ff"></div>
+                        <div class="color-option" style="background: #ffa502;" data-color="#ffa502"></div>
+                        <div class="color-option" style="background: #a55eea;" data-color="#a55eea"></div>
+                        <div class="color-option" style="background: #ff6b81;" data-color="#ff6b81"></div>
+                        <div class="color-option" style="background: #70a1ff;" data-color="#70a1ff"></div>
+                        <div class="color-option" style="background: #fffa65;" data-color="#fffa65"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 物理参数标签 -->
+            <div id="physicsTab" class="tab-content">
+                <div class="panel-section">
+                    <h3>物理参数</h3>
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>重力强度</span>
+                            <span class="slider-value" id="gravityValue">1.0</span>
+                        </div>
+                        <input type="range" id="gravitySlider" min="0" max="2" step="0.1" value="1">
+                    </div>
+                    
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>空气摩擦力</span>
+                            <span class="slider-value" id="frictionValue">0.01</span>
+                        </div>
+                        <input type="range" id="frictionSlider" min="0" max="0.1" step="0.001" value="0.01">
+                    </div>
+                    
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>弹性系数</span>
+                            <span class="slider-value" id="restitutionValue">0.7</span>
+                        </div>
+                        <input type="range" id="restitutionSlider" min="0" max="1" step="0.05" value="0.7">
+                    </div>
+                    
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>时间缩放</span>
+                            <span class="slider-value" id="timeScaleValue">1.0</span>
+                        </div>
+                        <input type="range" id="timeScaleSlider" min="0.1" max="3" step="0.1" value="1">
+                    </div>
+                </div>
+                
+                <div class="panel-section">
+                    <h3>物理效果</h3>
+                    <div class="button-grid">
+                        <button onclick="applyExplosion()"><span>💥</span> 爆炸效果</button>
+                        <button onclick="toggleWind()" id="windBtn"><span>🌬️</span> 开启风力</button>
+                        <button onclick="applyVortex()"><span>🌪️</span> 漩涡效果</button>
+                        <button onclick="applyImpulse()"><span>⚡</span> 脉冲效果</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 工具标签 -->
+            <div id="toolsTab" class="tab-content">
+                <div class="panel-section">
+                    <h3>场景管理</h3>
+                    <div class="button-grid">
+                        <button onclick="clearScene()" class="danger-btn"><span>🗑️</span> 清空场景</button>
+                        <button onclick="resetScene()"><span>🔄</span> 重置场景</button>
+                        <button onclick="togglePause()" id="pauseBtn"><span>⏸️</span> 暂停模拟</button>
+                        <button onclick="toggleWireframe()" id="wireframeBtn"><span>🔲</span> 线框模式</button>
+                    </div>
+                </div>
+                
+                <div class="panel-section">
+                    <h3>视图控制</h3>
+                    <div class="button-grid">
+                        <button onclick="zoomIn()"><span>➕</span> 放大</button>
+                        <button onclick="zoomOut()"><span>➖</span> 缩小</button>
+                        <button onclick="resetView()"><span>🎯</span> 重置视图</button>
+                        <button onclick="toggleGrid()" id="gridBtn"><span>📐</span> 显示网格</button>
+                    </div>
+                </div>
+                
+                <div class="panel-section">
+                    <h3>保存/加载</h3>
+                    <div class="button-grid">
+                        <button onclick="saveScene()"><span>💾</span> 保存场景</button>
+                        <button onclick="loadScene()"><span>📂</span> 加载场景</button>
+                        <button onclick="takeScreenshot()"><span>📸</span> 截图</button>
+                        <button onclick="recordScene()" id="recordBtn"><span>🎥</span> 开始录制</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="hint-box">
+                <h4>💡 操作提示</h4>
+                <p>• 点击物体可选中</p>
+                <p>• 拖拽可移动物体</p>
+                <p>• 右键拖拽平移视图</p>
+                <p>• 滚轮缩放视图</p>
+                <p>• 空格键暂停/继续</p>
+                <p>• Delete键删除选中物体</p>
+            </div>
+        </div>
+        
+        <!-- 中间模拟区域 -->
+        <div id="simulationArea">
+            <div class="canvas-overlay">
+                <div>物体: <span id="objCount">0</span> | 约束: <span id="constraintCount">0</span></div>
+                <div>FPS: <span id="fps">60</span> | 碰撞: <span id="collisions">0</span></div>
+                <div>运行: <span id="runTime">0s</span> | 选中: <span id="selectedType">无</span></div>
+            </div>
+            <canvas id="canvas"></canvas>
+        </div>
+        
+        <!-- 右侧信息面板 -->
+        <div id="rightPanel">
+            <h2 style="color: #4cc9f0; margin-bottom: 20px; text-align: center;">📊 信息面板</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-value" id="totalObjects">0</div>
+                    <div class="stat-label">物体总数</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="totalConstraints">0</div>
+                    <div class="stat-label">约束数量</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="totalCollisions">0</div>
+                    <div class="stat-label">碰撞次数</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="totalEnergy">0</div>
+                    <div class="stat-label">总能量</div>
+                </div>
+            </div>
+            
+            <div class="panel-section">
+                <h3>选中物体信息</h3>
+                <div id="objectInfo">
+                    <p>点击物体查看详细信息</p>
+                </div>
+            </div>
+            
+            <div class="panel-section">
+                <h3>物体列表</h3>
+                <div class="object-list" id="objectList">
+                    <!-- 物体列表会动态生成 -->
+                </div>
+            </div>
+            
+            <div class="panel-section">
+                <h3>碰撞历史</h3>
+                <div id="collisionHistory" style="max-height: 150px; overflow-y: auto; font-size: 0.8rem;">
+                    <!-- 碰撞记录会动态生成 -->
+                </div>
+            </div>
+            
+            <div class="hint-box">
+                <h4>🔧 调试信息</h4>
+                <p id="debugInfo">系统正常</p>
+                <button onclick="toggleDebug()" style="margin-top: 10px; padding: 8px; font-size: 0.8rem;">切换调试模式</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let engine, render, runner, canvas;
+        let selectedBody = null;
+        let selectedColor = '#ff4757';
+        let collisionCount = 0;
+        let startTime = Date.now();
+        let isPaused = false;
+        let wireframes = false;
+        let isWindActive = false;
+        let isGridVisible = false;
+        let isRecording = false;
+        let debugMode = false;
+        let frameCount = 0;
+        let lastTime = Date.now();
+        let fps = 60;
+        let totalEnergy = 0;
+        let collisionHistory = [];
+        let zoomLevel = 1.0;
+        
+        // 加载Matter.js
+        function loadMatterJS(callback) {
+            if (typeof Matter === 'undefined') {
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.18.0/matter.min.js';
+                script.onload = callback;
+                script.onerror = function() {
+                    console.log('CDN失败，使用备用CDN');
+                    const fallback = document.createElement('script');
+                    fallback.src = 'https://unpkg.com/matter-js@0.18.0/build/matter.min.js';
+                    fallback.onload = callback;
+                    fallback.onerror = function() {
+                        alert('无法加载Matter.js，请检查网络连接');
+                    };
+                    document.head.appendChild(fallback);
+                };
+                document.head.appendChild(script);
+            } else {
+                callback();
+            }
+        }
+        
+        // 初始化函数
+        function init() {
+            console.log('🚀 开始初始化物理模拟实验室...');
+            
+            // 获取canvas
+            canvas = document.getElementById('canvas');
+            canvas.width = document.getElementById('simulationArea').clientWidth;
+            canvas.height = document.getElementById('simulationArea').clientHeight;
+            
+            console.log('📐 Canvas尺寸:', canvas.width, 'x', canvas.height);
+            
+            // 检查Matter.js是否可用
+            if (typeof Matter === 'undefined') {
+                console.error('❌ Matter.js未加载');
+                return;
+            }
+            
+            // 创建引擎
+            engine = Matter.Engine.create();
+            engine.gravity.y = 1;
+            engine.gravity.x = 0;
+            
+            // 创建渲染器
+            render = Matter.Render.create({
+                canvas: canvas,
+                engine: engine,
+                options: {
+                    width: canvas.width,
+                    height: canvas.height,
+                    wireframes: wireframes,
+                    background: '#0d1525',
+                    showSleeping: false,
+                    showDebug: false,
+                    showBounds: false,
+                    showVelocity: false,
+                    showCollisions: false,
+                    showAngleIndicator: false,
+                    showIds: false
+                }
+            });
+            
+            // 创建运行器
+            runner = Matter.Runner.create();
+            Matter.Runner.run(runner, engine);
+            Matter.Render.run(render);
+            
+            // 添加鼠标控制
+            const mouse = Matter.Mouse.create(canvas);
+            const mouseConstraint = Matter.MouseConstraint.create(engine, {
+                mouse: mouse,
+                constraint: {
+                    stiffness: 0.2,
+                    render: { visible: false }
+                }
+            });
+            Matter.World.add(engine.world, mouseConstraint);
+            render.mouse = mouse;
+            
+            // 鼠标点击选择物体
+            Matter.Events.on(mouseConstraint, 'mousedown', function(event) {
+                const mousePosition = event.mouse.position;
+                const bodies = Matter.Composite.allBodies(engine.world);
+                
+                for (let body of bodies) {
+                    if (body.bounds && 
+                        mousePosition.x >= body.bounds.min.x && 
+                        mousePosition.x <= body.bounds.max.x &&
+                        mousePosition.y >= body.bounds.min.y && 
+                        mousePosition.y <= body.bounds.max.y) {
+                        
+                        // 使用精确的点查询
+                        const collisions = Matter.Query.point([body], mousePosition);
+                        if (collisions.length > 0) {
+                            selectBody(body);
+                            break;
+                        }
+                    }
+                }
+            });
+            
+            // 创建边界
+            createWalls();
+            
+            // 创建初始测试物体
+            createTestObjects();
+            
+            // 设置碰撞检测
+            Matter.Events.on(engine, 'collisionStart', function(event) {
+                collisionCount += event.pairs.length;
+                event.pairs.forEach(pair => {
+                    collisionHistory.unshift({
+                        time: Date.now(),
+                        bodyA: pair.bodyA.label || '物体A',
+                        bodyB: pair.bodyB.label || '物体B',
+                        force: pair.collision.depth
+                    });
+                    
+                    // 保留最近10条记录
+                    if (collisionHistory.length > 10) {
+                        collisionHistory.pop();
+                    }
+                });
+                updateStats();
+                updateCollisionHistory();
+            });
+            
+            // 设置颜色选择器
+            setupColorPicker();
+            
+            // 设置滑块事件
+            setupSliders();
+            
+            // 开始FPS计算
+            calculateFPS();
+            
+            console.log('✅ 物理模拟实验室初始化完成！');
+            console.log('🎯 功能列表:');
+            console.log('1. 多种形状创建');
+            console.log('2. 特殊结构生成');
+            console.log('3. 约束系统');
+            console.log('4. 物理参数调节');
+            console.log('5. 物理效果');
+            console.log('6. 场景管理');
+            console.log('7. 视图控制');
+            console.log('8. 保存/加载');
+        }
+        
+        // 创建边界墙
+        function createWalls() {
+            const wallThickness = 40;
+            const walls = [
+                // 地面
+                Matter.Bodies.rectangle(canvas.width/2, canvas.height + wallThickness/2, canvas.width + 100, wallThickness, {
+                    isStatic: true,
+                    render: { fillStyle: '#333366' },
+                    label: '地面'
+                }),
+                // 天花板
+                Matter.Bodies.rectangle(canvas.width/2, -wallThickness/2, canvas.width + 100, wallThickness, {
+                    isStatic: true,
+                    render: { fillStyle: '#333366' },
+                    label: '天花板'
+                }),
+                // 左墙
+                Matter.Bodies.rectangle(-wallThickness/2, canvas.height/2, wallThickness, canvas.height + 100, {
+                    isStatic: true,
+                    render: { fillStyle: '#333366' },
+                    label: '左墙'
+                }),
+                // 右墙
+                Matter.Bodies.rectangle(canvas.width + wallThickness/2, canvas.height/2, wallThickness, canvas.height + 100, {
+                    isStatic: true,
+                    render: { fillStyle: '#333366' },
+                    label: '右墙'
+                })
+            ];
+            Matter.World.add(engine.world, walls);
+        }
+        
+        // 创建测试物体
+        function createTestObjects() {
+            console.log('🎨 创建测试物体...');
+            
+            // 地面平台
+            const ground = Matter.Bodies.rectangle(canvas.width/2, canvas.height - 100, canvas.width - 200, 40, {
+                isStatic: true,
+                render: {
+                    fillStyle: '#4361ee',
+                    strokeStyle: '#4cc9f0',
+                    lineWidth: 3
+                },
+                label: '平台'
+            });
+            
+            // 测试物体
+            const testBox = Matter.Bodies.rectangle(300, 300, 120, 120, {
+                render: {
+                    fillStyle: '#ff4757',
+                    strokeStyle: '#ffffff',
+                    lineWidth: 4
+                },
+                label: '红色方块'
+            });
+            
+            const testCircle = Matter.Bodies.circle(600, 200, 60, {
+                render: {
+                    fillStyle: '#2ed573',
+                    strokeStyle: '#ffffff',
+                    lineWidth: 4
+                },
+                label: '绿色圆形'
+            });
+            
+            const testTriangle = Matter.Bodies.polygon(450, 150, 3, 70, {
+                render: {
+                    fillStyle: '#1e90ff',
+                    strokeStyle: '#ffffff',
+                    lineWidth: 4
+                },
+                label: '蓝色三角形'
+            });
+            
+            Matter.World.add(engine.world, [ground, testBox, testCircle, testTriangle]);
+            
+            // 创建一个简单的弹簧约束
+            const spring = Matter.Constraint.create({
+                pointA: { x: 200, y: 100 },
+                bodyB: testBox,
+                pointB: { x: -60, y: -60 },
+                stiffness: 0.01,
+                length: 100,
+                render: {
+                    strokeStyle: '#4cc9f0',
+                    lineWidth: 3
+                },
+                label: '弹簧'
+            });
+            
+            Matter.World.add(engine.world, spring);
+            
+            updateStats();
+            console.log('✅ 测试物体创建完成');
+        }
+        
+        // ========== 物体创建函数 ==========
+        
+        function addBox() {
+            const x = Math.random() * (canvas.width - 200) + 100;
+            const y = 100;
+            const size = 40 + Math.random() * 60;
+            
+            const box = Matter.Bodies.rectangle(x, y, size, size, {
+                render: {
+                    fillStyle: selectedColor,
+                    strokeStyle: '#ffffff',
+                    lineWidth: 2
+                },
+                label: '方块-' + Math.floor(Math.random() * 1000)
+            });
+            
+            Matter.World.add(engine.world, box);
+            updateStats();
+        }
+        
+        function addCircle() {
+            const x = Math.random() * (canvas.width - 200) + 100;
+            const y = 100;
+            const radius = 20 + Math.random() * 40;
+            
+            const circle = Matter.Bodies.circle(x, y, radius, {
+                render: {
+                    fillStyle: selectedColor,
+                    strokeStyle: '#ffffff',
+                    lineWidth: 2
+                },
+                label: '圆形-' + Math.floor(Math.random() * 1000)
+            });
+            
+            Matter.World.add(engine.world, circle);
+            updateStats();
+        }
+        
+        function addTriangle() {
+            const x = Math.random() * (canvas.width - 200) + 100;
+            const y = 100;
+            
+            const triangle = Matter.Bodies.polygon(x, y, 3, 40, {
+                render: {
+                    fillStyle: selectedColor,
+                    strokeStyle: '#ffffff',
+                    lineWidth: 2
+                },
+                label: '三角形-' + Math.floor(Math.random() * 1000)
+            });
+            
+            Matter.World.add(engine.world, triangle);
+            updateStats();
+        }
+        
+        function addPolygon() {
+            const x = Math.random() * (canvas.width - 200) + 100;
+            const y = 100;
+            const sides = Math.floor(Math.random() * 6) + 5;
+            const radius = 25 + Math.random() * 35;
+            
+            const polygon = Matter.Bodies.polygon(x, y, sides, radius, {
+                render: {
+                    fillStyle: selectedColor,
+                    strokeStyle: '#ffffff',
+                    lineWidth: 2
+                },
+                label: '多边形-' + Math.floor(Math.random() * 1000)
+            });
+            
+            Matter.World.add(engine.world, polygon);
+            updateStats();
+        }
+        
+        function addStack() {
+            const startX = canvas.width / 2;
+            const startY = canvas.height - 200;
+            const boxSize = 40;
+            const rows = 6;
+            
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < rows - row; col++) {
+                    const x = startX + (col - (rows - row - 1) / 2) * (boxSize + 5);
+                    const y = startY - row * (boxSize + 5);
+                    
+                    const box = Matter.Bodies.rectangle(x, y, boxSize, boxSize, {
+                        render: {
+                            fillStyle: `hsl(${row * 40}, 70%, 60%)`,
+                            strokeStyle: '#ffffff',
+                            lineWidth: 2
+                        },
+                        label: `堆叠-${row}-${col}`
+                    });
+                    
+                    Matter.World.add(engine.world, box);
+                }
+            }
+            
+            updateStats();
+        }
+        
+        function addPyramid() {
+            const startX = canvas.width / 2;
+            const startY = canvas.height - 150;
+            const ballRadius = 15;
+            const rows = 8;
+            
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < row + 1; col++) {
+                    const x = startX + (col - row / 2) * (ballRadius * 2.2);
+                    const y = startY - row * (ballRadius * 2.2);
+                    
+                    const ball = Matter.Bodies.circle(x, y, ballRadius, {
+                        render: {
+                            fillStyle: `hsl(${row * 45}, 70%, 60%)`,
+                            strokeStyle: '#ffffff',
+                            lineWidth: 2
+                        },
+                        label: `金字塔-${row}-${col}`
+                    });
+                    
+                    Matter.World.add(engine.world, ball);
+                }
+            }
+            
+            updateStats();
+        }
+        
+        function addChain() {
+            const startX = canvas.width / 2 - 150;
+            const startY = 200;
+            const linkCount = 12;
+            const linkRadius = 12;
+            const linkSpacing = 25;
+            
+            let prevBody = null;
+            
+            for (let i = 0; i < linkCount; i++) {
+                const x = startX + i * linkSpacing;
+                const y = startY;
+                
+                const link = Matter.Bodies.circle(x, y, linkRadius, {
+                    render: {
+                        fillStyle: '#a55eea',
+                        strokeStyle: '#ffffff',
+                        lineWidth: 2
+                    },
+                    label: `链条-${i}`
+                });
+                
+                Matter.World.add(engine.world, link);
+                
+                if (prevBody) {
+                    const constraint = Matter.Constraint.create({
+                        bodyA: prevBody,
+                        bodyB: link,
+                        length: linkSpacing,
+                        stiffness: 0.8,
+                        render: {
+                            strokeStyle: '#4cc9f0',
+                            lineWidth: 2
+                        },
+                        label: `链节-${i-1}`
+                    });
+                    
+                    Matter.World.add(engine.world, constraint);
+                } else {
+                    // 第一个链接固定在空中
+                    const anchor = Matter.Constraint.create({
+                        pointA: { x: startX, y: startY - 80 },
+                        bodyB: link,
+                        length: 80,
+                        stiffness: 0.5,
+                        render: {
+                            strokeStyle: '#4cc9f0',
+                            lineWidth: 2
+                        },
+                        label: '链锚'
+                    });
+                    
+                    Matter.World.add(engine.world, anchor);
+                }
+                
+                prevBody = link;
+            }
+            
+            updateStats();
+        }
+        
+        function addRagdoll() {
+            const x = canvas.width / 2;
+            const y = 200;
+            
+            // 创建布娃娃各部分
+            const head = Matter.Bodies.circle(x, y, 25, {
+                render: { fillStyle: '#ff4757', strokeStyle: '#ffffff', lineWidth: 2 },
+                label: '头部'
+            });
+            
+            const body = Matter.Bodies.rectangle(x, y + 60, 50, 80, {
+                render: { fillStyle: '#1e90ff', strokeStyle: '#ffffff', lineWidth: 2 },
+                label: '身体'
+            });
+            
+            const leftArm = Matter.Bodies.rectangle(x - 50, y + 60, 20, 60, {
+                render: { fillStyle: '#2ed573', strokeStyle: '#ffffff', lineWidth: 2 },
+                label: '左臂'
+            });
+            
+            const rightArm = Matter.Bodies.rectangle(x + 50, y + 60, 20, 60, {
+                render: { fillStyle: '#2ed573', strokeStyle: '#ffffff', lineWidth: 2 },
+                label: '右臂'
+            });
+            
+            const leftLeg = Matter.Bodies.rectangle(x - 20, y + 140, 15, 70, {
+                render: { fillStyle: '#ffa502', strokeStyle: '#ffffff', lineWidth: 2 },
+                label: '左腿'
+            });
+            
+            const rightLeg = Matter.Bodies.rectangle(x + 20, y + 140, 15, 70, {
+                render: { fillStyle: '#ffa502', strokeStyle: '#ffffff', lineWidth: 2 },
+                label: '右腿'
+            });
+            
+            const parts = [head, body, leftArm, rightArm, leftLeg, rightLeg];
+            Matter.World.add(engine.world, parts);
+            
+            // 添加约束连接
+            const constraints = [
+                Matter.Constraint.create({
+                    bodyA: head, bodyB: body,
+                    pointA: { x: 0, y: 25 }, pointB: { x: 0, y: -40 },
+                    stiffness: 0.6, render: { strokeStyle: '#4cc9f0', lineWidth: 2 }
+                }),
+                Matter.Constraint.create({
+                    bodyA: body, bodyB: leftArm,
+                    pointA: { x: -25, y: 0 }, pointB: { x: 10, y: 0 },
+                    stiffness: 0.6, render: { strokeStyle: '#4cc9f0', lineWidth: 2 }
+                }),
+                Matter.Constraint.create({
+                    bodyA: body, bodyB: rightArm,
+                    pointA: { x: 25, y: 0 }, pointB: { x: -10, y: 0 },
+                    stiffness: 0.6, render: { strokeStyle: '#4cc9f0', lineWidth: 2 }
+                }),
+                Matter.Constraint.create({
+                    bodyA: body, bodyB: leftLeg,
+                    pointA: { x: -20, y: 40 }, pointB: { x: 0, y: -35 },
+                    stiffness: 0.6, render: { strokeStyle: '#4cc9f0', lineWidth: 2 }
+                }),
+                Matter.Constraint.create({
+                    bodyA: body, bodyB: rightLeg,
+                    pointA: { x: 20, y: 40 }, pointB: { x: 0, y: -35 },
+                    stiffness: 0.6, render: { strokeStyle: '#4cc9f0', lineWidth: 2 }
+                })
+            ];
+            
+            Matter.World.add(engine.world, constraints);
+            updateStats();
+        }
+        
+        function addCar() {
+            const x = canvas.width / 2;
+            const y = 150;
+            
+            // 车身
+            const chassis = Matter.Bodies.rectangle(x, y, 120, 40, {
+                render: {
+                    fillStyle: '#ff4757',
+                    strokeStyle: '#ffffff',
+                    lineWidth: 3
+                },
+                label: '车身'
+            });
+            
+            // 车轮
+            const wheel1 = Matter.Bodies.circle(x - 45, y + 25, 20, {
+                render: {
+                    fillStyle: '#333333',
+                    strokeStyle: '#ffffff',
+                    lineWidth: 2
+                },
+                label: '前轮'
+            });
+            
+            const wheel2 = Matter.Bodies.circle(x + 45, y + 25, 20, {
+                render: {
+                    fillStyle: '#333333',
+                    strokeStyle: '#ffffff',
+                    lineWidth: 2
+                },
+                label: '后轮'
+            });
+            
+            Matter.World.add(engine.world, [chassis, wheel1, wheel2]);
+            
+            // 约束连接
+            const constraints = [
+                Matter.Constraint.create({
+                    bodyA: chassis, bodyB: wheel1,
+                    pointA: { x: -45, y: 20 }, pointB: { x: 0, y: 0 },
+                    stiffness: 0.8, render: { strokeStyle: '#4cc9f0', lineWidth: 2 }
+                }),
+                Matter.Constraint.create({
+                    bodyA: chassis, bodyB: wheel2,
+                    pointA: { x: 45, y: 20 }, pointB: { x: 0, y: 0 },
+                    stiffness: 0.8, render: { strokeStyle: '#4cc9f0', lineWidth: 2 }
+                })
+            ];
+            
+            Matter.World.add(engine.world, constraints);
+            updateStats();
+        }
+        
+        function addCatapult() {
+            const x = canvas.width / 2;
+            const y = canvas.height - 150;
+            
+            // 底座
+            const base = Matter.Bodies.rectangle(x, y, 250, 30, {
+                isStatic: true,
+                render: {
+                    fillStyle: '#8B4513',
+                    strokeStyle: '#ffffff',
+                    lineWidth: 3
+                },
+                label: '投石机底座'
+            });
+            
+            // 抛射臂
+            const arm = Matter.Bodies.rectangle(x, y - 70, 180, 15, {
+                angle: -0.4,
+                render: {
+                    fillStyle: '#A0522D',
+                    strokeStyle: '#ffffff',
+                    lineWidth: 3
+                },
+                label: '抛射臂'
+            });
+            
+            // 抛射物
+            const projectile = Matter.Bodies.circle(x + 100, y - 120, 25, {
+                render: {
+                    fillStyle: '#ff4757',
+                    strokeStyle: '#ffffff',
+                    lineWidth: 3
+                },
+                label: '抛射物'
+            });
+            
+            Matter.World.add(engine.world, [base, arm, projectile]);
+            
+            // 约束
+            const constraints = [
+                Matter.Constraint.create({
+                    bodyA: base, bodyB: arm,
+                    pointA: { x: 0, y: -15 }, pointB: { x: -85, y: 0 },
+                    stiffness: 0.1, render: { strokeStyle: '#4cc9f0', lineWidth: 3 }
+                }),
+                Matter.Constraint.create({
+                    bodyA: arm, bodyB: projectile,
+                    pointA: { x: 85, y: 0 }, pointB: { x: 0, y: 0 },
+                    stiffness: 0.9, render: { strokeStyle: '#4cc9f0', lineWidth: 3 }
+                })
+            ];
+            
+            Matter.World.add(engine.world, constraints);
+            updateStats();
+        }
+        
+        function addSpring() {
+            const bodies = Matter.Composite.allBodies(engine.world).filter(body => 
+                !body.isStatic && body.label && 
+                !body.label.includes('墙') && 
+                !body.label.includes('地面') && 
+                !body.label.includes('天花板'));
+            
+            if (bodies.length >= 2) {
+                const bodyA = bodies[Math.floor(Math.random() * bodies.length)];
+                let bodyB;
+                
+                do {
+                    bodyB = bodies[Math.floor(Math.random() * bodies.length)];
+                } while (bodyA === bodyB);
+                
+                const spring = Matter.Constraint.create({
+                    bodyA: bodyA,
+                    bodyB: bodyB,
+                    stiffness: 0.01 + Math.random() * 0.04,
+                    length: 100 + Math.random() * 100,
+                    render: {
+                        strokeStyle: '#4cc9f0',
+                        lineWidth: 2
+                    },
+                    label: '弹簧'
+                });
+                
+                Matter.World.add(engine.world, spring);
+                updateStats();
+            }
+        }
+        
+        function addRope() {
+            const startX = Math.random() * (canvas.width - 300) + 150;
+            const startY = 150;
+            const segmentCount = 8;
+            const segmentSize = 15;
+            
+            let prevBody = null;
+            
+            for (let i = 0; i < segmentCount; i++) {
+                const x = startX + i * (segmentSize * 2);
+                const y = startY;
+                
+                const segment = Matter.Bodies.rectangle(x, y, segmentSize * 2, segmentSize, {
+                    render: {
+                        fillStyle: '#8B4513',
+                        strokeStyle: '#ffffff',
+                        lineWidth: 2
+                    },
+                    label: `绳子-${i}`
+                });
+                
+                Matter.World.add(engine.world, segment);
+                
+                if (prevBody) {
+                    const joint = Matter.Constraint.create({
+                        bodyA: prevBody,
+                        bodyB: segment,
+                        pointA: { x: segmentSize, y: 0 },
+                        pointB: { x: -segmentSize, y: 0 },
+                        stiffness: 0.9,
+                        render: {
+                            strokeStyle: '#A0522D',
+                            lineWidth: 2
+                        },
+                        label: `绳结-${i-1}`
+                    });
+                    
+                    Matter.World.add(engine.world, joint);
+                } else {
+                    // 第一个段固定
+                    const anchor = Matter.Constraint.create({
+                        pointA: { x: startX, y: startY - 50 },
+                        bodyB: segment,
+                        pointB: { x: -segmentSize, y: 0 },
+                        stiffness: 0.5,
+                        render: {
+                            strokeStyle: '#A0522D',
+                            lineWidth: 2
+                        },
+                        label: '绳锚'
+                    });
+                    
+                    Matter.World.add(engine.world, anchor);
+                }
+                
+                prevBody = segment;
+            }
+            
+            updateStats();
+        }
+        
+        function addComposite() {
+            const x = Math.random() * (canvas.width - 300) + 150;
+            const y = 100;
+            
+            // 创建复合物体的各个部分
+            const part1 = Matter.Bodies.rectangle(x, y, 50, 50, {
+                render: { fillStyle: '#7209b7' }
+            });
+            
+            const part2 = Matter.Bodies.circle(x + 70, y, 30, {
+                render: { fillStyle: '#3a0ca3' }
+            });
+            
+            const part3 = Matter.Bodies.polygon(x + 140, y, 5, 35, {
+                render: { fillStyle: '#4361ee' }
+            });
+            
+            Matter.World.add(engine.world, [part1, part2, part3]);
+            
+            // 添加约束连接
+            const constraints = [
+                Matter.Constraint.create({
+                    bodyA: part1, bodyB: part2,
+                    stiffness: 0.05, length: 60,
+                    render: { strokeStyle: '#4cc9f0', lineWidth: 2 }
+                }),
+                Matter.Constraint.create({
+                    bodyA: part2, bodyB: part3,
+                    stiffness: 0.05, length: 60,
+                    render: { strokeStyle: '#4cc9f0', lineWidth: 2 }
+                })
+            ];
+            
+            Matter.World.add(engine.world, constraints);
+            updateStats();
+        }
+        
+        function addGear() {
+            const x = canvas.width / 2;
+            const y = canvas.height / 2;
+            const radius = 40;
+            const teeth = 12;
+            
+            // 创建齿轮形状
+            const vertices = [];
+            for (let i = 0; i < teeth * 2; i++) {
+                const angle = (i * Math.PI) / teeth;
+                const r = i % 2 === 0 ? radius : radius * 0.7;
+                vertices.push({
+                    x: x + r * Math.cos(angle),
+                    y: y + r * Math.sin(angle)
+                });
+            }
+            
+            const gear = Matter.Bodies.fromVertices(x, y, [vertices], {
+                render: {
+                    fillStyle: '#ffa502',
+                    strokeStyle: '#ffffff',
+                    lineWidth: 2
+                },
+                label: '齿轮'
+            }, true);
+            
+            Matter.World.add(engine.world, gear);
+            updateStats();
+        }
+        
+        // ========== 物理效果函数 ==========
+        
+        function applyExplosion() {
+            const bodies = Matter.Composite.allBodies(engine.world).filter(body => 
+                !body.isStatic && body.label && 
+                !body.label.includes('墙') && 
+                !body.label.includes('地面') && 
+                !body.label.includes('天花板'));
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            bodies.forEach(body => {
+                const dx = body.position.x - centerX;
+                const dy = body.position.y - centerY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const force = 0.08 / (distance + 1);
+                
+                Matter.Body.applyForce(body, body.position, {
+                    x: (dx / distance) * force,
+                    y: (dy / distance) * force
+                });
+            });
+            
+            console.log('💥 应用了爆炸效果');
+        }
+        
+        function toggleWind() {
+            isWindActive = !isWindActive;
+            const btn = document.getElementById('windBtn');
+            
+            if (isWindActive) {
+                btn.innerHTML = '<span>🌪️</span> 关闭风力';
+                btn.style.background = 'linear-gradient(135deg, #ffa502, #ff6348)';
+            } else {
+                btn.innerHTML = '<span>🌬️</span> 开启风力';
+                btn.style.background = 'linear-gradient(135deg, #4361ee, #3a0ca3)';
+            }
+        }
+        
+        function applyVortex() {
+            const bodies = Matter.Composite.allBodies(engine.world).filter(body => 
+                !body.isStatic && body.label && 
+                !body.label.includes('墙') && 
+                !body.label.includes('地面') && 
+                !body.label.includes('天花板'));
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            bodies.forEach(body => {
+                const dx = body.position.x - centerX;
+                const dy = body.position.y - centerY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const force = 0.05 / (distance + 1);
+                
+                // 漩涡力（切向力）
+                Matter.Body.applyForce(body, body.position, {
+                    x: (-dy / distance) * force,
+                    y: (dx / distance) * force
+                });
+                
+                // 向心力
+                Matter.Body.applyForce(body, body.position, {
+                    x: (-dx / distance) * force * 0.5,
+                    y: (-dy / distance) * force * 0.5
+                });
+            });
+            
+            console.log('🌪️ 应用了漩涡效果');
+        }
+        
+        function applyImpulse() {
+            if (selectedBody) {
+                Matter.Body.applyForce(selectedBody, selectedBody.position, {
+                    x: (Math.random() - 0.5) * 0.1,
+                    y: -0.15
+                });
+                console.log('⚡ 对选中物体应用了脉冲');
+            } else {
+                // 如果没有选中物体，对所有物体应用脉冲
+                const bodies = Matter.Composite.allBodies(engine.world).filter(body => 
+                    !body.isStatic && body.label && 
+                    !body.label.includes('墙') && 
+                    !body.label.includes('地面') && 
+                    !body.label.includes('天花板'));
+                
+                bodies.forEach(body => {
+                    Matter.Body.applyForce(body, body.position, {
+                        x: (Math.random() - 0.5) * 0.05,
+                        y: -0.08
+                    });
+                });
+                console.log('⚡ 对所有物体应用了脉冲');
+            }
+        }
+        
+        // ========== 场景管理函数 ==========
+        
+        function clearScene() {
+            const bodies = Matter.Composite.allBodies(engine.world);
+            const constraints = Matter.Composite.allConstraints(engine.world);
+            
+            // 移除非边界物体
+            bodies.forEach(body => {
+                if (!body.label || 
+                    (body.label !== '地面' && 
+                     body.label !== '天花板' && 
+                     body.label !== '左墙' && 
+                     body.label !== '右墙')) {
+                    Matter.World.remove(engine.world, body);
+                }
+            });
+            
+            // 移除所有约束
+            constraints.forEach(constraint => {
+                Matter.World.remove(engine.world, constraint);
+            });
+            
+            selectedBody = null;
+            collisionCount = 0;
+            collisionHistory = [];
+            updateStats();
+            updateCollisionHistory();
+            
+            console.log('🗑️ 场景已清空');
+        }
+        
+        function resetScene() {
+            clearScene();
+            startTime = Date.now();
+            createTestObjects();
+            console.log('🔄 场景已重置');
+        }
+        
+        function togglePause() {
+            isPaused = !isPaused;
+            const btn = document.getElementById('pauseBtn');
+            
+            if (isPaused) {
+                Matter.Runner.stop(runner);
+                btn.innerHTML = '<span>▶️</span> 继续模拟';
+                console.log('⏸️ 模拟已暂停');
+            } else {
+                Matter.Runner.run(runner, engine);
+                btn.innerHTML = '<span>⏸️</span> 暂停模拟';
+                console.log('▶️ 模拟已继续');
+            }
+        }
+        
+        function toggleWireframe() {
+            wireframes = !wireframes;
+            render.options.wireframes = wireframes;
+            const btn = document.getElementById('wireframeBtn');
+            
+            if (wireframes) {
+                btn.innerHTML = '<span>🔳</span> 实体模式';
+                console.log('🔲 切换到线框模式');
+            } else {
+                btn.innerHTML = '<span>🔲</span> 线框模式';
+                console.log('🔳 切换到实体模式');
+            }
+        }
+        
+        // ========== 视图控制函数 ==========
+        
+        function zoomIn() {
+            zoomLevel *= 1.2;
+            updateZoom();
+            console.log('➕ 放大视图');
+        }
+        
+        function zoomOut() {
+            zoomLevel /= 1.2;
+            updateZoom();
+            console.log('➖ 缩小视图');
+        }
+        
+        function resetView() {
+            zoomLevel = 1.0;
+            updateZoom();
+            console.log('🎯 重置视图');
+        }
+        
+        function updateZoom() {
+            // Matter.js没有内置的缩放功能，这里只是更新显示
+            // 实际应用中可以通过修改render.bounds来实现
+            console.log('当前缩放级别:', zoomLevel.toFixed(2));
+        }
+        
+        function toggleGrid() {
+            isGridVisible = !isGridVisible;
+            const btn = document.getElementById('gridBtn');
+            
+            if (isGridVisible) {
+                btn.innerHTML = '<span>📏</span> 隐藏网格';
+                console.log('📐 显示网格');
+            } else {
+                btn.innerHTML = '<span>📐</span> 显示网格';
+                console.log('📏 隐藏网格');
+            }
+        }
+        
+        // ========== 保存/加载函数 ==========
+        
+        function saveScene() {
+            const scene = {
+                bodies: Matter.Composite.allBodies(engine.world).map(body => ({
+                    type: body.circleRadius ? 'circle' : 'polygon',
+                    position: { x: body.position.x, y: body.position.y },
+                    size: body.circleRadius || { width: body.bounds.max.x - body.bounds.min.x, height: body.bounds.max.y - body.bounds.min.y },
+                    color: body.render.fillStyle,
+                    isStatic: body.isStatic,
+                    label: body.label
+                })),
+                constraints: Matter.Composite.allConstraints(engine.world).map(constraint => ({
+                    type: 'constraint',
+                    length: constraint.length,
+                    stiffness: constraint.stiffness
+                })),
+                timestamp: new Date().toISOString()
+            };
+            
+            const sceneJson = JSON.stringify(scene, null, 2);
+            localStorage.setItem('matterjs_scene', sceneJson);
+            
+            console.log('💾 场景已保存到本地存储');
+            alert('场景已保存到本地存储！');
+        }
+        
+        function loadScene() {
+            const sceneJson = localStorage.getItem('matterjs_scene');
+            if (sceneJson) {
+                try {
+                    const scene = JSON.parse(sceneJson);
+                    
+                    // 清空当前场景
+                    clearScene();
+                    
+                    // 重新创建物体（简化版）
+                    scene.bodies.forEach(bodyData => {
+                        let body;
+                        if (bodyData.type === 'circle') {
+                            body = Matter.Bodies.circle(
+                                bodyData.position.x,
+                                bodyData.position.y,
+                                bodyData.size,
+                                {
+                                    render: { fillStyle: bodyData.color },
+                                    isStatic: bodyData.isStatic,
+                                    label: bodyData.label
+                                }
+                            );
+                        } else {
+                            body = Matter.Bodies.rectangle(
+                                bodyData.position.x,
+                                bodyData.position.y,
+                                bodyData.size.width,
+                                bodyData.size.height,
+                                {
+                                    render: { fillStyle: bodyData.color },
+                                    isStatic: bodyData.isStatic,
+                                    label: bodyData.label
+                                }
+                            );
+                        }
+                        Matter.World.add(engine.world, body);
+                    });
+                    
+                    console.log('📂 场景已从本地存储加载');
+                    alert('场景已加载！');
+                } catch (error) {
+                    console.error('加载场景时出错:', error);
+                    alert('加载场景时出错: ' + error.message);
+                }
+            } else {
+                alert('没有找到保存的场景！');
+            }
+        }
+        
+        function takeScreenshot() {
+            const link = document.createElement('a');
+            link.download = `matterjs_screenshot_${Date.now()}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            
+            console.log('📸 截图已保存');
+        }
+        
+        function recordScene() {
+            isRecording = !isRecording;
+            const btn = document.getElementById('recordBtn');
+            
+            if (isRecording) {
+                btn.innerHTML = '<span>⏹️</span> 停止录制';
+                btn.style.background = 'linear-gradient(135deg, #f72585, #b5179e)';
+                console.log('🎥 开始录制（演示功能）');
+            } else {
+                btn.innerHTML = '<span>🎥</span> 开始录制';
+                btn.style.background = 'linear-gradient(135deg, #4361ee, #3a0ca3)';
+                console.log('⏹️ 停止录制');
+            }
+        }
+        
+        // ========== 工具函数 ==========
+        
+        function selectBody(body) {
+            // 取消之前选中的物体
+            if (selectedBody && selectedBody.render) {
+                selectedBody.render.lineWidth = selectedBody.originalLineWidth || 2;
+                selectedBody.render.strokeStyle = selectedBody.originalStrokeStyle || '#ffffff';
+            }
+            
+            // 如果点击的是已选中的物体，取消选中
+            if (selectedBody === body) {
+                selectedBody = null;
+                updateObjectInfo();
+                updateObjectList();
+                return;
+            }
+            
+            // 选中新物体
+            selectedBody = body;
+            
+            // 保存原始样式并高亮
+            if (body.render) {
+                body.originalLineWidth = body.render.lineWidth;
+                body.originalStrokeStyle = body.render.strokeStyle;
+                body.render.lineWidth = 4;
+                body.render.strokeStyle = '#ffd166';
+            }
+            
+            updateObjectInfo();
+            updateObjectList();
+            
+            console.log('🎯 选中了物体:', body.label);
+        }
+        
+        function updateStats() {
+            const bodies = Matter.Composite.allBodies(engine.world);
+            const constraints = Matter.Composite.allConstraints(engine.world);
+            
+            // 过滤掉边界墙
+            const nonWallBodies = bodies.filter(body => 
+                body.label && !body.label.includes('墙') && 
+                !body.label.includes('地面') && 
+                !body.label.includes('天花板'));
+            
+            // 计算总能量（简化版）
+            totalEnergy = 0;
+            nonWallBodies.forEach(body => {
+                if (!body.isStatic) {
+                    const kinetic = 0.5 * body.mass * (body.velocity.x * body.velocity.x + body.velocity.y * body.velocity.y);
+                    const potential = body.mass * Math.abs(engine.gravity.y) * body.position.y;
+                    totalEnergy += kinetic + potential;
+                }
+            });
+            
+            // 更新显示
+            document.getElementById('totalObjects').textContent = nonWallBodies.length;
+            document.getElementById('totalConstraints').textContent = constraints.length;
+            document.getElementById('totalCollisions').textContent = collisionCount;
+            document.getElementById('totalEnergy').textContent = Math.round(totalEnergy);
+            
+            document.getElementById('objCount').textContent = nonWallBodies.length;
+            document.getElementById('constraintCount').textContent = constraints.length;
+            document.getElementById('collisions').textContent = collisionCount;
+            
+            const runTime = Math.floor((Date.now() - startTime) / 1000);
+            document.getElementById('runTime').textContent = runTime + 's';
+            
+            document.getElementById('selectedType').textContent = selectedBody ? selectedBody.label : '无';
+            
+            document.getElementById('fps').textContent = Math.round(fps);
+        }
+        
+        function updateObjectInfo() {
+            const infoDiv = document.getElementById('objectInfo');
+            
+            if (!selectedBody) {
+                infoDiv.innerHTML = '<p>点击物体查看详细信息</p>';
+                return;
+            }
+            
+            let type = '未知';
+            if (selectedBody.circleRadius) {
+                type = '圆形';
+            } else if (selectedBody.vertices && selectedBody.vertices.length === 4) {
+                type = '矩形';
+            } else if (selectedBody.vertices && selectedBody.vertices.length === 3) {
+                type = '三角形';
+            } else if (selectedBody.vertices && selectedBody.vertices.length > 4) {
+                type = '多边形';
+            } else if (selectedBody.isStatic) {
+                type = '静态物体';
+            }
+            
+            infoDiv.innerHTML = `
+                <div style="margin-bottom: 10px; font-weight: bold; color: #4cc9f0;">${selectedBody.label || '未命名物体'}</div>
+                <div class="info-row">
+                    <span>类型:</span>
+                    <span>${type}</span>
+                </div>
+                <div class="info-row">
+                    <span>位置:</span>
+                    <span>(${selectedBody.position.x.toFixed(1)}, ${selectedBody.position.y.toFixed(1)})</span>
+                </div>
+                <div class="info-row">
+                    <span>速度:</span>
+                    <span>(${selectedBody.velocity.x.toFixed(2)}, ${selectedBody.velocity.y.toFixed(2)})</span>
+                </div>
+                <div class="info-row">
+                    <span>角度:</span>
+                    <span>${(selectedBody.angle * 180 / Math.PI).toFixed(1)}°</span>
+                </div>
+                <div class="info-row">
+                    <span>质量:</span>
+                    <span>${selectedBody.mass ? selectedBody.mass.toFixed(1) : '∞'}</span>
+                </div>
+                <div style="margin-top: 10px; display: flex; gap: 5px;">
+                    <button onclick="deleteSelectedBody()" style="padding: 5px 10px; font-size: 0.8rem; flex: 1;">删除</button>
+                    <button onclick="applyForceToSelected()" style="padding: 5px 10px; font-size: 0.8rem; flex: 1;">施加力</button>
+                </div>
+            `;
+        }
+        
+        function deleteSelectedBody() {
+            if (selectedBody) {
+                Matter.World.remove(engine.world, selectedBody);
+                selectedBody = null;
+                updateStats();
+                updateObjectInfo();
+                console.log('🗑️ 删除了选中物体');
+            }
+        }
+        
+        function applyForceToSelected() {
+            if (selectedBody) {
+                Matter.Body.applyForce(selectedBody, selectedBody.position, {
+                    x: (Math.random() - 0.5) * 0.05,
+                    y: -0.1
+                });
+                console.log('⚡ 对选中物体施加了力');
+            }
+        }
+        
+        function updateObjectList() {
+            const objectList = document.getElementById('objectList');
+            const bodies = Matter.Composite.allBodies(engine.world);
+            
+            // 过滤掉边界墙
+            const nonWallBodies = bodies.filter(body => 
+                body.label && !body.label.includes('墙') && 
+                !body.label.includes('地面') && 
+                !body.label.includes('天花板'));
+            
+            objectList.innerHTML = '';
+            
+            if (nonWallBodies.length === 0) {
+                objectList.innerHTML = '<div class="object-item">暂无物体</div>';
+                return;
+            }
+            
+            nonWallBodies.forEach((body, index) => {
+                const item = document.createElement('div');
+                item.className = 'object-item';
+                if (body === selectedBody) {
+                    item.classList.add('selected');
+                }
+                
+                let icon = '🔵';
+                if (body.circleRadius) {
+                    icon = '🔵';
+                } else if (body.vertices && body.vertices.length === 4) {
+                    icon = '⬜';
+                } else if (body.vertices && body.vertices.length === 3) {
+                    icon = '🔺';
+                } else if (body.vertices && body.vertices.length > 4) {
+                    icon = '⬢';
+                } else if (body.isStatic) {
+                    icon = '🏔️';
+                }
+                
+                item.innerHTML = `
+                    <div>
+                        <div>${icon} ${body.label || '物体' + (index + 1)}</div>
+                        <div style="font-size: 0.7rem; color: #90e0ef;">位置: (${body.position.x.toFixed(0)}, ${body.position.y.toFixed(0)})</div>
+                    </div>
+                `;
+                
+                item.addEventListener('click', () => {
+                    selectBody(body);
+                });
+                
+                objectList.appendChild(item);
+            });
+        }
+        
+        function updateCollisionHistory() {
+            const historyDiv = document.getElementById('collisionHistory');
+            historyDiv.innerHTML = '';
+            
+            if (collisionHistory.length === 0) {
+                historyDiv.innerHTML = '<div style="color: #888; text-align: center;">暂无碰撞</div>';
+                return;
+            }
+            
+            collisionHistory.forEach((collision, index) => {
+                const timeAgo = Math.floor((Date.now() - collision.time) / 1000);
+                const item = document.createElement('div');
+                item.style.padding = '5px';
+                item.style.borderBottom = '1px solid rgba(255,255,255,0.1)';
+                item.style.fontSize = '0.75rem';
+                item.innerHTML = `
+                    <div>${collision.bodyA} ↔ ${collision.bodyB}</div>
+                    <div style="color: #90e0ef; font-size: 0.7rem;">${timeAgo}秒前 | 力度: ${collision.force.toFixed(2)}</div>
+                `;
+                historyDiv.appendChild(item);
+            });
+        }
+        
+        function setupColorPicker() {
+            const colorOptions = document.querySelectorAll('.color-option');
+            colorOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    colorOptions.forEach(o => o.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedColor = this.getAttribute('data-color');
+                    console.log('🎨 选择了颜色:', selectedColor);
+                });
+            });
+        }
+        
+        function setupSliders() {
+            // 重力滑块
+            document.getElementById('gravitySlider').addEventListener('input', function() {
+                const value = parseFloat(this.value);
+                document.getElementById('gravityValue').textContent = value.toFixed(1);
+                engine.gravity.y = value;
+                console.log('⚖️ 重力设置为:', value);
+            });
+            
+            // 摩擦力滑块
+            document.getElementById('frictionSlider').addEventListener('input', function() {
+                const value = parseFloat(this.value);
+                document.getElementById('frictionValue').textContent = value.toFixed(3);
+                
+                // 更新所有物体的空气摩擦力
+                const bodies = Matter.Composite.allBodies(engine.world);
+                bodies.forEach(body => {
+                    if (!body.isStatic) {
+                        body.frictionAir = value;
+                    }
+                });
+                console.log('🌫️ 空气摩擦力设置为:', value);
+            });
+            
+            // 弹性滑块
+            document.getElementById('restitutionSlider').addEventListener('input', function() {
+                const value = parseFloat(this.value);
+                document.getElementById('restitutionValue').textContent = value.toFixed(2);
+                
+                // 更新所有物体的恢复系数
+                const bodies = Matter.Composite.allBodies(engine.world);
+                bodies.forEach(body => {
+                    if (!body.isStatic) {
+                        body.restitution = value;
+                    }
+                });
+                console.log('🏀 弹性系数设置为:', value);
+            });
+            
+            // 时间缩放滑块
+            document.getElementById('timeScaleSlider').addEventListener('input', function() {
+                const value = parseFloat(this.value);
+                document.getElementById('timeScaleValue').textContent = value.toFixed(1);
+                engine.timing.timeScale = value;
+                console.log('⏱️ 时间缩放设置为:', value);
+            });
+        }
+        
+        function switchTab(tabName) {
+            // 更新标签
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 激活选中的标签
+            event.target.classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            
+            console.log('📂 切换到标签:', tabName);
+        }
+        
+        function toggleDebug() {
+            debugMode = !debugMode;
+            const debugInfo = document.getElementById('debugInfo');
+            
+            if (debugMode) {
+                debugInfo.innerHTML = `
+                    <div>调试模式已开启</div>
+                    <div style="font-size: 0.8rem; margin-top: 5px;">
+                        引擎: ${engine ? '运行中' : '未运行'}<br>
+                        渲染器: ${render ? '正常' : '异常'}<br>
+                        物体数: ${Matter.Composite.allBodies(engine.world).length}<br>
+                        约束数: ${Matter.Composite.allConstraints(engine.world).length}
+                    </div>
+                `;
+                console.log('🔧 调试模式已开启');
+            } else {
+                debugInfo.textContent = '系统正常';
+                console.log('🔧 调试模式已关闭');
+            }
+        }
+        
+        // FPS计算
+        function calculateFPS() {
+            frameCount++;
+            const now = Date.now();
+            const delta = now - lastTime;
+            
+            if (delta >= 1000) {
+                fps = (frameCount * 1000) / delta;
+                frameCount = 0;
+                lastTime = now;
+            }
+            
+            // 风力效果
+            if (isWindActive) {
+                const bodies = Matter.Composite.allBodies(engine.world).filter(body => 
+                    !body.isStatic && body.label && 
+                    !body.label.includes('墙') && 
+                    !body.label.includes('地面') && 
+                    !body.label.includes('天花板'));
+                
+                bodies.forEach(body => {
+                    Matter.Body.applyForce(body, body.position, {
+                        x: 0.002,
+                        y: 0
+                    });
+                });
+            }
+            
+            // 网格显示（简化版）
+            if (isGridVisible && debugMode) {
+                const ctx = canvas.getContext('2d');
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                ctx.lineWidth = 1;
+                
+                // 绘制网格线
+                const gridSize = 50;
+                for (let x = 0; x < canvas.width; x += gridSize) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, canvas.height);
+                    ctx.stroke();
+                }
+                for (let y = 0; y < canvas.height; y += gridSize) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(canvas.width, y);
+                    ctx.stroke();
+                }
+            }
+            
+            // 更新统计信息
+            updateStats();
+            updateObjectList();
+            
+            requestAnimationFrame(calculateFPS);
+        }
+        
+        // 键盘控制
+        document.addEventListener('keydown', function(event) {
+            // 空格键暂停/继续
+            if (event.code === 'Space') {
+                event.preventDefault();
+                togglePause();
+            }
+            
+            // Delete键删除选中物体
+            if (event.code === 'Delete' && selectedBody) {
+                deleteSelectedBody();
+            }
+            
+            // 方向键控制重力
+            if (event.code === 'ArrowUp') {
+                engine.gravity.y = Math.max(0, engine.gravity.y - 0.1);
+                document.getElementById('gravitySlider').value = engine.gravity.y;
+                document.getElementById('gravityValue').textContent = engine.gravity.y.toFixed(1);
+                console.log('⬆️ 重力减小为:', engine.gravity.y);
+            }
+            
+            if (event.code === 'ArrowDown') {
+                engine.gravity.y = Math.min(2, engine.gravity.y + 0.1);
+                document.getElementById('gravitySlider').value = engine.gravity.y;
+                document.getElementById('gravityValue').textContent = engine.gravity.y.toFixed(1);
+                console.log('⬇️ 重力增加为:', engine.gravity.y);
+            }
+            
+            // Ctrl+S保存场景
+            if (event.ctrlKey && event.code === 'KeyS') {
+                event.preventDefault();
+                saveScene();
+            }
+            
+            // Ctrl+L加载场景
+            if (event.ctrlKey && event.code === 'KeyL') {
+                event.preventDefault();
+                loadScene();
+            }
+        });
+        
+        // 窗口大小调整
+        window.addEventListener('resize', function() {
+            const simulationArea = document.getElementById('simulationArea');
+            canvas.width = simulationArea.clientWidth;
+            canvas.height = simulationArea.clientHeight;
+            
+            if (render) {
+                render.options.width = canvas.width;
+                render.options.height = canvas.height;
+            }
+            
+            console.log('🔄 窗口大小调整:', canvas.width, 'x', canvas.height);
+        });
+        
+        // 页面加载
+        window.onload = function() {
+            console.log('🚀 页面加载完成，开始加载Matter.js...');
+            loadMatterJS(function() {
+                console.log('✅ Matter.js加载成功，版本:', Matter.version);
+                init();
+            });
+        };
+    </script>
+</body>
+</html>

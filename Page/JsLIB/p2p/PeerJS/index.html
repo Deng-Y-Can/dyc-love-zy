@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>纯前端协作编辑器</title>
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <style>
+        #editor {
+            width: 100%;
+            height: 300px;
+        }
+
+        .remote {
+            background: #f0f0f0;
+            margin: 5px;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <input id="peerId" placeholder="输入对方ID">
+        <button onclick="connect()">连接</button>
+        <div>我的ID: <span id="myId"></span></div>
+    </div>
+    <textarea id="editor" oninput="sync()"></textarea>
+    <div id="remotes"></div>
+
+    <script>
+        // 生成唯一ID
+        const myId = 'user_' + Math.random().toString(36).substr(2, 9);
+        document.getElementById('myId').textContent = myId;
+
+        // 创建Peer
+        const peer = new Peer(myId, {
+            host: '0.peerjs.com',
+            port: 443,
+            path: '/'
+        });
+
+        let connections = {};
+        let lastContent = '';
+
+        // 监听连接
+        peer.on('connection', (conn) => {
+            setupConnection(conn);
+        });
+
+        // 连接到其他Peer
+        function connect() {
+            const remoteId = document.getElementById('peerId').value;
+            const conn = peer.connect(remoteId);
+            setupConnection(conn);
+        }
+
+        function setupConnection(conn) {
+            connections[conn.peer] = conn;
+
+            conn.on('open', () => {
+                // 发送当前内容给新连接
+                const content = document.getElementById('editor').value;
+                conn.send({ type: 'sync', content });
+                addRemoteView(conn.peer);
+            });
+
+            conn.on('data', (data) => {
+                if (data.type === 'edit') {
+                    updateContent(data.content, data.position, conn.peer);
+                } else if (data.type === 'sync') {
+                    document.getElementById('editor').value = data.content;
+                }
+            });
+        }
+
+        function sync() {
+            const content = document.getElementById('editor').value;
+            const position = document.getElementById('editor').selectionStart;
+
+            // 广播给所有连接
+            Object.values(connections).forEach(conn => {
+                conn.send({
+                    type: 'edit',
+                    content: content,
+                    position: position
+                });
+            });
+
+            // 保存到本地存储
+            localStorage.setItem('collab_doc', content);
+            lastContent = content;
+        }
+
+        function updateContent(content, position, from) {
+            const editor = document.getElementById('editor');
+            editor.value = content;
+
+            // 标记更新来源
+            document.querySelector(`.remote[data-peer="${from}"]`)?.classList.add('updated');
+            setTimeout(() => {
+                document.querySelector(`.remote[data-peer="${from}"]`)?.classList.remove('updated');
+            }, 500);
+        }
+
+        function addRemoteView(peerId) {
+            const div = document.createElement('div');
+            div.className = 'remote';
+            div.dataset.peer = peerId;
+            div.textContent = `已连接: ${peerId}`;
+            document.getElementById('remotes').appendChild(div);
+        }
+
+        // 从本地存储加载
+        window.onload = () => {
+            const saved = localStorage.getItem('collab_doc');
+            if (saved) {
+                document.getElementById('editor').value = saved;
+                lastContent = saved;
+            }
+        };
+    </script>
+</body>
+</html>

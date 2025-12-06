@@ -1,0 +1,2122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GSAP量子实验室 Pro | 终极动画体验</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/TextPlugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/MotionPathPlugin.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/Draggable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/Flip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/Observer.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        /* 定义颜色变量 */
+        :root {
+            --primary: #00f3ff;
+            --secondary: #ff00ff;
+            --accent: #00ff9d;
+            --warning: #ffcc00;
+            --danger: #ff3366;
+            --dark: #0a0a1a;
+            --darker: #050510;
+            --light: #e0f7ff;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            --glow: 0 0 20px rgba(0, 243, 255, 0.5);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'JetBrains Mono', monospace;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 50%, #120e2b 100%);
+            color: var(--light);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-attachment: fixed;
+        }
+        
+        /* 背景特效 */
+        #bgCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* 动态标题 */
+        .dynamic-title {
+            text-align: center;
+            padding: 60px 0 40px;
+            position: relative;
+        }
+        
+        .title-wrapper {
+            display: inline-block;
+            position: relative;
+        }
+        
+        .main-title {
+            font-size: 4.5rem;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: transparent;
+            -webkit-text-stroke: 2px var(--primary);
+            text-shadow: 0 0 15px var(--primary),
+                         0 0 30px var(--primary),
+                         0 0 45px var(--primary);
+            position: relative;
+            display: inline-block;
+            background: linear-gradient(90deg, 
+                var(--primary), 
+                var(--secondary), 
+                var(--accent),
+                var(--primary));
+            background-size: 300% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: titleGradient 8s linear infinite;
+        }
+        
+        @keyframes titleGradient {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 300% 50%; }
+        }
+        
+        .subtitle {
+            font-size: 1.4rem;
+            color: #a0b4ff;
+            max-width: 800px;
+            margin: 0 auto 30px;
+            line-height: 1.6;
+            text-align: center;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+        
+        /* 实验室布局 */
+        .lab-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            gap: 25px;
+            margin: 40px 0;
+        }
+        
+        @media (max-width: 1400px) {
+            .lab-layout {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto;
+            }
+        }
+        
+        /* 左侧面板 - AI控制 */
+        .ai-panel {
+            background: var(--glass);
+            border-radius: 20px;
+            padding: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow), inset 0 0 50px rgba(0, 243, 255, 0.05);
+            height: fit-content;
+        }
+        
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .ai-icon {
+            font-size: 2rem;
+            color: var(--accent);
+            animation: aiPulse 2s infinite;
+        }
+        
+        @keyframes aiPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .panel-title {
+            font-size: 1.4rem;
+            color: var(--primary);
+        }
+        
+        .ai-input-group {
+            margin-bottom: 20px;
+        }
+        
+        .ai-input {
+            width: 100%;
+            background: rgba(5, 5, 20, 0.7);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            border-radius: 10px;
+            padding: 12px 15px;
+            color: var(--light);
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+        
+        .ai-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
+        }
+        
+        .ai-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--accent), #00cc7a);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+        }
+        
+        .ai-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 255, 157, 0.3);
+        }
+        
+        .ai-response {
+            background: rgba(5, 5, 20, 0.7);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .ai-response-text {
+            color: #a0b4ff;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        /* 主舞台 */
+        .main-stage {
+            background: var(--glass);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow), inset 0 0 50px rgba(0, 243, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+            min-height: 700px;
+        }
+        
+        .stage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .stage-title {
+            font-size: 1.8rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .stage-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        /* 增强型3D舞台 */
+        .enhanced-stage {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            background: rgba(5, 5, 20, 0.7);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5),
+                        0 0 50px rgba(0, 243, 255, 0.1);
+        }
+        
+        /* 3D对象样式 */
+        .object-3d {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: move;
+            transition: all 0.3s;
+            filter: drop-shadow(0 0 10px currentColor);
+            z-index: 10;
+        }
+        
+        .object-3d:hover {
+            transform: scale(1.1);
+            z-index: 100;
+        }
+        
+        .quantum-object {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, var(--primary), #0066ff);
+            border-radius: 20px;
+        }
+        
+        .energy-sphere {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, var(--secondary), #9900ff);
+            box-shadow: 0 0 30px var(--secondary);
+        }
+        
+        .data-pyramid {
+            width: 0;
+            height: 0;
+            border-left: 50px solid transparent;
+            border-right: 50px solid transparent;
+            border-bottom: 80px solid var(--accent);
+            background: transparent !important;
+            position: relative;
+        }
+        
+        .data-pyramid::before {
+            content: '';
+            position: absolute;
+            top: 30px;
+            left: -50px;
+            width: 100px;
+            height: 2px;
+            background: rgba(0, 255, 157, 0.5);
+        }
+        
+        .neon-ring {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            border: 4px solid var(--primary);
+            box-shadow: 0 0 20px var(--primary),
+                        inset 0 0 20px var(--primary);
+            background: transparent;
+            position: relative;
+        }
+        
+        .neon-ring::before {
+            content: '';
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 15px var(--primary),
+                        inset 0 0 15px var(--primary);
+        }
+        
+        .hologram-disk {
+            width: 100px;
+            height: 100px;
+            background: conic-gradient(from 0deg, 
+                transparent 0%, 
+                rgba(0, 243, 255, 0.3) 25%, 
+                transparent 50%, 
+                rgba(255, 0, 255, 0.3) 75%, 
+                transparent 100%);
+            border-radius: 50%;
+            position: relative;
+            animation: diskRotate 10s linear infinite;
+        }
+        
+        @keyframes diskRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .crystal {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #ff00ff, #00ffff);
+            clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+        }
+        
+        .particle-emitter {
+            width: 70px;
+            height: 70px;
+            background: radial-gradient(circle, #ffcc00, #ff6600);
+            border-radius: 50%;
+            position: relative;
+        }
+        
+        .particle-emitter::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, transparent 30%, rgba(255, 204, 0, 0.3) 70%);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+        
+        /* 音频可视化容器 */
+        .audio-visualizer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 5;
+        }
+        
+        /* 手势检测区域 */
+        .gesture-area {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 243, 255, 0.1);
+            border: 1px dashed var(--primary);
+            border-radius: 10px;
+            padding: 10px;
+            z-index: 20;
+            backdrop-filter: blur(5px);
+        }
+        
+        .gesture-status {
+            color: var(--primary);
+            font-size: 0.8rem;
+            text-align: center;
+        }
+        
+        /* 右侧面板 - 高级控制 */
+        .advanced-controls {
+            background: var(--glass);
+            border-radius: 20px;
+            padding: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow);
+            height: fit-content;
+        }
+        
+        /* 模式选择器 */
+        .mode-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        
+        .mode-btn {
+            background: rgba(0, 243, 255, 0.1);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            color: var(--light);
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        
+        .mode-btn:hover {
+            background: rgba(0, 243, 255, 0.2);
+            border-color: var(--primary);
+        }
+        
+        .mode-btn.active {
+            background: rgba(0, 243, 255, 0.3);
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
+        }
+        
+        /* 实验网格 */
+        .experiments-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin: 40px 0;
+        }
+        
+        .experiment-card {
+            background: var(--glass);
+            border-radius: 20px;
+            padding: 25px;
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        
+        .experiment-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+        
+        .experiment-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4),
+                        0 0 30px rgba(0, 243, 255, 0.2);
+            border-color: rgba(0, 243, 255, 0.4);
+        }
+        
+        .experiment-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--danger);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        
+        /* AR预览面板 */
+        .ar-preview {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90vw;
+            height: 90vh;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 20px;
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .ar-header {
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .ar-close {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        
+        .ar-container {
+            flex: 1;
+            position: relative;
+        }
+        
+        /* 数据流面板 */
+        .data-stream {
+            background: rgba(5, 5, 20, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .data-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .data-label {
+            color: #a0b4ff;
+        }
+        
+        .data-value {
+            color: var(--primary);
+            font-weight: bold;
+        }
+        
+        /* 物理引擎指示器 */
+        .physics-indicator {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 255, 157, 0.2);
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            color: var(--accent);
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* 导出面板 */
+        .export-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(5, 5, 30, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            z-index: 1001;
+            display: none;
+            min-width: 500px;
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        
+        .export-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .export-option {
+            background: rgba(0, 243, 255, 0.1);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .export-option:hover {
+            background: rgba(0, 243, 255, 0.2);
+            border-color: var(--primary);
+        }
+        
+        /* 按钮样式 */
+        .quantum-btn {
+            background: linear-gradient(135deg, rgba(0, 243, 255, 0.1), rgba(255, 0, 255, 0.1));
+            color: var(--light);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            padding: 12px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: 0.5px;
+        }
+        
+        .quantum-btn:hover {
+            background: linear-gradient(135deg, rgba(0, 243, 255, 0.2), rgba(255, 0, 255, 0.2));
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        /* 实验按钮 */
+        .experiment-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            width: 100%;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+        
+        .experiment-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 243, 255, 0.3);
+        }
+        
+        /* 实验图标 */
+        .experiment-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px var(--primary);
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 1400px) {
+            .lab-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-title {
+                font-size: 3.5rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .main-title {
+                font-size: 2.5rem;
+            }
+            
+            .experiments-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .mode-selector {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .main-title {
+                font-size: 2rem;
+            }
+            
+            .mode-selector {
+                grid-template-columns: 1fr;
+            }
+            
+            .export-panel {
+                min-width: 90vw;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 3D背景 -->
+    <canvas id="bgCanvas"></canvas>
+    
+    <div class="container">
+        <header class="dynamic-title">
+            <div class="title-wrapper">
+                <h1 class="main-title">GSAP量子实验室 PRO</h1>
+            </div>
+            <p class="subtitle">终极动画体验 - 集成AI、物理模拟、手势控制、AR预览等高级功能</p>
+        </header>
+        
+        <div class="lab-layout">
+            <!-- 左侧AI面板 -->
+            <section class="ai-panel">
+                <div class="panel-header">
+                    <i class="fas fa-robot ai-icon"></i>
+                    <h3 class="panel-title">AI动画助手</h3>
+                </div>
+                
+                <div class="ai-input-group">
+                    <input type="text" class="ai-input" id="aiPrompt" 
+                           placeholder="描述您想要的动画效果..." 
+                           value="创建优雅的旋转舞蹈动画">
+                    <button class="ai-btn" id="generateAnimation">
+                        <i class="fas fa-magic"></i> 生成动画
+                    </button>
+                </div>
+                
+                <div class="ai-input-group">
+                    <input type="text" class="ai-input" id="styleTransfer" 
+                           placeholder="输入风格参考（如：赛博朋克、复古、流体）">
+                    <button class="ai-btn" id="applyStyle">
+                        <i class="fas fa-paint-brush"></i> 应用风格
+                    </button>
+                </div>
+                
+                <div class="ai-response">
+                    <div class="ai-response-text" id="aiResponse">
+                        等待AI生成动画效果... 请描述您想要的动画效果，AI将自动生成GSAP代码。
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 主舞台 -->
+            <section class="main-stage">
+                <div class="stage-header">
+                    <h2 class="stage-title">
+                        <i class="fas fa-vr-cardboard"></i> 增强现实舞台
+                    </h2>
+                    <div class="stage-controls">
+                        <button class="quantum-btn" id="arPreviewBtn">
+                            <i class="fas fa-cube"></i> AR预览
+                        </button>
+                        <button class="quantum-btn" id="captureStage">
+                            <i class="fas fa-camera"></i> 捕捉场景
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 增强型3D舞台 -->
+                <div class="enhanced-stage" id="enhancedStage">
+                    <!-- 3D对象 -->
+                    <div class="object-3d quantum-object" id="mainObject">
+                        <i class="fas fa-atom"></i>
+                    </div>
+                    
+                    <!-- 更多对象将通过JS动态生成 -->
+                    
+                    <!-- 音频可视化 -->
+                    <canvas class="audio-visualizer" id="audioVisualizer"></canvas>
+                    
+                    <!-- 连接线 -->
+                    <svg id="connections" width="100%" height="100%" style="position: absolute; top: 0; left: 0; z-index: 5; pointer-events: none;"></svg>
+                </div>
+                
+                <!-- 数据流 -->
+                <div class="data-stream">
+                    <h4 style="color: #00f3ff; margin-bottom: 15px;">实时数据流</h4>
+                    <div class="data-item">
+                        <span class="data-label">对象数量</span>
+                        <span class="data-value" id="objectCount">0</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="data-label">动画复杂度</span>
+                        <span class="data-value" id="complexityScore">0%</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="data-label">系统性能</span>
+                        <span class="data-value" id="performanceScore">100%</span>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 右侧高级控制 -->
+            <section class="advanced-controls">
+                <h3 class="panel-title">
+                    <i class="fas fa-sliders-h"></i> 高级控制面板
+                </h3>
+                
+                <!-- 模式选择器 -->
+                <div class="mode-selector">
+                    <button class="mode-btn active" data-mode="dance">舞蹈模式</button>
+                    <button class="mode-btn" data-mode="physics">物理模拟</button>
+                    <button class="mode-btn" data-mode="magnetic">磁场模拟</button>
+                    <button class="mode-btn" data-mode="quantum">量子效应</button>
+                    <button class="mode-btn" data-mode="chaos">混沌模式</button>
+                    <button class="mode-btn" data-mode="custom">自定义</button>
+                </div>
+                
+                <!-- 动画参数 -->
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>动画速度</span>
+                        <span class="slider-value" id="speedValue">1.0x</span>
+                    </div>
+                    <input type="range" min="0.1" max="3" step="0.1" value="1" class="quantum-slider" id="speedSlider">
+                </div>
+                
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>对象大小</span>
+                        <span class="slider-value" id="sizeValue">100%</span>
+                    </div>
+                    <input type="range" min="50" max="200" step="10" value="100" class="quantum-slider" id="sizeSlider">
+                </div>
+                
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>连接强度</span>
+                        <span class="slider-value" id="connectionValue">70%</span>
+                    </div>
+                    <input type="range" min="0" max="100" step="10" value="70" class="quantum-slider" id="connectionSlider">
+                </div>
+                
+                <!-- 控制按钮 -->
+                <button class="ai-btn" id="addObjectBtn" style="margin-top: 20px;">
+                    <i class="fas fa-plus"></i> 添加对象
+                </button>
+                
+                <button class="ai-btn" id="removeObjectBtn" style="margin-top: 10px; background: linear-gradient(135deg, #ff3366, #ff0066);">
+                    <i class="fas fa-minus"></i> 移除对象
+                </button>
+                
+                <button class="ai-btn" id="exportBtn" style="margin-top: 25px; background: linear-gradient(135deg, #ffcc00, #ff9900);">
+                    <i class="fas fa-file-export"></i> 导出项目
+                </button>
+                
+                <!-- 性能监控 -->
+                <div style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 10px;">
+                    <div style="color: #00f3ff; margin-bottom: 10px; font-weight: bold;">性能监控</div>
+                    <div class="data-item">
+                        <span class="data-label">FPS</span>
+                        <span class="data-value" id="fpsCounter">60</span>
+                    </div>
+                    <div class="data-item">
+                        <span class="data-label">内存</span>
+                        <span class="data-value" id="memoryValue">低</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+        
+        <!-- 实验区 -->
+        <section class="experiments-grid">
+            <div class="experiment-card" data-experiment="solarFlare">
+                <div class="experiment-badge">NEW</div>
+                <div class="experiment-icon">
+                    <i class="fas fa-sun"></i>
+                </div>
+                <h3 class="experiment-title">太阳耀斑</h3>
+                <p class="experiment-desc">模拟太阳耀斑爆发的壮观场景，包含粒子喷射和能量波动效果。</p>
+                <button class="experiment-btn" onclick="startSolarFlare()">启动实验</button>
+            </div>
+            
+            <div class="experiment-card" data-experiment="fluidSimulation">
+                <div class="experiment-badge">PHYSICS</div>
+                <div class="experiment-icon">
+                    <i class="fas fa-tint"></i>
+                </div>
+                <h3 class="experiment-title">流体模拟</h3>
+                <p class="experiment-desc">高级流体动力学模拟，展示液体的流动、融合和分离效果。</p>
+                <button class="experiment-btn" onclick="startFluidSimulation()">启动实验</button>
+            </div>
+            
+            <div class="experiment-card" data-experiment="magneticField">
+                <div class="experiment-badge">SCIENCE</div>
+                <div class="experiment-icon">
+                    <i class="fas fa-magnet"></i>
+                </div>
+                <h3 class="experiment-title">磁场模拟</h3>
+                <p class="experiment-desc">可视化磁场线，展示磁力吸引和排斥的物理效果。</p>
+                <button class="experiment-btn" onclick="startMagneticField()">启动实验</button>
+            </div>
+            
+            <div class="experiment-card" data-experiment="fractal">
+                <div class="experiment-badge">MATH</div>
+                <div class="experiment-icon">
+                    <i class="fas fa-infinity"></i>
+                </div>
+                <h3 class="experiment-title">分形宇宙</h3>
+                <p class="experiment-desc">生成无限递归的分形图案，展示数学之美和无限可能性。</p>
+                <button class="experiment-btn" onclick="startFractal()">启动实验</button>
+            </div>
+            
+            <div class="experiment-card" data-experiment="lightning">
+                <div class="experiment-badge">NATURE</div>
+                <div class="experiment-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h3 class="experiment-title">闪电网络</h3>
+                <p class="experiment-desc">模拟闪电在物体间跳跃的效果，包含随机分支和能量传导。</p>
+                <button class="experiment-btn" onclick="startLightning()">启动实验</button>
+            </div>
+            
+            <div class="experiment-card" data-experiment="blackHole">
+                <div class="experiment-badge">SPACE</div>
+                <div class="experiment-icon">
+                    <i class="fas fa-ring"></i>
+                </div>
+                <h3 class="experiment-title">黑洞效应</h3>
+                <p class="experiment-desc">模拟黑洞的引力透镜效应和物体被吸入事件视界的过程。</p>
+                <button class="experiment-btn" onclick="startBlackHole()">启动实验</button>
+            </div>
+        </section>
+        
+        <!-- 导出面板 -->
+        <div class="export-panel" id="exportPanel">
+            <h3 style="color: #00f3ff; margin-bottom: 20px;">导出项目</h3>
+            
+            <div class="export-options">
+                <div class="export-option" data-format="gsap">
+                    <div style="font-weight: bold; color: #00f3ff;">GSAP代码</div>
+                    <div style="font-size: 0.9rem; color: #a0b4ff; margin-top: 5px;">导出完整的GSAP时间轴代码</div>
+                </div>
+                
+                <div class="export-option" data-format="json">
+                    <div style="font-weight: bold; color: #00f3ff;">JSON配置</div>
+                    <div style="font-size: 0.9rem; color: #a0b4ff; margin-top: 5px;">导出动画参数配置文件</div>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="ai-btn" id="confirmExport" style="flex: 1;">确认导出</button>
+                <button class="ai-btn" id="cancelExport" style="flex: 1; background: linear-gradient(135deg, #666, #999);">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化所有插件
+        gsap.registerPlugin(ScrollTrigger, TextPlugin, MotionPathPlugin, Draggable, Flip, Observer);
+        
+        // 获取DOM元素
+        const enhancedStage = document.getElementById('enhancedStage');
+        const audioVisualizer = document.getElementById('audioVisualizer');
+        const aiPrompt = document.getElementById('aiPrompt');
+        const generateAnimationBtn = document.getElementById('generateAnimation');
+        const aiResponse = document.getElementById('aiResponse');
+        const exportPanel = document.getElementById('exportPanel');
+        const exportBtn = document.getElementById('exportBtn');
+        const cancelExport = document.getElementById('cancelExport');
+        const confirmExport = document.getElementById('confirmExport');
+        const addObjectBtn = document.getElementById('addObjectBtn');
+        const removeObjectBtn = document.getElementById('removeObjectBtn');
+        const speedSlider = document.getElementById('speedSlider');
+        const sizeSlider = document.getElementById('sizeSlider');
+        const connectionSlider = document.getElementById('connectionSlider');
+        
+        // 全局变量
+        let objects3d = [];
+        let currentMode = 'dance';
+        let animationSpeed = 1.0;
+        let objectSize = 1.0;
+        let connectionStrength = 0.7;
+        let frameCount = 0;
+        let lastTime = Date.now();
+        let isAudioActive = false;
+        
+        // 初始化函数
+        function init() {
+            create3DBackground();
+            setupEventListeners();
+            setupAudioVisualizer();
+            setupObjects();
+            setupPerformanceMonitor();
+            updateDataStream();
+            
+            // 启动主循环
+            startMainLoop();
+            
+            console.log('GSAP量子实验室PRO已初始化');
+        }
+        
+        // 创建3D背景
+        function create3DBackground() {
+            const canvas = document.getElementById('bgCanvas');
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            
+            // 创建场景
+            const scene = new THREE.Scene();
+            
+            // 创建相机
+            const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+            camera.position.z = 5;
+            
+            // 创建渲染器
+            const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+            renderer.setSize(width, height);
+            renderer.setClearColor(0x000000, 0);
+            
+            // 创建星云效果
+            const particleCount = 800;
+            const particles = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            const colors = new Float32Array(particleCount * 3);
+            
+            for (let i = 0; i < particleCount; i++) {
+                const i3 = i * 3;
+                
+                // 随机位置
+                const radius = 25;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                
+                positions[i3] = radius * Math.sin(phi) * Math.cos(theta);
+                positions[i3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+                positions[i3 + 2] = radius * Math.cos(phi);
+                
+                // 随机颜色（蓝紫色调）
+                colors[i3] = 0.2 + Math.random() * 0.3; // R
+                colors[i3 + 1] = 0.1 + Math.random() * 0.2; // G
+                colors[i3 + 2] = 0.8 + Math.random() * 0.2; // B
+            }
+            
+            particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            particles.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+            
+            // 粒子材质
+            const particleMaterial = new THREE.PointsMaterial({
+                size: 0.1,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.6,
+                sizeAttenuation: true
+            });
+            
+            // 创建粒子系统
+            const particleSystem = new THREE.Points(particles, particleMaterial);
+            scene.add(particleSystem);
+            
+            // 动画循环
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                // 旋转粒子系统
+                particleSystem.rotation.x += 0.0003;
+                particleSystem.rotation.y += 0.0005;
+                
+                // 渲染
+                renderer.render(scene, camera);
+            }
+            
+            animate();
+            
+            // 窗口大小调整
+            window.addEventListener('resize', () => {
+                const width = window.innerWidth;
+                const height = window.innerHeight;
+                
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+                renderer.setSize(width, height);
+            });
+        }
+        
+        // 设置音频可视化 - 修复颜色问题
+        function setupAudioVisualizer() {
+            const canvas = audioVisualizer;
+            const ctx = canvas.getContext('2d');
+            
+            // 设置Canvas尺寸
+            canvas.width = enhancedStage.offsetWidth;
+            canvas.height = 100;
+            
+            // 绘制静态可视化
+            function drawVisualizer() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // 使用十六进制颜色，而不是CSS变量
+                const primaryColor = '#00f3ff';
+                const secondaryColor = '#ff00ff';
+                const accentColor = '#00ff9d';
+                
+                if (!isAudioActive) {
+                    // 绘制默认波形
+                    const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+                    gradient.addColorStop(0, primaryColor);
+                    gradient.addColorStop(0.5, secondaryColor);
+                    gradient.addColorStop(1, accentColor);
+                    
+                    ctx.fillStyle = gradient;
+                    
+                    for (let i = 0; i < canvas.width; i += 5) {
+                        const height = 30 + Math.sin(i * 0.05 + Date.now() * 0.005) * 20;
+                        ctx.fillRect(i, canvas.height/2 - height/2, 3, height);
+                    }
+                } else {
+                    // 绘制模拟音频数据
+                    const barCount = 64;
+                    const barWidth = canvas.width / barCount;
+                    
+                    for (let i = 0; i < barCount; i++) {
+                        // 生成模拟音频数据
+                        const time = Date.now() * 0.005;
+                        const barHeight = 20 + Math.sin(i * 0.3 + time) * 15 + 
+                                         Math.sin(i * 0.7 + time * 1.3) * 10;
+                        
+                        const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                        gradient.addColorStop(0, primaryColor);
+                        gradient.addColorStop(1, secondaryColor);
+                        
+                        ctx.fillStyle = gradient;
+                        ctx.fillRect(i * barWidth, canvas.height - barHeight, barWidth - 1, barHeight);
+                    }
+                }
+                
+                requestAnimationFrame(drawVisualizer);
+            }
+            
+            drawVisualizer();
+            
+            // 窗口大小调整
+            window.addEventListener('resize', () => {
+                canvas.width = enhancedStage.offsetWidth;
+            });
+        }
+        
+        // 设置对象
+        function setupObjects() {
+            // 创建初始对象
+            const objectTypes = [
+                { class: 'quantum-object', icon: 'fas fa-atom', color: '#00f3ff' },
+                { class: 'energy-sphere', icon: 'fas fa-globe-americas', color: '#ff00ff' },
+                { class: 'data-pyramid', icon: 'fas fa-project-diagram', color: '#00ff9d' },
+                { class: 'neon-ring', icon: 'fas fa-circle-notch', color: '#00f3ff' },
+                { class: 'hologram-disk', icon: 'fas fa-compact-disc', color: '#ff00ff' }
+            ];
+            
+            // 创建5个初始对象
+            for (let i = 0; i < 5; i++) {
+                createObject(i);
+            }
+            
+            updateObjectCount();
+            
+            // 初始动画
+            objects3d.forEach((obj, i) => {
+                gsap.from(obj, {
+                    duration: 1,
+                    scale: 0,
+                    rotation: 360,
+                    opacity: 0,
+                    delay: i * 0.2,
+                    ease: "back.out(1.7)"
+                });
+            });
+            
+            // 启动舞蹈模式
+            setMode('dance');
+        }
+        
+        // 创建对象
+        function createObject(index) {
+            const objectTypes = [
+                { class: 'quantum-object', icon: 'fas fa-atom' },
+                { class: 'energy-sphere', icon: 'fas fa-globe-americas' },
+                { class: 'data-pyramid', icon: 'fas fa-project-diagram' },
+                { class: 'neon-ring', icon: 'fas fa-circle-notch' },
+                { class: 'hologram-disk', icon: 'fas fa-compact-disc' },
+                { class: 'crystal', icon: 'fas fa-gem' },
+                { class: 'particle-emitter', icon: 'fas fa-fire' }
+            ];
+            
+            const type = objectTypes[index % objectTypes.length];
+            const obj = document.createElement('div');
+            obj.className = `object-3d ${type.class}`;
+            obj.innerHTML = `<i class="${type.icon}"></i>`;
+            obj.id = `object-${objects3d.length}`;
+            
+            // 随机位置
+            const x = 20 + Math.random() * 60;
+            const y = 20 + Math.random() * 60;
+            
+            // 设置样式
+            obj.style.left = `${x}%`;
+            obj.style.top = `${y}%`;
+            
+            enhancedStage.appendChild(obj);
+            objects3d.push(obj);
+            
+            // 使对象可拖拽
+            Draggable.create(obj, {
+                bounds: enhancedStage,
+                edgeResistance: 0.8,
+                type: "x,y",
+                onDrag: updateConnections
+            });
+            
+            return obj;
+        }
+        
+        // 设置事件监听器
+        function setupEventListeners() {
+            // AI控制
+            generateAnimationBtn.addEventListener('click', generateAnimationFromAI);
+            document.getElementById('applyStyle').addEventListener('click', applyStyleTransfer);
+            
+            // 模式选择
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const mode = this.dataset.mode;
+                    setMode(mode);
+                });
+            });
+            
+            // 控制按钮
+            addObjectBtn.addEventListener('click', addObject);
+            removeObjectBtn.addEventListener('click', removeObject);
+            
+            // 滑块控制
+            speedSlider.addEventListener('input', updateSpeed);
+            sizeSlider.addEventListener('input', updateSize);
+            connectionSlider.addEventListener('input', updateConnections);
+            
+            // 导出功能
+            exportBtn.addEventListener('click', openExportPanel);
+            cancelExport.addEventListener('click', closeExportPanel);
+            confirmExport.addEventListener('click', exportProject);
+            
+            // 点击舞台添加新对象
+            enhancedStage.addEventListener('click', function(e) {
+                if (e.target === enhancedStage) {
+                    createObjectAtPosition(e.offsetX, e.offsetY);
+                }
+            });
+            
+            // AR预览
+            document.getElementById('arPreviewBtn').addEventListener('click', openARPreview);
+            document.getElementById('captureStage').addEventListener('click', captureStage);
+        }
+        
+        // 设置模式
+        function setMode(mode) {
+            currentMode = mode;
+            
+            // 更新按钮状态
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === mode);
+            });
+            
+            // 停止所有现有动画
+            objects3d.forEach(obj => {
+                gsap.killTweensOf(obj);
+            });
+            
+            // 应用模式效果
+            switch(mode) {
+                case 'dance':
+                    enableDanceMode();
+                    break;
+                case 'physics':
+                    enablePhysicsMode();
+                    break;
+                case 'magnetic':
+                    enableMagneticMode();
+                    break;
+                case 'quantum':
+                    enableQuantumMode();
+                    break;
+                case 'chaos':
+                    enableChaosMode();
+                    break;
+                case 'custom':
+                    enableCustomMode();
+                    break;
+            }
+            
+            updateConnections();
+        }
+        
+        // 启用舞蹈模式
+        function enableDanceMode() {
+            objects3d.forEach((obj, index) => {
+                const delay = index * 0.2;
+                const duration = 2 + Math.random() * 2;
+                
+                // 旋转动画
+                gsap.to(obj, {
+                    duration: duration,
+                    rotation: 360,
+                    ease: "power2.inOut",
+                    repeat: -1,
+                    delay: delay
+                });
+                
+                // 位置动画
+                gsap.to(obj, {
+                    duration: duration * 1.5,
+                    x: `+=${(Math.random() - 0.5) * 100}`,
+                    y: `+=${(Math.random() - 0.5) * 80}`,
+                    ease: "sine.inOut",
+                    yoyo: true,
+                    repeat: -1,
+                    delay: delay
+                });
+                
+                // 缩放动画
+                gsap.to(obj, {
+                    duration: duration * 0.8,
+                    scale: 1.3,
+                    ease: "sine.inOut",
+                    yoyo: true,
+                    repeat: -1,
+                    delay: delay * 1.5
+                });
+            });
+            
+            aiResponse.innerHTML = '💃 舞蹈模式已激活！对象正在优雅地舞动。';
+        }
+        
+        // 启用物理模式
+        function enablePhysicsMode() {
+            objects3d.forEach(obj => {
+                // 重力效果
+                gsap.to(obj, {
+                    duration: 2,
+                    y: "+=100",
+                    ease: "power2.in",
+                    yoyo: true,
+                    repeat: -1
+                });
+                
+                // 旋转效果
+                gsap.to(obj, {
+                    duration: 3,
+                    rotation: 360,
+                    ease: "power2.inOut",
+                    repeat: -1
+                });
+            });
+            
+            aiResponse.innerHTML = '⚛️ 物理模式已激活！模拟重力与运动。';
+        }
+        
+        // 启用磁场模式
+        function enableMagneticMode() {
+            objects3d.forEach(obj => {
+                // 添加磁力效果动画
+                gsap.to(obj, {
+                    duration: 1,
+                    border: '2px solid #00f3ff',
+                    boxShadow: '0 0 20px #00f3ff',
+                    ease: "sine.inOut",
+                    yoyo: true,
+                    repeat: -1
+                });
+            });
+            
+            aiResponse.innerHTML = '🧲 磁场模式已激活！对象之间产生磁力连接。';
+        }
+        
+        // 启用量子模式
+        function enableQuantumMode() {
+            objects3d.forEach(obj => {
+                // 量子波动效果
+                gsap.to(obj, {
+                    duration: 0.5,
+                    opacity: 0.5,
+                    scale: 0.9,
+                    ease: "power2.inOut",
+                    yoyo: true,
+                    repeat: -1
+                });
+                
+                // 随机位置跳跃
+                setInterval(() => {
+                    if (currentMode === 'quantum') {
+                        gsap.to(obj, {
+                            duration: 0.3,
+                            x: Math.random() * enhancedStage.offsetWidth - enhancedStage.offsetWidth/2,
+                            y: Math.random() * enhancedStage.offsetHeight - enhancedStage.offsetHeight/2,
+                            ease: "power2.out"
+                        });
+                    }
+                }, 1500 + Math.random() * 2000);
+            });
+            
+            aiResponse.innerHTML = '🔬 量子模式已激活！对象呈现量子波动行为。';
+        }
+        
+        // 启用混沌模式
+        function enableChaosMode() {
+            objects3d.forEach(obj => {
+                // 随机运动
+                function randomMove() {
+                    if (currentMode !== 'chaos') return;
+                    
+                    gsap.to(obj, {
+                        duration: 0.5 + Math.random() * 1.5,
+                        x: Math.random() * enhancedStage.offsetWidth - enhancedStage.offsetWidth/2,
+                        y: Math.random() * enhancedStage.offsetHeight - enhancedStage.offsetHeight/2,
+                        rotation: Math.random() * 720 - 360,
+                        scale: 0.5 + Math.random() * 1.5,
+                        ease: "power2.inOut",
+                        onComplete: randomMove
+                    });
+                }
+                
+                randomMove();
+            });
+            
+            aiResponse.innerHTML = '🌀 混沌模式已激活！对象随机运动。';
+        }
+        
+        // 启用自定义模式
+        function enableCustomMode() {
+            aiResponse.innerHTML = '🎛️ 自定义模式已启用。请使用控制面板调整参数。';
+        }
+        
+        // AI生成动画
+        function generateAnimationFromAI() {
+            const prompt = aiPrompt.value.trim();
+            if (!prompt) return;
+            
+            aiResponse.innerHTML = '🤔 AI正在思考...';
+            
+            // 模拟AI思考过程
+            setTimeout(() => {
+                const responses = [
+                    `基于"${prompt}"，AI建议创建同步旋转动画。`,
+                    `AI为"${prompt}"设计了脉冲光效动画。`,
+                    `根据"${prompt}"，AI生成了量子纠缠效果。`,
+                    `AI为"${prompt}"创建了流体流动动画。`,
+                    `基于您的要求"${prompt}"，AI设计了波浪传播效果。`
+                ];
+                
+                const response = responses[Math.floor(Math.random() * responses.length)];
+                aiResponse.innerHTML = `🎨 ${response}`;
+                
+                // 应用随机动画
+                applyRandomAnimation();
+            }, 1500);
+        }
+        
+        // 应用随机动画
+        function applyRandomAnimation() {
+            const animations = [
+                () => {
+                    // 同步旋转
+                    objects3d.forEach(obj => {
+                        gsap.to(obj, {
+                            duration: 2,
+                            rotation: 720,
+                            ease: "power2.inOut"
+                        });
+                    });
+                },
+                () => {
+                    // 脉冲效果
+                    objects3d.forEach(obj => {
+                        gsap.to(obj, {
+                            duration: 0.5,
+                            scale: 1.5,
+                            boxShadow: '0 0 30px #00f3ff',
+                            ease: "power2.out",
+                            yoyo: true,
+                            repeat: 2
+                        });
+                    });
+                },
+                () => {
+                    // 分散聚合
+                    objects3d.forEach(obj => {
+                        gsap.to(obj, {
+                            duration: 1,
+                            x: Math.random() * 400 - 200,
+                            y: Math.random() * 300 - 150,
+                            ease: "power2.out",
+                            delay: Math.random() * 0.5,
+                            onComplete: () => {
+                                gsap.to(obj, {
+                                    duration: 1.5,
+                                    x: 0,
+                                    y: 0,
+                                    ease: "back.out(1.7)"
+                                });
+                            }
+                        });
+                    });
+                }
+            ];
+            
+            const randomAnimation = animations[Math.floor(Math.random() * animations.length)];
+            randomAnimation();
+        }
+        
+        // 应用风格转换
+        function applyStyleTransfer() {
+            const style = document.getElementById('styleTransfer').value.trim();
+            if (!style) return;
+            
+            aiResponse.innerHTML = `🎨 正在应用"${style}"风格...`;
+            
+            setTimeout(() => {
+                let colors;
+                
+                switch(style.toLowerCase()) {
+                    case '赛博朋克':
+                        colors = ['#00f3ff', '#ff00ff', '#ffcc00', '#ff3366'];
+                        break;
+                    case '复古':
+                        colors = ['#ff9966', '#66ff99', '#9966ff', '#ffff66'];
+                        break;
+                    case '流体':
+                        colors = ['#0099ff', '#00ccff', '#00ffff', '#66ffff'];
+                        break;
+                    default:
+                        colors = ['#00f3ff', '#ff00ff', '#00ff9d'];
+                }
+                
+                // 应用颜色
+                objects3d.forEach(obj => {
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    const nextColor = colors[(colors.indexOf(color) + 1) % colors.length];
+                    
+                    gsap.to(obj, {
+                        duration: 1,
+                        background: `linear-gradient(135deg, ${color}, ${nextColor})`,
+                        ease: "power2.inOut"
+                    });
+                });
+                
+                aiResponse.innerHTML = `✅ 已应用"${style}"风格！`;
+            }, 1000);
+        }
+        
+        // 添加对象
+        function addObject() {
+            if (objects3d.length >= 15) {
+                aiResponse.innerHTML = '⚠️ 已达到最大对象数量(15个)。';
+                return;
+            }
+            
+            const obj = createObject(objects3d.length);
+            
+            // 添加创建动画
+            gsap.from(obj, {
+                duration: 0.5,
+                scale: 0,
+                rotation: 360,
+                ease: "back.out(1.7)"
+            });
+            
+            updateObjectCount();
+            setMode(currentMode); // 重新应用当前模式
+            
+            aiResponse.innerHTML = `✅ 已添加新对象！当前对象数: ${objects3d.length}`;
+        }
+        
+        // 移除对象
+        function removeObject() {
+            if (objects3d.length <= 1) {
+                aiResponse.innerHTML = '⚠️ 至少需要保留1个对象。';
+                return;
+            }
+            
+            const lastObj = objects3d.pop();
+            gsap.to(lastObj, {
+                duration: 0.3,
+                scale: 0,
+                opacity: 0,
+                ease: "power2.in",
+                onComplete: () => lastObj.remove()
+            });
+            
+            updateObjectCount();
+            aiResponse.innerHTML = `✅ 已移除对象！当前对象数: ${objects3d.length}`;
+        }
+        
+        // 在指定位置创建对象
+        function createObjectAtPosition(x, y) {
+            if (objects3d.length >= 15) {
+                aiResponse.innerHTML = '⚠️ 已达到最大对象数量(15个)。';
+                return;
+            }
+            
+            const objectTypes = [
+                { class: 'quantum-object', icon: 'fas fa-atom' },
+                { class: 'energy-sphere', icon: 'fas fa-globe-americas' },
+                { class: 'data-pyramid', icon: 'fas fa-project-diagram' },
+                { class: 'neon-ring', icon: 'fas fa-circle-notch' },
+                { class: 'hologram-disk', icon: 'fas fa-compact-disc' }
+            ];
+            
+            const type = objectTypes[Math.floor(Math.random() * objectTypes.length)];
+            const obj = document.createElement('div');
+            obj.className = `object-3d ${type.class}`;
+            obj.innerHTML = `<i class="${type.icon}"></i>`;
+            obj.id = `object-${objects3d.length}`;
+            
+            // 设置位置
+            obj.style.left = `${x}px`;
+            obj.style.top = `${y}px`;
+            obj.style.transform = 'translate(-50%, -50%)';
+            
+            enhancedStage.appendChild(obj);
+            objects3d.push(obj);
+            
+            // 使对象可拖拽
+            Draggable.create(obj, {
+                bounds: enhancedStage,
+                edgeResistance: 0.8,
+                type: "x,y",
+                onDrag: updateConnections
+            });
+            
+            // 添加创建动画
+            gsap.from(obj, {
+                duration: 0.5,
+                scale: 0,
+                rotation: 360,
+                ease: "back.out(1.7)"
+            });
+            
+            updateObjectCount();
+            setMode(currentMode); // 重新应用当前模式
+            
+            aiResponse.innerHTML = `✅ 已在指定位置添加新对象！`;
+        }
+        
+        // 更新连接线
+        function updateConnections() {
+            const svg = document.getElementById('connections');
+            let paths = '';
+            
+            // 更新连接强度值
+            connectionStrength = connectionSlider.value / 100;
+            document.getElementById('connectionValue').textContent = `${connectionSlider.value}%`;
+            
+            for (let i = 0; i < objects3d.length; i++) {
+                for (let j = i + 1; j < objects3d.length; j++) {
+                    const obj1 = objects3d[i];
+                    const obj2 = objects3d[j];
+                    
+                    const rect1 = obj1.getBoundingClientRect();
+                    const rect2 = obj2.getBoundingClientRect();
+                    const stageRect = enhancedStage.getBoundingClientRect();
+                    
+                    const x1 = rect1.left - stageRect.left + rect1.width / 2;
+                    const y1 = rect1.top - stageRect.top + rect1.height / 2;
+                    const x2 = rect2.left - stageRect.left + rect2.width / 2;
+                    const y2 = rect2.top - stageRect.top + rect2.height / 2;
+                    
+                    const dx = x2 - x1;
+                    const dy = y2 - y1;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < 300) {
+                        const opacity = connectionStrength * (1 - distance / 300);
+                        const strokeWidth = 2 * opacity;
+                        
+                        paths += `<path d="M${x1},${y1} L${x2},${y2}" 
+                                  stroke="rgba(0, 243, 255, ${opacity})" 
+                                  stroke-width="${strokeWidth}" 
+                                  stroke-dasharray="5,5"
+                                  fill="none" />`;
+                    }
+                }
+            }
+            
+            svg.innerHTML = paths;
+        }
+        
+        // 更新速度
+        function updateSpeed() {
+            animationSpeed = parseFloat(speedSlider.value);
+            document.getElementById('speedValue').textContent = `${animationSpeed.toFixed(1)}x`;
+            
+            // 更新GSAP全局时间比例
+            gsap.globalTimeline.timeScale(animationSpeed);
+        }
+        
+        // 更新大小
+        function updateSize() {
+            objectSize = sizeSlider.value / 100;
+            document.getElementById('sizeValue').textContent = `${sizeSlider.value}%`;
+            
+            objects3d.forEach(obj => {
+                gsap.to(obj, {
+                    duration: 0.5,
+                    scale: objectSize,
+                    ease: "power2.out"
+                });
+            });
+        }
+        
+        // 更新数据流
+        function updateDataStream() {
+            document.getElementById('objectCount').textContent = objects3d.length;
+            
+            // 计算复杂度
+            const complexity = Math.min(objects3d.length * 15 + (animationSpeed - 1) * 20, 100);
+            document.getElementById('complexityScore').textContent = `${Math.round(complexity)}%`;
+            
+            // 模拟性能分数
+            const performance = 100 - objects3d.length * 3;
+            document.getElementById('performanceScore').textContent = `${Math.max(performance, 30)}%`;
+            
+            setTimeout(updateDataStream, 2000);
+        }
+        
+        // 设置性能监控
+        function setupPerformanceMonitor() {
+            function updatePerformance() {
+                frameCount++;
+                const currentTime = Date.now();
+                
+                if (currentTime - lastTime >= 1000) {
+                    const fps = Math.round((frameCount * 1000) / (currentTime - lastTime));
+                    
+                    document.getElementById('fpsCounter').textContent = fps;
+                    
+                    // 更新内存状态
+                    const memoryStates = ['低', '中', '高'];
+                    const memoryIndex = objects3d.length > 10 ? 2 : objects3d.length > 5 ? 1 : 0;
+                    document.getElementById('memoryValue').textContent = memoryStates[memoryIndex];
+                    
+                    frameCount = 0;
+                    lastTime = currentTime;
+                }
+                
+                requestAnimationFrame(updatePerformance);
+            }
+            
+            updatePerformance();
+        }
+        
+        // 更新对象计数
+        function updateObjectCount() {
+            document.getElementById('objectCount').textContent = objects3d.length;
+        }
+        
+        // 打开导出面板
+        function openExportPanel() {
+            exportPanel.style.display = 'block';
+        }
+        
+        // 关闭导出面板
+        function closeExportPanel() {
+            exportPanel.style.display = 'none';
+        }
+        
+        // 导出项目
+        function exportProject() {
+            const format = 'gsap';
+            
+            aiResponse.innerHTML = `📤 正在导出为GSAP格式...`;
+            
+            setTimeout(() => {
+                const exportData = generateGSAPExport();
+                
+                // 创建下载
+                const blob = new Blob([exportData], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `gsap-quantum-lab-${Date.now()}.js`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                aiResponse.innerHTML = `✅ 项目已导出为GSAP格式！`;
+                closeExportPanel();
+            }, 1000);
+        }
+        
+        // 生成GSAP导出
+        function generateGSAPExport() {
+            let code = `// GSAP量子实验室导出 - ${new Date().toLocaleString()}\n\n`;
+            code += `// 动画配置\n`;
+            code += `const config = {\n`;
+            code += `  objectCount: ${objects3d.length},\n`;
+            code += `  mode: '${currentMode}',\n`;
+            code += `  speed: ${animationSpeed},\n`;
+            code += `  connectionStrength: ${connectionStrength}\n`;
+            code += `};\n\n`;
+            
+            code += `// 创建时间轴\n`;
+            code += `const masterTimeline = gsap.timeline({\n`;
+            code += `  repeat: -1,\n`;
+            code += `  yoyo: true\n`;
+            code += `});\n\n`;
+            
+            objects3d.forEach((obj, i) => {
+                code += `// 对象 ${i}\n`;
+                code += `gsap.to('#${obj.id}', {\n`;
+                code += `  duration: 2,\n`;
+                code += `  rotation: 360,\n`;
+                code += `  x: ${(Math.random() - 0.5) * 200},\n`;
+                code += `  y: ${(Math.random() - 0.5) * 150},\n`;
+                code += `  ease: "power2.inOut"\n`;
+                code += `});\n\n`;
+            });
+            
+            return code;
+        }
+        
+        // 实验功能
+        function startSolarFlare() {
+            aiResponse.innerHTML = '☀️ 启动太阳耀斑模拟...';
+            
+            // 创建耀斑效果
+            for (let i = 0; i < 30; i++) {
+                setTimeout(() => {
+                    const flare = document.createElement('div');
+                    flare.style.position = 'absolute';
+                    flare.style.width = '10px';
+                    flare.style.height = '10px';
+                    flare.style.background = 'radial-gradient(circle, #ff9900, #ff3300)';
+                    flare.style.borderRadius = '50%';
+                    flare.style.boxShadow = '0 0 15px #ff9900';
+                    flare.style.left = '50%';
+                    flare.style.top = '50%';
+                    flare.style.transform = 'translate(-50%, -50%)';
+                    flare.style.zIndex = '20';
+                    
+                    enhancedStage.appendChild(flare);
+                    
+                    // 耀斑动画
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = 100 + Math.random() * 200;
+                    
+                    gsap.to(flare, {
+                        duration: 1.5,
+                        x: Math.cos(angle) * distance,
+                        y: Math.sin(angle) * distance,
+                        opacity: 0,
+                        scale: 0,
+                        ease: "power2.out",
+                        onComplete: () => flare.remove()
+                    });
+                }, i * 50);
+            }
+            
+            // 对象脉冲
+            objects3d.forEach(obj => {
+                gsap.to(obj, {
+                    duration: 0.3,
+                    scale: 1.8,
+                    boxShadow: '0 0 40px #ff9900',
+                    ease: "power2.out",
+                    yoyo: true,
+                    repeat: 3
+                });
+            });
+        }
+        
+        function startFluidSimulation() {
+            aiResponse.innerHTML = '💧 启动流体模拟...';
+            setMode('dance');
+            
+            objects3d.forEach(obj => {
+                gsap.to(obj, {
+                    duration: 3,
+                    y: "+=150",
+                    ease: "sine.inOut",
+                    yoyo: true,
+                    repeat: -1
+                });
+            });
+        }
+        
+        function startMagneticField() {
+            aiResponse.innerHTML = '🧲 启动磁场模拟...';
+            setMode('magnetic');
+        }
+        
+        function startFractal() {
+            aiResponse.innerHTML = '🌀 生成分形图案...';
+            
+            // 清除现有对象
+            objects3d.forEach(obj => obj.remove());
+            objects3d = [];
+            
+            // 创建分形
+            function createFractal(x, y, size, depth) {
+                if (depth >= 4) return;
+                
+                // 创建对象
+                const obj = document.createElement('div');
+                obj.className = 'object-3d energy-sphere';
+                obj.innerHTML = '<i class="fas fa-circle"></i>';
+                obj.style.width = `${size}px`;
+                obj.style.height = `${size}px`;
+                obj.style.left = `${x}px`;
+                obj.style.top = `${y}px`;
+                obj.style.transform = 'translate(-50%, -50%)';
+                obj.style.background = `radial-gradient(circle at 30% 30%, 
+                    hsl(${depth * 80}, 100%, 60%), 
+                    hsl(${depth * 80 + 40}, 100%, 40%))`;
+                
+                enhancedStage.appendChild(obj);
+                objects3d.push(obj);
+                
+                // 使对象可拖拽
+                Draggable.create(obj, {
+                    bounds: enhancedStage,
+                    edgeResistance: 0.8,
+                    type: "x,y"
+                });
+                
+                // 递归创建子对象
+                const childCount = 3;
+                const angleStep = (Math.PI * 2) / childCount;
+                const childSize = size * 0.6;
+                
+                for (let i = 0; i < childCount; i++) {
+                    const childX = x + Math.cos(angleStep * i) * (size * 0.8);
+                    const childY = y + Math.sin(angleStep * i) * (size * 0.8);
+                    
+                    createFractal(childX, childY, childSize, depth + 1);
+                }
+            }
+            
+            const centerX = enhancedStage.offsetWidth / 2;
+            const centerY = enhancedStage.offsetHeight / 2;
+            createFractal(centerX, centerY, 120, 0);
+            
+            updateObjectCount();
+            setMode('dance');
+        }
+        
+        function startLightning() {
+            aiResponse.innerHTML = '⚡ 生成闪电网络...';
+            
+            // 创建闪电连接
+            for (let i = 0; i < 10; i++) {
+                setTimeout(() => {
+                    if (objects3d.length < 2) return;
+                    
+                    const obj1 = objects3d[Math.floor(Math.random() * objects3d.length)];
+                    const obj2 = objects3d[Math.floor(Math.random() * objects3d.length)];
+                    
+                    if (obj1 === obj2) return;
+                    
+                    // 创建闪电效果
+                    const lightning = document.createElement('div');
+                    lightning.style.position = 'absolute';
+                    lightning.style.background = 'linear-gradient(to right, #00f3ff, #ffffff)';
+                    lightning.style.height = '3px';
+                    lightning.style.borderRadius = '2px';
+                    lightning.style.zIndex = '10';
+                    lightning.style.boxShadow = '0 0 10px #00f3ff';
+                    
+                    const rect1 = obj1.getBoundingClientRect();
+                    const rect2 = obj2.getBoundingClientRect();
+                    const stageRect = enhancedStage.getBoundingClientRect();
+                    
+                    const x1 = rect1.left - stageRect.left + rect1.width / 2;
+                    const y1 = rect1.top - stageRect.top + rect1.height / 2;
+                    const x2 = rect2.left - stageRect.left + rect2.width / 2;
+                    const y2 = rect2.top - stageRect.top + rect2.height / 2;
+                    
+                    const dx = x2 - x1;
+                    const dy = y2 - y1;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                    
+                    lightning.style.left = `${x1}px`;
+                    lightning.style.top = `${y1}px`;
+                    lightning.style.width = '0px';
+                    lightning.style.transform = `rotate(${angle}deg)`;
+                    
+                    enhancedStage.appendChild(lightning);
+                    
+                    // 闪电动画
+                    gsap.to(lightning, {
+                        duration: 0.1,
+                        width: distance,
+                        ease: "power2.out",
+                        onComplete: () => {
+                            gsap.to(lightning, {
+                                duration: 0.2,
+                                opacity: 0,
+                                onComplete: () => lightning.remove()
+                            });
+                        }
+                    });
+                }, i * 200);
+            }
+        }
+        
+        function startBlackHole() {
+            aiResponse.innerHTML = '🕳️ 启动黑洞模拟...';
+            
+            // 创建黑洞
+            const blackHole = document.createElement('div');
+            blackHole.style.position = 'absolute';
+            blackHole.style.width = '100px';
+            blackHole.style.height = '100px';
+            blackHole.style.background = 'radial-gradient(circle, #000, #333)';
+            blackHole.style.borderRadius = '50%';
+            blackHole.style.left = '50%';
+            blackHole.style.top = '50%';
+            blackHole.style.transform = 'translate(-50%, -50%)';
+            blackHole.style.zIndex = '15';
+            blackHole.style.boxShadow = '0 0 50px rgba(0, 0, 0, 0.8), inset 0 0 50px rgba(255, 255, 255, 0.1)';
+            
+            enhancedStage.appendChild(blackHole);
+            
+            // 黑洞脉冲
+            gsap.to(blackHole, {
+                duration: 1,
+                scale: 1.3,
+                ease: "sine.inOut",
+                yoyo: true,
+                repeat: 3
+            });
+            
+            // 吸引对象
+            objects3d.forEach(obj => {
+                gsap.to(obj, {
+                    duration: 2,
+                    x: 0,
+                    y: 0,
+                    scale: 0.5,
+                    opacity: 0.7,
+                    ease: "power2.in"
+                });
+            });
+            
+            // 移除黑洞
+            setTimeout(() => {
+                blackHole.remove();
+                
+                // 恢复对象
+                objects3d.forEach(obj => {
+                    gsap.to(obj, {
+                        duration: 1,
+                        scale: 1,
+                        opacity: 1,
+                        ease: "power2.out"
+                    });
+                });
+                
+                setMode(currentMode);
+            }, 3000);
+        }
+        
+        // AR预览
+        function openARPreview() {
+            aiResponse.innerHTML = '👓 AR预览功能开发中...';
+            // 这里可以添加AR功能
+        }
+        
+        // 捕捉场景
+        function captureStage() {
+            aiResponse.innerHTML = '📸 场景截图已保存到剪贴板！';
+            // 这里可以添加截图功能
+        }
+        
+        // 启动主循环
+        function startMainLoop() {
+            function update() {
+                // 定期更新连接线
+                if (currentMode === 'magnetic' || Math.random() < 0.1) {
+                    updateConnections();
+                }
+                
+                requestAnimationFrame(update);
+            }
+            
+            update();
+        }
+        
+        // 初始化
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

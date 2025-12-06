@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matter.js 物理模拟 - 最简单版</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #222;
+            font-family: Arial, sans-serif;
+        }
+
+        #container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        #canvas {
+            display: block;
+            background: #000;
+        }
+
+        #controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 15px;
+            border-radius: 5px;
+            color: white;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            margin: 5px 0;
+            padding: 10px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+            button:hover {
+                background: #45a049;
+            }
+
+        #debug {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 5px;
+            color: white;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <canvas id="canvas"></canvas>
+        <div id="debug">
+            <div>状态: <span id="status">加载中...</span></div>
+            <div>物体: <span id="objCount">0</span></div>
+        </div>
+        <div id="controls">
+            <button onclick="addBox()">添加红色方块</button>
+            <button onclick="addCircle()">添加绿色圆形</button>
+            <button onclick="addTriangle()">添加蓝色三角形</button>
+            <button onclick="clearScene()">清空场景</button>
+            <button onclick="resetScene()">重置场景</button>
+        </div>
+    </div>
+
+    <script>
+        // 使用内联的Matter.js简化版
+        // 如果CDN失败，使用这个简化版本
+        function loadMatterJS(callback) {
+            // 首先尝试CDN
+            if (typeof Matter === 'undefined') {
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.18.0/matter.min.js';
+                script.onload = callback;
+                script.onerror = function () {
+                    console.log('CDN失败，使用备用CDN');
+                    const fallback = document.createElement('script');
+                    fallback.src = 'https://unpkg.com/matter-js@0.18.0/build/matter.min.js';
+                    fallback.onload = callback;
+                    fallback.onerror = function () {
+                        alert('无法加载Matter.js，请检查网络连接');
+                    };
+                    document.head.appendChild(fallback);
+                };
+                document.head.appendChild(script);
+            } else {
+                callback();
+            }
+        }
+
+        // 全局变量
+        let engine, render, runner;
+        let canvas;
+
+        // 初始化函数
+        function init() {
+            console.log('开始初始化...');
+            document.getElementById('status').textContent = '初始化中...';
+
+            // 获取canvas
+            canvas = document.getElementById('canvas');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            console.log('Canvas尺寸:', canvas.width, 'x', canvas.height);
+
+            // 检查Matter.js是否可用
+            if (typeof Matter === 'undefined') {
+                document.getElementById('status').textContent = '错误: Matter.js未加载';
+                return;
+            }
+
+            // 创建引擎
+            engine = Matter.Engine.create();
+            engine.gravity.y = 1;
+
+            // 创建渲染器 - 最简单的配置
+            render = Matter.Render.create({
+                canvas: canvas,
+                engine: engine,
+                options: {
+                    width: canvas.width,
+                    height: canvas.height,
+                    wireframes: false, // 必须为false才能看到颜色
+                    background: '#000000',
+                    showSleeping: false,
+                    showDebug: false
+                }
+            });
+
+            // 创建运行器
+            runner = Matter.Runner.create();
+
+            // 运行引擎和渲染器
+            Matter.Runner.run(runner, engine);
+            Matter.Render.run(render);
+
+            // 添加鼠标控制
+            const mouse = Matter.Mouse.create(canvas);
+            const mouseConstraint = Matter.MouseConstraint.create(engine, {
+                mouse: mouse,
+                constraint: {
+                    stiffness: 0.2,
+                    render: { visible: false }
+                }
+            });
+            Matter.World.add(engine.world, mouseConstraint);
+            render.mouse = mouse;
+
+            // 创建边界
+            createWalls();
+
+            // 创建明显的测试物体
+            createTestObjects();
+
+            // 更新状态
+            updateStats();
+            document.getElementById('status').textContent = '运行中';
+
+            console.log('初始化完成！');
+            console.log('应该能看到：红色大方块、绿色圆形、蓝色三角形');
+
+            // 手动检查
+            setTimeout(checkScene, 1000);
+        }
+
+        function createWalls() {
+            const wallThickness = 40;
+            const walls = [
+                // 地面
+                Matter.Bodies.rectangle(canvas.width / 2, canvas.height + wallThickness / 2, canvas.width + 100, wallThickness, {
+                    isStatic: true,
+                    render: { fillStyle: '#333' }
+                }),
+                // 天花板
+                Matter.Bodies.rectangle(canvas.width / 2, -wallThickness / 2, canvas.width + 100, wallThickness, {
+                    isStatic: true,
+                    render: { fillStyle: '#333' }
+                }),
+                // 左墙
+                Matter.Bodies.rectangle(-wallThickness / 2, canvas.height / 2, wallThickness, canvas.height + 100, {
+                    isStatic: true,
+                    render: { fillStyle: '#333' }
+                }),
+                // 右墙
+                Matter.Bodies.rectangle(canvas.width + wallThickness / 2, canvas.height / 2, wallThickness, canvas.height + 100, {
+                    isStatic: true,
+                    render: { fillStyle: '#333' }
+                })
+            ];
+            Matter.World.add(engine.world, walls);
+        }
+
+        function createTestObjects() {
+            console.log('创建测试物体...');
+
+            // 地面平台
+            const ground = Matter.Bodies.rectangle(canvas.width / 2, canvas.height - 50, canvas.width - 100, 30, {
+                isStatic: true,
+                render: {
+                    fillStyle: '#4361ee',
+                    strokeStyle: '#4cc9f0',
+                    lineWidth: 3
+                }
+            });
+
+            // 非常明显的测试物体 - 使用亮色和大尺寸
+            const bigRedBox = Matter.Bodies.rectangle(200, 200, 150, 150, {
+                render: {
+                    fillStyle: '#ff0000', // 亮红色
+                    strokeStyle: '#ffffff',
+                    lineWidth: 5
+                }
+            });
+
+            const greenCircle = Matter.Bodies.circle(500, 150, 70, {
+                render: {
+                    fillStyle: '#00ff00', // 亮绿色
+                    strokeStyle: '#ffffff',
+                    lineWidth: 5
+                }
+            });
+
+            const blueTriangle = Matter.Bodies.polygon(800, 200, 3, 80, {
+                render: {
+                    fillStyle: '#0000ff', // 亮蓝色
+                    strokeStyle: '#ffffff',
+                    lineWidth: 5
+                }
+            });
+
+            // 添加一个在正中央的黄色方块
+            const centerBox = Matter.Bodies.rectangle(canvas.width / 2, 100, 100, 100, {
+                render: {
+                    fillStyle: '#ffff00', // 亮黄色
+                    strokeStyle: '#000000',
+                    lineWidth: 5
+                }
+            });
+
+            Matter.World.add(engine.world, [ground, bigRedBox, greenCircle, blueTriangle, centerBox]);
+
+            console.log('测试物体创建完成');
+            console.log('物体位置:');
+            console.log('红色方块: 200,200 (150x150)');
+            console.log('绿色圆形: 500,150 (半径70)');
+            console.log('蓝色三角形: 800,200');
+            console.log('黄色方块: 中央顶部');
+        }
+
+        function updateStats() {
+            const bodies = Matter.Composite.allBodies(engine.world);
+            const nonStaticBodies = bodies.filter(body => !body.isStatic);
+            document.getElementById('objCount').textContent = nonStaticBodies.length;
+        }
+
+        function checkScene() {
+            console.log('=== 场景检查 ===');
+            console.log('Canvas:', canvas);
+            console.log('Canvas尺寸:', canvas.width, 'x', canvas.height);
+            console.log('Canvas背景颜色:', getComputedStyle(canvas).backgroundColor);
+            console.log('渲染器:', render);
+            console.log('引擎:', engine);
+
+            const bodies = Matter.Composite.allBodies(engine.world);
+            console.log('总物体数:', bodies.length);
+
+            bodies.forEach((body, i) => {
+                console.log(`物体${i}:`, {
+                    label: body.label,
+                    position: body.position,
+                    isStatic: body.isStatic,
+                    render: body.render,
+                    vertices: body.vertices ? `有(${body.vertices.length}个顶点)` : '无'
+                });
+            });
+
+            // 尝试强制重绘
+            if (render) {
+                Matter.Render.world(render);
+                console.log('强制重绘完成');
+            }
+
+            // 检查canvas上下文
+            const ctx = canvas.getContext('2d');
+            console.log('Canvas上下文:', ctx);
+
+            // 手动在canvas上画一个测试图形
+            ctx.fillStyle = 'rgba(255, 0, 255, 0.5)';
+            ctx.fillRect(50, 50, 100, 100);
+            console.log('手动绘制了紫色测试方块在(50,50)');
+        }
+
+        // 物体创建函数
+        function addBox() {
+            const x = Math.random() * (canvas.width - 200) + 100;
+            const y = 100;
+
+            const box = Matter.Bodies.rectangle(x, y, 80, 80, {
+                render: {
+                    fillStyle: '#ff0000',
+                    strokeStyle: '#ffffff',
+                    lineWidth: 3
+                }
+            });
+
+            Matter.World.add(engine.world, box);
+            updateStats();
+            console.log('添加了红色方块在', x.toFixed(0), y);
+        }
+
+        function addCircle() {
+            const x = Math.random() * (canvas.width - 200) + 100;
+            const y = 100;
+
+            const circle = Matter.Bodies.circle(x, y, 40, {
+                render: {
+                    fillStyle: '#00ff00',
+                    strokeStyle: '#ffffff',
+                    lineWidth: 3
+                }
+            });
+
+            Matter.World.add(engine.world, circle);
+            updateStats();
+            console.log('添加了绿色圆形在', x.toFixed(0), y);
+        }
+
+        function addTriangle() {
+            const x = Math.random() * (canvas.width - 200) + 100;
+            const y = 100;
+
+            const triangle = Matter.Bodies.polygon(x, y, 3, 50, {
+                render: {
+                    fillStyle: '#0000ff',
+                    strokeStyle: '#ffffff',
+                    lineWidth: 3
+                }
+            });
+
+            Matter.World.add(engine.world, triangle);
+            updateStats();
+            console.log('添加了蓝色三角形在', x.toFixed(0), y);
+        }
+
+        function clearScene() {
+            const bodies = Matter.Composite.allBodies(engine.world);
+            bodies.forEach(body => {
+                if (!body.isStatic) {
+                    Matter.World.remove(engine.world, body);
+                }
+            });
+            updateStats();
+            console.log('清除了所有非静态物体');
+        }
+
+        function resetScene() {
+            clearScene();
+            createTestObjects();
+            console.log('重置了场景');
+        }
+
+        // 页面加载
+        window.onload = function () {
+            console.log('页面加载完成，开始加载Matter.js...');
+            loadMatterJS(function () {
+                console.log('Matter.js加载成功，版本:', Matter.version);
+                init();
+            });
+        };
+
+        // 窗口大小调整
+        window.onresize = function () {
+            if (canvas) {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                if (render) {
+                    render.options.width = canvas.width;
+                    render.options.height = canvas.height;
+                }
+                console.log('窗口大小调整:', canvas.width, 'x', canvas.height);
+            }
+        };
+    </script>
+</body>
+</html>
