@@ -1,0 +1,2129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高级Particles.js粒子系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #fff;
+            overflow-x: hidden;
+            background: #0f0c29;
+            background: linear-gradient(to right, #24243e, #302b63, #0f0c29);
+            min-height: 100vh;
+        }
+        
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 40px 0 30px;
+        }
+        
+        h1 {
+            font-size: 3.2rem;
+            margin-bottom: 10px;
+            text-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(to right, #ff8a00, #da1b60, #2193b0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: titleGlow 3s infinite alternate;
+        }
+        
+        @keyframes titleGlow {
+            0% { text-shadow: 0 5px 15px rgba(255, 138, 0, 0.5); }
+            50% { text-shadow: 0 5px 20px rgba(218, 27, 96, 0.6); }
+            100% { text-shadow: 0 5px 25px rgba(33, 147, 176, 0.7); }
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto 30px;
+            line-height: 1.6;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        @media (max-width: 1100px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.12);
+        }
+        
+        .card h2 {
+            font-size: 1.6rem;
+            margin-bottom: 20px;
+            color: #ff8a00;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 2px solid rgba(255, 138, 0, 0.3);
+            padding-bottom: 10px;
+        }
+        
+        .card h2 i {
+            font-size: 1.4rem;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .control-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .control-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        label {
+            font-weight: 500;
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .value-display {
+            font-weight: bold;
+            color: #ff8a00;
+            font-size: 1.1rem;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #ff8a00;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 138, 0, 0.5);
+            transition: all 0.2s;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #ff9e2d;
+            transform: scale(1.1);
+        }
+        
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        select:hover, select:focus {
+            border-color: #ff8a00;
+            box-shadow: 0 0 10px rgba(255, 138, 0, 0.3);
+        }
+        
+        .color-picker-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .color-option {
+            width: 100%;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .color-option:hover {
+            transform: scale(1.05);
+        }
+        
+        .color-option.active {
+            border-color: white;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+        
+        .buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        button {
+            padding: 14px 20px;
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .primary-btn {
+            background: linear-gradient(to right, #ff8a00, #da1b60);
+        }
+        
+        .secondary-btn {
+            background: linear-gradient(to right, #2193b0, #6dd5ed);
+        }
+        
+        .success-btn {
+            background: linear-gradient(to right, #11998e, #38ef7d);
+        }
+        
+        .danger-btn {
+            background: linear-gradient(to right, #f46b45, #eea849);
+        }
+        
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        
+        .preset-btn {
+            padding: 12px 10px;
+            font-size: 0.85rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .preset-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .effects-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .effect-btn {
+            padding: 15px 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .effect-btn.active {
+            background: rgba(255, 138, 0, 0.2);
+            border-color: #ff8a00;
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 20px 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #ff8a00;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .visualization {
+            height: 120px;
+            width: 100%;
+            border-radius: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            margin-top: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .visual-canvas {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 30px 0 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+        
+        .mode-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px 15px;
+            border-radius: 10px;
+            border-left: 4px solid #ff8a00;
+            font-size: 0.9rem;
+            z-index: 100;
+        }
+        
+        .mode-name {
+            color: #ff8a00;
+            font-weight: bold;
+        }
+        
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 25px;
+            border-radius: 10px;
+            border-left: 4px solid #ff8a00;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.3s;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .notification.show {
+            opacity: 1;
+        }
+        
+        .fullscreen-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s;
+        }
+        
+        .fullscreen-btn:hover {
+            background: rgba(0, 0, 0, 0.7);
+            transform: scale(1.1);
+        }
+        
+        .fullscreen-btn i {
+            font-size: 1.3rem;
+            color: white;
+        }
+        
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 5px;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #ff8a00;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+        
+        .export-import {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .export-import button {
+            flex: 1;
+            padding: 12px;
+        }
+        
+        .keyboard-shortcuts {
+            margin-top: 20px;
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+        
+        .shortcut {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .key {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <!-- Particles.js容器 -->
+    <div id="particles-js"></div>
+    
+    <!-- 全屏切换按钮 -->
+    <div class="fullscreen-btn" id="fullscreen-btn">
+        <i>⛶</i>
+    </div>
+    
+    <!-- 模式指示器 -->
+    <div class="mode-indicator" id="mode-indicator">
+        模式: <span class="mode-name" id="mode-name">吸引</span>
+    </div>
+    
+    <!-- 通知 -->
+    <div class="notification" id="notification">
+        设置已保存到本地存储
+    </div>
+    
+    <div class="container">
+        <header>
+            <h1>高级粒子系统</h1>
+            <p class="subtitle">一个功能丰富的Particles.js演示，包含多种粒子效果、交互模式和控制选项</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="card">
+                    <h2><i>⚙️</i> 基本控制</h2>
+                    <div class="control-group">
+                        <div class="control-row">
+                            <div class="control-header">
+                                <label for="particle-density">粒子密度</label>
+                                <span class="value-display" id="density-value">120</span>
+                            </div>
+                            <input type="range" id="particle-density" min="10" max="500" value="120">
+                        </div>
+                        
+                        <div class="control-row">
+                            <div class="control-header">
+                                <label for="particle-size">粒子大小</label>
+                                <span class="value-display" id="size-value">3</span>
+                            </div>
+                            <input type="range" id="particle-size" min="1" max="15" value="3" step="0.5">
+                        </div>
+                        
+                        <div class="control-row">
+                            <div class="control-header">
+                                <label for="particle-speed">粒子速度</label>
+                                <span class="value-display" id="speed-value">2</span>
+                            </div>
+                            <input type="range" id="particle-speed" min="0" max="10" value="2" step="0.5">
+                        </div>
+                        
+                        <div class="control-row">
+                            <div class="control-header">
+                                <label for="particle-opacity">粒子透明度</label>
+                                <span class="value-display" id="opacity-value">0.5</span>
+                            </div>
+                            <input type="range" id="particle-opacity" min="0.1" max="1" value="0.5" step="0.05">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2><i>🔗</i> 连线效果</h2>
+                    <div class="control-group">
+                        <div class="control-row">
+                            <div class="control-header">
+                                <label for="line-width">连线宽度</label>
+                                <span class="value-display" id="line-value">1</span>
+                            </div>
+                            <input type="range" id="line-width" min="0" max="5" value="1" step="0.1">
+                        </div>
+                        
+                        <div class="control-row">
+                            <div class="control-header">
+                                <label for="line-distance">连线距离</label>
+                                <span class="value-display" id="distance-value">150</span>
+                            </div>
+                            <input type="range" id="line-distance" min="50" max="500" value="150">
+                        </div>
+                        
+                        <div class="control-row">
+                            <div class="control-header">
+                                <label for="line-opacity">连线透明度</label>
+                                <span class="value-display" id="line-opacity-value">0.2</span>
+                            </div>
+                            <input type="range" id="line-opacity" min="0.1" max="1" value="0.2" step="0.05">
+                        </div>
+                        
+                        <div class="toggle-container">
+                            <label for="line-toggle">启用连线</label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="line-toggle" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2><i>🎨</i> 颜色与形状</h2>
+                    <div class="control-group">
+                        <div class="control-row">
+                            <label>粒子颜色</label>
+                            <div class="color-picker-container">
+                                <div class="color-option active" style="background: linear-gradient(45deg, #ff8a00, #da1b60);" data-color="multi"></div>
+                                <div class="color-option" style="background: #2193b0;" data-color="#2193b0"></div>
+                                <div class="color-option" style="background: #38ef7d;" data-color="#38ef7d"></div>
+                                <div class="color-option" style="background: #f46b45;" data-color="#f46b45"></div>
+                                <div class="color-option" style="background: #8e2de2;" data-color="#8e2de2"></div>
+                                <div class="color-option" style="background: #ffffff;" data-color="#ffffff"></div>
+                                <div class="color-option" style="background: #ffeb3b;" data-color="#ffeb3b"></div>
+                                <div class="color-option" style="background: linear-gradient(45deg, #ff0080, #ff8c00);" data-color="rainbow"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="control-row">
+                            <label for="particle-shape">粒子形状</label>
+                            <select id="particle-shape">
+                                <option value="circle">圆形</option>
+                                <option value="triangle">三角形</option>
+                                <option value="star">星形</option>
+                                <option value="polygon">多边形</option>
+                                <option value="edge">方形</option>
+                            </select>
+                        </div>
+                        
+                        <div class="control-row">
+                            <label for="color-mode">颜色模式</label>
+                            <select id="color-mode">
+                                <option value="random">随机颜色</option>
+                                <option value="single">单一颜色</option>
+                                <option value="gradient">渐变颜色</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2><i>🌊</i> 运动效果</h2>
+                    <div class="effects-container">
+                        <button class="effect-btn" id="effect-gravity">重力</button>
+                        <button class="effect-btn" id="effect-vortex">漩涡</button>
+                        <button class="effect-btn" id="effect-pulse">脉冲</button>
+                        <button class="effect-btn" id="effect-waves">波浪</button>
+                        <button class="effect-btn" id="effect-bounce">弹跳</button>
+                        <button class="effect-btn" id="effect-trails">轨迹</button>
+                    </div>
+                    
+                    <div class="visualization">
+                        <canvas class="visual-canvas" id="motion-visual"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="right-panel">
+                <div class="card">
+                    <h2><i>🎯</i> 交互控制</h2>
+                    <div class="control-group">
+                        <div class="control-row">
+                            <label for="interaction-mode">交互模式</label>
+                            <select id="interaction-mode">
+                                <option value="attract">吸引</option>
+                                <option value="repulse">排斥</option>
+                                <option value="bubble">气泡</option>
+                                <option value="grab">抓取</option>
+                                <option value="push">推动</option>
+                                <option value="trail">轨迹</option>
+                            </select>
+                        </div>
+                        
+                        <div class="control-row">
+                            <div class="control-header">
+                                <label for="interaction-distance">交互距离</label>
+                                <span class="value-display" id="interaction-distance-value">200</span>
+                            </div>
+                            <input type="range" id="interaction-distance" min="50" max="400" value="200">
+                        </div>
+                        
+                        <div class="control-row">
+                            <div class="control-header">
+                                <label for="interaction-strength">交互强度</label>
+                                <span class="value-display" id="interaction-strength-value">5</span>
+                            </div>
+                            <input type="range" id="interaction-strength" min="1" max="20" value="5">
+                        </div>
+                        
+                        <div class="buttons-grid">
+                            <button class="primary-btn" id="toggle-lines"><i>🔗</i> 连线</button>
+                            <button class="secondary-btn" id="toggle-particles"><i>⚛️</i> 粒子</button>
+                            <button class="success-btn" id="toggle-move"><i>▶️</i> 运动</button>
+                            <button class="danger-btn" id="clear-effects"><i>🗑️</i> 清除</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2><i>✨</i> 预设效果</h2>
+                    <div class="preset-buttons">
+                        <button class="preset-btn" data-preset="fireworks">烟花</button>
+                        <button class="preset-btn" data-preset="snow">雪花</button>
+                        <button class="preset-btn" data-preset="network">网络</button>
+                        <button class="preset-btn" data-preset="galaxy">星系</button>
+                        <button class="preset-btn" data-preset="fire">火焰</button>
+                        <button class="preset-btn" data-preset="water">水流</button>
+                        <button class="preset-btn" data-preset="stars">星空</button>
+                        <button class="preset-btn" data-preset="nebula">星云</button>
+                        <button class="preset-btn" data-preset="default">默认</button>
+                    </div>
+                    
+                    <div class="export-import">
+                        <button class="secondary-btn" id="save-preset"><i>💾</i> 保存</button>
+                        <button class="secondary-btn" id="load-preset"><i>📂</i> 加载</button>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2><i>📊</i> 系统状态</h2>
+                    <div class="stats-container">
+                        <div class="stat-item">
+                            <span class="stat-value" id="particle-count">120</span>
+                            <span class="stat-label">粒子数量</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="fps">60</span>
+                            <span class="stat-label">帧率(FPS)</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="connections">45</span>
+                            <span class="stat-label">连线数量</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="mouse-x">0</span>
+                            <span class="stat-label">鼠标 X</span>
+                        </div>
+                    </div>
+                    
+                    <div class="keyboard-shortcuts">
+                        <div class="shortcut">
+                            <span>切换连线</span>
+                            <span class="key">L</span>
+                        </div>
+                        <div class="shortcut">
+                            <span>切换粒子</span>
+                            <span class="key">P</span>
+                        </div>
+                        <div class="shortcut">
+                            <span>暂停/继续</span>
+                            <span class="key">Space</span>
+                        </div>
+                        <div class="shortcut">
+                            <span>重置效果</span>
+                            <span class="key">R</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2><i>🎚️</i> 高级设置</h2>
+                    <div class="control-group">
+                        <div class="toggle-container">
+                            <label for="random-size">随机大小</label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="random-size" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="toggle-container">
+                            <label for="random-opacity">随机透明度</label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="random-opacity" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="toggle-container">
+                            <label for="bounce-effect">边界反弹</label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="bounce-effect">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="toggle-container">
+                            <label for="auto-save">自动保存</label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="auto-save" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>高级粒子系统演示 &copy; 2023 | 使用鼠标和键盘快捷键与粒子交互，探索各种效果</p>
+            <p style="margin-top: 10px; font-size: 0.85rem;">按住Shift键并拖动鼠标可以绘制粒子轨迹，按ESC键重置视图</p>
+        </div>
+    </div>
+
+    <script>
+        /* 增强版Particles.js实现 */
+        var particlesJS = function(tag_id, params) {
+            // 创建画布
+            var canvas = document.createElement('canvas');
+            var ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            canvas.style.position = 'absolute';
+            canvas.style.top = '0';
+            canvas.style.left = '0';
+            canvas.style.zIndex = '-1';
+            
+            var container = document.getElementById(tag_id);
+            container.appendChild(canvas);
+            
+            // 默认配置
+            var config = {
+                particles: {
+                    number: { value: 120, density: { enable: true, value_area: 800 } },
+                    color: { value: ["#ff8a00", "#da1b60", "#2193b0", "#8e2de2"], mode: "random" },
+                    shape: { type: "circle", polygon: { nb_sides: 5 } },
+                    opacity: { value: 0.5, random: true, anim: { enable: false, speed: 1, opacity_min: 0.1 } },
+                    size: { value: 3, random: true, anim: { enable: false, speed: 40, size_min: 0.1 } },
+                    line_linked: { enable: true, distance: 150, color: "#ffffff", opacity: 0.2, width: 1 },
+                    move: { 
+                        enable: true, 
+                        speed: 2, 
+                        direction: "none", 
+                        random: true, 
+                        straight: false, 
+                        out_mode: "out",
+                        bounce: false,
+                        attract: { enable: false, rotateX: 600, rotateY: 1200 }
+                    }
+                },
+                interactivity: {
+                    detect_on: "canvas",
+                    events: {
+                        onhover: { enable: true, mode: "attract", distance: 200, strength: 5 },
+                        onclick: { enable: true, mode: "push" }
+                    }
+                },
+                effects: {
+                    gravity: { enable: false, strength: 0.1, direction: "bottom" },
+                    vortex: { enable: false, strength: 0.5, centerX: 0.5, centerY: 0.5 },
+                    pulse: { enable: false, speed: 5, factor: 4 },
+                    waves: { enable: false, speed: 0.5, amplitude: 20 },
+                    bounce: { enable: false, factor: 0.8 },
+                    trails: { enable: false, length: 10 }
+                }
+            };
+            
+            // 合并配置
+            if (params) {
+                config = deepMerge(config, params);
+            }
+            
+            // 粒子数组
+            var particles = [];
+            var mouse = { x: 0, y: 0, radius: 100, down: false };
+            var trailPoints = [];
+            var maxTrailPoints = 50;
+            
+            // 效果状态
+            var activeEffect = null;
+            var effectStartTime = 0;
+            var gravityCenter = { x: canvas.width/2, y: canvas.height/2 };
+            
+            // 创建粒子
+            function createParticles() {
+                particles = [];
+                var numberOfParticles = config.particles.number.value;
+                
+                for (var i = 0; i < numberOfParticles; i++) {
+                    var color;
+                    if (config.particles.color.mode === "random" && Array.isArray(config.particles.color.value)) {
+                        color = config.particles.color.value[Math.floor(Math.random() * config.particles.color.value.length)];
+                    } else if (config.particles.color.mode === "gradient") {
+                        color = getGradientColor(i / numberOfParticles);
+                    } else {
+                        color = config.particles.color.value;
+                    }
+                    
+                    particles.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        size: config.particles.size.random ? 
+                            Math.random() * config.particles.size.value + 1 : 
+                            config.particles.size.value,
+                        originalSize: config.particles.size.random ? 
+                            Math.random() * config.particles.size.value + 1 : 
+                            config.particles.size.value,
+                        color: color,
+                        speedX: (Math.random() - 0.5) * config.particles.move.speed,
+                        speedY: (Math.random() - 0.5) * config.particles.move.speed,
+                        opacity: config.particles.opacity.random ?
+                            Math.random() * config.particles.opacity.value :
+                            config.particles.opacity.value,
+                        trail: config.effects.trails.enable ? [] : null
+                    });
+                }
+            }
+            
+            // 获取渐变颜色
+            function getGradientColor(position) {
+                var colors = [
+                    {r: 255, g: 138, b: 0},
+                    {r: 218, g: 27, b: 96},
+                    {r: 33, g: 147, b: 176},
+                    {r: 142, g: 45, b: 226}
+                ];
+                
+                var idx = Math.floor(position * (colors.length - 1));
+                var frac = position * (colors.length - 1) - idx;
+                
+                var r = Math.round(colors[idx].r + frac * (colors[idx+1].r - colors[idx].r));
+                var g = Math.round(colors[idx].g + frac * (colors[idx+1].g - colors[idx].g));
+                var b = Math.round(colors[idx].b + frac * (colors[idx+1].b - colors[idx].b));
+                
+                return `rgb(${r}, ${g}, ${b})`;
+            }
+            
+            // 绘制形状
+            function drawShape(ctx, x, y, size, shape) {
+                ctx.beginPath();
+                
+                switch(shape) {
+                    case "circle":
+                        ctx.arc(x, y, size, 0, Math.PI * 2);
+                        break;
+                    case "triangle":
+                        ctx.moveTo(x, y - size);
+                        ctx.lineTo(x - size, y + size);
+                        ctx.lineTo(x + size, y + size);
+                        ctx.closePath();
+                        break;
+                    case "star":
+                        drawStar(ctx, x, y, 5, size, size/2);
+                        break;
+                    case "polygon":
+                        drawPolygon(ctx, x, y, config.particles.shape.polygon.nb_sides || 5, size);
+                        break;
+                    case "edge":
+                        ctx.rect(x - size, y - size, size * 2, size * 2);
+                        break;
+                    default:
+                        ctx.arc(x, y, size, 0, Math.PI * 2);
+                }
+                
+                ctx.fill();
+            }
+            
+            // 绘制星形
+            function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
+                var rot = Math.PI / 2 * 3;
+                var x = cx;
+                var y = cy;
+                var step = Math.PI / spikes;
+                
+                ctx.beginPath();
+                ctx.moveTo(cx, cy - outerRadius);
+                
+                for (var i = 0; i < spikes; i++) {
+                    x = cx + Math.cos(rot) * outerRadius;
+                    y = cy + Math.sin(rot) * outerRadius;
+                    ctx.lineTo(x, y);
+                    rot += step;
+                    
+                    x = cx + Math.cos(rot) * innerRadius;
+                    y = cy + Math.sin(rot) * innerRadius;
+                    ctx.lineTo(x, y);
+                    rot += step;
+                }
+                
+                ctx.lineTo(cx, cy - outerRadius);
+                ctx.closePath();
+            }
+            
+            // 绘制多边形
+            function drawPolygon(ctx, x, y, sides, radius) {
+                ctx.beginPath();
+                for (var i = 0; i < sides; i++) {
+                    var angle = (i * 2 * Math.PI / sides) - Math.PI / 2;
+                    var px = x + radius * Math.cos(angle);
+                    var py = y + radius * Math.sin(angle);
+                    
+                    if (i === 0) {
+                        ctx.moveTo(px, py);
+                    } else {
+                        ctx.lineTo(px, py);
+                    }
+                }
+                ctx.closePath();
+            }
+            
+            // 应用效果
+            function applyEffects(particle, index) {
+                // 重力效果
+                if (config.effects.gravity.enable) {
+                    particle.speedY += config.effects.gravity.strength;
+                }
+                
+                // 漩涡效果
+                if (config.effects.vortex.enable) {
+                    var centerX = config.effects.vortex.centerX * canvas.width;
+                    var centerY = config.effects.vortex.centerY * canvas.height;
+                    
+                    var dx = centerX - particle.x;
+                    var dy = centerY - particle.y;
+                    var distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance > 10) {
+                        var force = config.effects.vortex.strength / distance;
+                        particle.speedX += (dy / distance) * force;
+                        particle.speedY -= (dx / distance) * force;
+                    }
+                }
+                
+                // 脉冲效果
+                if (config.effects.pulse.enable) {
+                    var time = Date.now() / 1000;
+                    var pulse = Math.sin(time * config.effects.pulse.speed) * 0.5 + 0.5;
+                    particle.size = particle.originalSize * (1 + pulse * config.effects.pulse.factor / 10);
+                }
+                
+                // 波浪效果
+                if (config.effects.waves.enable) {
+                    var wave = Math.sin(particle.x * 0.01 + Date.now() * 0.001 * config.effects.waves.speed) * 
+                               config.effects.waves.amplitude;
+                    particle.speedY += wave * 0.01;
+                }
+                
+                // 轨迹效果
+                if (config.effects.trails.enable && particle.trail) {
+                    particle.trail.push({x: particle.x, y: particle.y});
+                    if (particle.trail.length > config.effects.trails.length) {
+                        particle.trail.shift();
+                    }
+                }
+            }
+            
+            // 绘制粒子
+            function drawParticles() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // 绘制鼠标轨迹点
+                if (config.effects.trails.enable && trailPoints.length > 1) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+                    ctx.lineWidth = 2;
+                    ctx.moveTo(trailPoints[0].x, trailPoints[0].y);
+                    
+                    for (var i = 1; i < trailPoints.length; i++) {
+                        ctx.lineTo(trailPoints[i].x, trailPoints[i].y);
+                    }
+                    ctx.stroke();
+                }
+                
+                // 绘制连线
+                if (config.particles.line_linked.enable) {
+                    for (var i = 0; i < particles.length; i++) {
+                        for (var j = i + 1; j < particles.length; j++) {
+                            var dx = particles[i].x - particles[j].x;
+                            var dy = particles[i].y - particles[j].y;
+                            var distance = Math.sqrt(dx * dx + dy * dy);
+                            
+                            if (distance < config.particles.line_linked.distance) {
+                                ctx.beginPath();
+                                ctx.strokeStyle = config.particles.line_linked.color;
+                                ctx.lineWidth = config.particles.line_linked.width;
+                                ctx.globalAlpha = config.particles.line_linked.opacity * (1 - distance / config.particles.line_linked.distance);
+                                ctx.moveTo(particles[i].x, particles[i].y);
+                                ctx.lineTo(particles[j].x, particles[j].y);
+                                ctx.stroke();
+                                ctx.globalAlpha = 1;
+                            }
+                        }
+                    }
+                }
+                
+                // 绘制粒子
+                for (var i = 0; i < particles.length; i++) {
+                    var p = particles[i];
+                    
+                    // 应用效果
+                    applyEffects(p, i);
+                    
+                    // 鼠标交互
+                    if (config.interactivity.events.onhover.enable && config.interactivity.events.onhover.mode !== "none") {
+                        var dx = mouse.x - p.x;
+                        var dy = mouse.y - p.y;
+                        var distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < config.interactivity.events.onhover.distance) {
+                            var angle = Math.atan2(dy, dx);
+                            var force = (config.interactivity.events.onhover.distance - distance) / config.interactivity.events.onhover.distance;
+                            force *= config.interactivity.events.onhover.strength / 10;
+                            
+                            switch(config.interactivity.events.onhover.mode) {
+                                case "attract":
+                                    p.x -= Math.cos(angle) * force * 2;
+                                    p.y -= Math.sin(angle) * force * 2;
+                                    break;
+                                case "repulse":
+                                    p.x += Math.cos(angle) * force * 5;
+                                    p.y += Math.sin(angle) * force * 5;
+                                    break;
+                                case "bubble":
+                                    p.size *= 1.05;
+                                    break;
+                                case "grab":
+                                    p.x = mouse.x + Math.cos(angle) * distance * 0.1;
+                                    p.y = mouse.y + Math.sin(angle) * distance * 0.1;
+                                    break;
+                                case "trail":
+                                    // 轨迹模式 - 粒子跟随鼠标轨迹
+                                    if (trailPoints.length > 0) {
+                                        var closestPoint = trailPoints[0];
+                                        var minDist = Infinity;
+                                        
+                                        for (var j = 0; j < trailPoints.length; j++) {
+                                            var ddx = trailPoints[j].x - p.x;
+                                            var ddy = trailPoints[j].y - p.y;
+                                            var dist = Math.sqrt(ddx * ddx + ddy * ddy);
+                                            
+                                            if (dist < minDist) {
+                                                minDist = dist;
+                                                closestPoint = trailPoints[j];
+                                            }
+                                        }
+                                        
+                                        if (minDist < 100) {
+                                            var trailAngle = Math.atan2(closestPoint.y - p.y, closestPoint.x - p.x);
+                                            p.x += Math.cos(trailAngle) * force * 3;
+                                            p.y += Math.sin(trailAngle) * force * 3;
+                                        }
+                                    }
+                                    break;
+                            }
+                        }
+                    }
+                    
+                    // 移动粒子
+                    if (config.particles.move.enable) {
+                        p.x += p.speedX;
+                        p.y += p.speedY;
+                        
+                        // 边界检查
+                        if (config.particles.move.bounce) {
+                            if (p.x < 0 || p.x > canvas.width) p.speedX = -p.speedX * config.effects.bounce.factor;
+                            if (p.y < 0 || p.y > canvas.height) p.speedY = -p.speedY * config.effects.bounce.factor;
+                        } else {
+                            if (p.x < -50) p.x = canvas.width + 50;
+                            if (p.x > canvas.width + 50) p.x = -50;
+                            if (p.y < -50) p.y = canvas.height + 50;
+                            if (p.y > canvas.height + 50) p.y = -50;
+                        }
+                        
+                        // 确保粒子在合理范围内
+                        p.x = Math.max(-100, Math.min(canvas.width + 100, p.x));
+                        p.y = Math.max(-100, Math.min(canvas.height + 100, p.y));
+                    }
+                    
+                    // 绘制轨迹
+                    if (config.effects.trails.enable && p.trail && p.trail.length > 1) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = p.color;
+                        ctx.lineWidth = p.size / 3;
+                        ctx.globalAlpha = p.opacity * 0.3;
+                        ctx.moveTo(p.trail[0].x, p.trail[0].y);
+                        
+                        for (var j = 1; j < p.trail.length; j++) {
+                            ctx.lineTo(p.trail[j].x, p.trail[j].y);
+                        }
+                        ctx.stroke();
+                        ctx.globalAlpha = 1;
+                    }
+                    
+                    // 绘制单个粒子
+                    ctx.beginPath();
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = p.opacity;
+                    drawShape(ctx, p.x, p.y, p.size, config.particles.shape.type);
+                    ctx.globalAlpha = 1;
+                }
+                
+                // 绘制重力中心（如果启用）
+                if (config.effects.vortex.enable) {
+                    ctx.beginPath();
+                    ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
+                    ctx.arc(
+                        config.effects.vortex.centerX * canvas.width, 
+                        config.effects.vortex.centerY * canvas.height, 
+                        10, 0, Math.PI * 2
+                    );
+                    ctx.fill();
+                }
+                
+                requestAnimationFrame(drawParticles);
+            }
+            
+            // 初始化
+            createParticles();
+            drawParticles();
+            
+            // 窗口调整大小
+            window.addEventListener('resize', function() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                createParticles();
+            });
+            
+            // 鼠标移动
+            canvas.addEventListener('mousemove', function(e) {
+                mouse.x = e.x;
+                mouse.y = e.y;
+                
+                // 记录轨迹点
+                if (mouse.down) {
+                    trailPoints.push({x: mouse.x, y: mouse.y});
+                    if (trailPoints.length > maxTrailPoints) {
+                        trailPoints.shift();
+                    }
+                }
+            });
+            
+            // 鼠标按下
+            canvas.addEventListener('mousedown', function(e) {
+                mouse.down = true;
+                
+                // 添加轨迹点
+                trailPoints.push({x: e.x, y: e.y});
+                if (trailPoints.length > maxTrailPoints) {
+                    trailPoints.shift();
+                }
+                
+                // 鼠标点击效果
+                if (config.interactivity.events.onclick.enable) {
+                    var mode = config.interactivity.events.onclick.mode;
+                    var count = 10;
+                    
+                    if (mode === "push") {
+                        for (var i = 0; i < count; i++) {
+                            particles.push({
+                                x: e.x,
+                                y: e.y,
+                                size: Math.random() * 5 + 2,
+                                originalSize: Math.random() * 5 + 2,
+                                color: config.particles.color.mode === "random" && Array.isArray(config.particles.color.value) ? 
+                                       config.particles.color.value[Math.floor(Math.random() * config.particles.color.value.length)] : 
+                                       config.particles.color.value,
+                                speedX: (Math.random() - 0.5) * 4,
+                                speedY: (Math.random() - 0.5) * 4,
+                                opacity: 0.8,
+                                trail: config.effects.trails.enable ? [] : null
+                            });
+                        }
+                    } else if (mode === "remove") {
+                        // 移除点击区域的粒子
+                        particles = particles.filter(function(p) {
+                            var dx = p.x - e.x;
+                            var dy = p.y - e.y;
+                            return Math.sqrt(dx * dx + dy * dy) > 50;
+                        });
+                    } else if (mode === "bubble") {
+                        // 气泡效果 - 粒子向外扩散
+                        for (var i = 0; i < particles.length; i++) {
+                            var p = particles[i];
+                            var dx = p.x - e.x;
+                            var dy = p.y - e.y;
+                            var distance = Math.sqrt(dx * dx + dy * dy);
+                            
+                            if (distance < 150) {
+                                var angle = Math.atan2(dy, dx);
+                                var force = (150 - distance) / 150;
+                                p.speedX += Math.cos(angle) * force * 3;
+                                p.speedY += Math.sin(angle) * force * 3;
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 鼠标释放
+            canvas.addEventListener('mouseup', function() {
+                mouse.down = false;
+            });
+            
+            // 鼠标离开画布
+            canvas.addEventListener('mouseleave', function() {
+                mouse.down = false;
+            });
+            
+            // 工具函数 - 深度合并对象
+            function deepMerge(target, source) {
+                for (var key in source) {
+                    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+                        if (!target[key] || typeof target[key] !== 'object') {
+                            target[key] = {};
+                        }
+                        deepMerge(target[key], source[key]);
+                    } else {
+                        target[key] = source[key];
+                    }
+                }
+                return target;
+            }
+            
+            // 返回API
+            return {
+                pJSDom: [{
+                    pJS: {
+                        particles: config.particles,
+                        interactivity: config.interactivity,
+                        effects: config.effects,
+                        fn: {
+                            particlesRefresh: function() {
+                                createParticles();
+                            },
+                            updateConfig: function(newConfig) {
+                                config = deepMerge(config, newConfig);
+                                createParticles();
+                            },
+                            getConfig: function() {
+                                return JSON.parse(JSON.stringify(config));
+                            }
+                        }
+                    }
+                }]
+            };
+        };
+        
+        // 初始化Particles.js
+        var pJS = particlesJS('particles-js', {
+            particles: {
+                number: { value: 120, density: { enable: true, value_area: 800 } },
+                color: { value: ["#ff8a00", "#da1b60", "#2193b0", "#8e2de2"], mode: "random" },
+                shape: { type: "circle" },
+                opacity: { value: 0.5, random: true },
+                size: { value: 3, random: true },
+                line_linked: { enable: true, distance: 150, color: "#ffffff", opacity: 0.2, width: 1 },
+                move: { enable: true, speed: 2, direction: "none", random: true, straight: false, out_mode: "out", bounce: false }
+            },
+            interactivity: {
+                detect_on: "canvas",
+                events: {
+                    onhover: { enable: true, mode: "attract", distance: 200, strength: 5 },
+                    onclick: { enable: true, mode: "push" }
+                }
+            },
+            effects: {
+                gravity: { enable: false, strength: 0.1, direction: "bottom" },
+                vortex: { enable: false, strength: 0.5, centerX: 0.5, centerY: 0.5 },
+                pulse: { enable: false, speed: 5, factor: 4 },
+                waves: { enable: false, speed: 0.5, amplitude: 20 },
+                bounce: { enable: false, factor: 0.8 },
+                trails: { enable: false, length: 10 }
+            }
+        });
+        
+        // 获取particles.js实例
+        pJS = pJS.pJSDom[0].pJS;
+        
+        // 初始化UI控制
+        initUIControls();
+        
+        function initUIControls() {
+            // 获取DOM元素
+            const densitySlider = document.getElementById('particle-density');
+            const sizeSlider = document.getElementById('particle-size');
+            const speedSlider = document.getElementById('particle-speed');
+            const opacitySlider = document.getElementById('particle-opacity');
+            const lineWidthSlider = document.getElementById('line-width');
+            const lineDistanceSlider = document.getElementById('line-distance');
+            const lineOpacitySlider = document.getElementById('line-opacity');
+            const interactionDistanceSlider = document.getElementById('interaction-distance');
+            const interactionStrengthSlider = document.getElementById('interaction-strength');
+            
+            const densityValue = document.getElementById('density-value');
+            const sizeValue = document.getElementById('size-value');
+            const speedValue = document.getElementById('speed-value');
+            const opacityValue = document.getElementById('opacity-value');
+            const lineValue = document.getElementById('line-value');
+            const distanceValue = document.getElementById('distance-value');
+            const lineOpacityValue = document.getElementById('line-opacity-value');
+            const interactionDistanceValue = document.getElementById('interaction-distance-value');
+            const interactionStrengthValue = document.getElementById('interaction-strength-value');
+            
+            const lineToggle = document.getElementById('line-toggle');
+            const randomSizeToggle = document.getElementById('random-size');
+            const randomOpacityToggle = document.getElementById('random-opacity');
+            const bounceToggle = document.getElementById('bounce-effect');
+            const autoSaveToggle = document.getElementById('auto-save');
+            
+            const particleShapeSelect = document.getElementById('particle-shape');
+            const colorModeSelect = document.getElementById('color-mode');
+            const interactionModeSelect = document.getElementById('interaction-mode');
+            
+            const colorOptions = document.querySelectorAll('.color-option');
+            const effectButtons = document.querySelectorAll('.effect-btn');
+            const presetButtons = document.querySelectorAll('.preset-btn');
+            
+            const toggleLinesBtn = document.getElementById('toggle-lines');
+            const toggleParticlesBtn = document.getElementById('toggle-particles');
+            const toggleMoveBtn = document.getElementById('toggle-move');
+            const clearEffectsBtn = document.getElementById('clear-effects');
+            const savePresetBtn = document.getElementById('save-preset');
+            const loadPresetBtn = document.getElementById('load-preset');
+            const fullscreenBtn = document.getElementById('fullscreen-btn');
+            
+            const particleCountElement = document.getElementById('particle-count');
+            const fpsElement = document.getElementById('fps');
+            const connectionsElement = document.getElementById('connections');
+            const mouseXElement = document.getElementById('mouse-x');
+            const modeNameElement = document.getElementById('mode-name');
+            const notification = document.getElementById('notification');
+            
+            const motionVisualCanvas = document.getElementById('motion-visual');
+            const motionVisualCtx = motionVisualCanvas.getContext('2d');
+            motionVisualCanvas.width = motionVisualCanvas.offsetWidth;
+            motionVisualCanvas.height = motionVisualCanvas.offsetHeight;
+            
+            // 更新UI显示的值
+            densityValue.textContent = densitySlider.value;
+            sizeValue.textContent = sizeSlider.value;
+            speedValue.textContent = speedSlider.value;
+            opacityValue.textContent = opacitySlider.value;
+            lineValue.textContent = lineWidthSlider.value;
+            distanceValue.textContent = lineDistanceSlider.value;
+            lineOpacityValue.textContent = lineOpacitySlider.value;
+            interactionDistanceValue.textContent = interactionDistanceSlider.value;
+            interactionStrengthValue.textContent = interactionStrengthSlider.value;
+            
+            // 更新粒子数量显示
+            particleCountElement.textContent = pJS.particles.number.value;
+            
+            // 更新模式名称
+            modeNameElement.textContent = interactionModeSelect.options[interactionModeSelect.selectedIndex].text;
+            
+            // 性能监控
+            let lastTime = 0;
+            let frameCount = 0;
+            let fps = 60;
+            
+            function updateFPS(currentTime) {
+                frameCount++;
+                if (currentTime - lastTime >= 1000) {
+                    fps = Math.round((frameCount * 1000) / (currentTime - lastTime));
+                    fpsElement.textContent = fps;
+                    frameCount = 0;
+                    lastTime = currentTime;
+                }
+                requestAnimationFrame(updateFPS);
+            }
+            
+            requestAnimationFrame(updateFPS);
+            
+            // 鼠标位置追踪
+            document.addEventListener('mousemove', (e) => {
+                mouseXElement.textContent = e.clientX;
+            });
+            
+            // 模拟连线数
+            function updateConnections() {
+                let connections = Math.floor(pJS.particles.number.value / 4);
+                connectionsElement.textContent = connections;
+                setTimeout(updateConnections, 1000);
+            }
+            
+            updateConnections();
+            
+            // 运动可视化
+            function updateMotionVisual() {
+                motionVisualCtx.clearRect(0, 0, motionVisualCanvas.width, motionVisualCanvas.height);
+                
+                // 绘制波形
+                motionVisualCtx.beginPath();
+                motionVisualCtx.strokeStyle = "#ff8a00";
+                motionVisualCtx.lineWidth = 2;
+                
+                const time = Date.now() / 1000;
+                const amplitude = motionVisualCanvas.height / 3;
+                const frequency = 0.05;
+                
+                for (let x = 0; x < motionVisualCanvas.width; x++) {
+                    const y = amplitude * Math.sin(x * frequency + time * 2) + motionVisualCanvas.height / 2;
+                    
+                    if (x === 0) {
+                        motionVisualCtx.moveTo(x, y);
+                    } else {
+                        motionVisualCtx.lineTo(x, y);
+                    }
+                }
+                
+                motionVisualCtx.stroke();
+                requestAnimationFrame(updateMotionVisual);
+            }
+            
+            updateMotionVisual();
+            
+            // 滑块事件监听器
+            densitySlider.addEventListener('input', function() {
+                densityValue.textContent = this.value;
+                pJS.particles.number.value = parseInt(this.value);
+                pJS.fn.particlesRefresh();
+                particleCountElement.textContent = pJS.particles.number.value;
+                if (autoSaveToggle.checked) saveSettings();
+            });
+            
+            sizeSlider.addEventListener('input', function() {
+                sizeValue.textContent = this.value;
+                pJS.particles.size.value = parseFloat(this.value);
+                pJS.fn.particlesRefresh();
+                if (autoSaveToggle.checked) saveSettings();
+            });
+            
+            speedSlider.addEventListener('input', function() {
+                speedValue.textContent = this.value;
+                pJS.particles.move.speed = parseFloat(this.value);
+                pJS.fn.particlesRefresh();
+                if (autoSaveToggle.checked) saveSettings();
+            });
+            
+            opacitySlider.addEventListener('input', function() {
+                opacityValue.textContent = this.value;
+                pJS.particles.opacity.value = parseFloat(this.value);
+                pJS.fn.particlesRefresh();
+                if (autoSaveToggle.checked) saveSettings();
+            });
+            
+            lineWidthSlider.addEventListener('input', function() {
+                lineValue.textContent = this.value;
+                pJS.particles.line_linked.width = parseFloat(this.value);
+                pJS.fn.particlesRefresh();
+                if (autoSaveToggle.checked) saveSettings();
+            });
+            
+            lineDistanceSlider.addEventListener('input', function() {
+                distanceValue.textContent = this.value;
+                pJS.particles.line_linked.distance = parseInt(this.value);
+                pJS.fn.particlesRefresh();
+                if (autoSaveToggle.checked) saveSettings();
+            });
+            
+            lineOpacitySlider.addEventListener('input', function() {
+                lineOpacityValue.textContent = this.value;
+                pJS.particles.line_linked.opacity = parseFloat(this.value);
+                pJS.fn.particlesRefresh();
+                if (autoSaveToggle.checked) saveSettings();
+            });
+            
+            interactionDistanceSlider.addEventListener('input', function() {
+                interactionDistanceValue.textContent = this.value;
+                pJS.interactivity.events.onhover.distance = parseInt(this.value);
+                if (autoSaveToggle.checked) saveSettings();
+            });
+            
+            interactionStrengthSlider.addEventListener('input', function() {
+                interactionStrengthValue.textContent = this.value;
+                pJS.interactivity.events.onhover.strength = parseInt(this.value);
+                if (autoSaveToggle.checked) saveSettings();
+            });
+            
+            // 切换开关事件
+            lineToggle.addEventListener('change', function() {
+                pJS.particles.line_linked.enable = this.checked;
+                pJS.fn.particlesRefresh();
+                if (autoSaveToggle.checked) saveSettings();
+            });
+            
+            randomSizeToggle.addEventListener('change', function() {
+                pJS.particles.size.random = this.checked;
+                pJS.fn.particlesRefresh();
+                if (autoSaveToggle.checked) saveSettings();
+            });
+            
+            randomOpacityToggle.addEventListener('change', function() {
+                pJS.particles.opacity.random = this.checked;
+                pJS.fn.particlesRefresh();
+                if (autoSaveToggle.checked) saveSettings();
+            });
+            
+            bounceToggle.addEventListener('change', function() {
+                pJS.particles.move.bounce = this.checked;
+                pJS.effects.bounce.enable = this.checked;
+                if (autoSaveToggle.checked) saveSettings();
+            });
+            
+            // 选择框事件
+            particleShapeSelect.addEventListener('change', function() {
+                pJS.particles.shape.type = this.value;
+                pJS.fn.particlesRefresh();
+                if (autoSaveToggle.checked) saveSettings();
+            });
+            
+            colorModeSelect.addEventListener('change', function() {
+                pJS.particles.color.mode = this.value;
+                pJS.fn.particlesRefresh();
+                if (autoSaveToggle.checked) saveSettings();
+            });
+            
+            interactionModeSelect.addEventListener('change', function() {
+                pJS.interactivity.events.onhover.mode = this.value;
+                modeNameElement.textContent = this.options[this.selectedIndex].text;
+                if (autoSaveToggle.checked) saveSettings();
+            });
+            
+            // 颜色选项事件
+            colorOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    colorOptions.forEach(opt => opt.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const color = this.dataset.color;
+                    if (color === 'multi') {
+                        pJS.particles.color.value = ["#ff8a00", "#da1b60", "#2193b0", "#8e2de2"];
+                        pJS.particles.color.mode = "random";
+                        colorModeSelect.value = "random";
+                    } else if (color === 'rainbow') {
+                        pJS.particles.color.value = ["#ff0080", "#ff8c00", "#ffff00", "#00ff00", "#00ffff", "#0000ff", "#8a2be2"];
+                        pJS.particles.color.mode = "random";
+                        colorModeSelect.value = "random";
+                    } else {
+                        pJS.particles.color.value = color;
+                        pJS.particles.color.mode = "single";
+                        colorModeSelect.value = "single";
+                    }
+                    
+                    pJS.fn.particlesRefresh();
+                    if (autoSaveToggle.checked) saveSettings();
+                });
+            });
+            
+            // 效果按钮事件
+            effectButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // 关闭所有效果
+                    Object.keys(pJS.effects).forEach(key => {
+                        if (pJS.effects[key] && typeof pJS.effects[key] === 'object') {
+                            pJS.effects[key].enable = false;
+                        }
+                    });
+                    
+                    // 移除所有激活状态
+                    effectButtons.forEach(btn => btn.classList.remove('active'));
+                    
+                    // 激活当前效果
+                    this.classList.add('active');
+                    
+                    const effect = this.id.replace('effect-', '');
+                    
+                    switch(effect) {
+                        case 'gravity':
+                            pJS.effects.gravity.enable = true;
+                            break;
+                        case 'vortex':
+                            pJS.effects.vortex.enable = true;
+                            break;
+                        case 'pulse':
+                            pJS.effects.pulse.enable = true;
+                            break;
+                        case 'waves':
+                            pJS.effects.waves.enable = true;
+                            break;
+                        case 'bounce':
+                            pJS.effects.bounce.enable = true;
+                            pJS.particles.move.bounce = true;
+                            bounceToggle.checked = true;
+                            break;
+                        case 'trails':
+                            pJS.effects.trails.enable = true;
+                            break;
+                    }
+                    
+                    pJS.fn.particlesRefresh();
+                    if (autoSaveToggle.checked) saveSettings();
+                });
+            });
+            
+            // 预设按钮事件
+            presetButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const preset = this.dataset.preset;
+                    
+                    // 重置所有效果
+                    Object.keys(pJS.effects).forEach(key => {
+                        if (pJS.effects[key] && typeof pJS.effects[key] === 'object') {
+                            pJS.effects[key].enable = false;
+                        }
+                    });
+                    
+                    effectButtons.forEach(btn => btn.classList.remove('active'));
+                    
+                    switch(preset) {
+                        case 'fireworks':
+                            pJS.particles.color.value = ["#ff0000", "#ffff00", "#00ff00", "#00ffff", "#ff00ff"];
+                            pJS.particles.color.mode = "random";
+                            pJS.particles.opacity.value = 0.9;
+                            pJS.particles.size.value = 4;
+                            pJS.particles.line_linked.enable = false;
+                            pJS.particles.move.speed = 6;
+                            pJS.particles.number.value = 80;
+                            pJS.interactivity.events.onclick.mode = "push";
+                            lineToggle.checked = false;
+                            break;
+                            
+                        case 'snow':
+                            pJS.particles.color.value = "#ffffff";
+                            pJS.particles.color.mode = "single";
+                            pJS.particles.opacity.value = 0.8;
+                            pJS.particles.size.value = 5;
+                            pJS.particles.line_linked.enable = false;
+                            pJS.particles.move.speed = 1;
+                            pJS.particles.move.direction = "bottom";
+                            pJS.particles.number.value = 150;
+                            pJS.effects.gravity.enable = true;
+                            pJS.effects.gravity.direction = "bottom";
+                            lineToggle.checked = false;
+                            effectButtons[0].classList.add('active');
+                            break;
+                            
+                        case 'network':
+                            pJS.particles.color.value = "#00ffaa";
+                            pJS.particles.color.mode = "single";
+                            pJS.particles.opacity.value = 0.6;
+                            pJS.particles.size.value = 2;
+                            pJS.particles.line_linked.enable = true;
+                            pJS.particles.line_linked.color = "#00ffaa";
+                            pJS.particles.line_linked.opacity = 0.4;
+                            pJS.particles.line_linked.width = 1;
+                            pJS.particles.line_linked.distance = 200;
+                            pJS.particles.move.speed = 0.5;
+                            pJS.particles.number.value = 100;
+                            lineToggle.checked = true;
+                            break;
+                            
+                        case 'galaxy':
+                            pJS.particles.color.value = ["#8e2de2", "#4a00e0", "#2193b0", "#6dd5ed"];
+                            pJS.particles.color.mode = "random";
+                            pJS.particles.opacity.value = 0.7;
+                            pJS.particles.size.value = 2;
+                            pJS.particles.line_linked.enable = true;
+                            pJS.particles.line_linked.color = "#8e2de2";
+                            pJS.particles.line_linked.opacity = 0.1;
+                            pJS.particles.line_linked.distance = 300;
+                            pJS.particles.move.speed = 0.3;
+                            pJS.particles.number.value = 200;
+                            pJS.effects.vortex.enable = true;
+                            pJS.effects.vortex.strength = 0.3;
+                            lineToggle.checked = true;
+                            effectButtons[1].classList.add('active');
+                            break;
+                            
+                        case 'fire':
+                            pJS.particles.color.value = ["#f46b45", "#eea849", "#ff8a00"];
+                            pJS.particles.color.mode = "random";
+                            pJS.particles.opacity.value = 0.8;
+                            pJS.particles.size.value = 4;
+                            pJS.particles.line_linked.enable = false;
+                            pJS.particles.move.speed = 3;
+                            pJS.particles.move.direction = "top";
+                            pJS.particles.number.value = 80;
+                            pJS.effects.pulse.enable = true;
+                            lineToggle.checked = false;
+                            effectButtons[2].classList.add('active');
+                            break;
+                            
+                        case 'water':
+                            pJS.particles.color.value = ["#2193b0", "#6dd5ed", "#00b4db"];
+                            pJS.particles.color.mode = "random";
+                            pJS.particles.opacity.value = 0.6;
+                            pJS.particles.size.value = 3;
+                            pJS.particles.line_linked.enable = true;
+                            pJS.particles.line_linked.color = "#2193b0";
+                            pJS.particles.line_linked.opacity = 0.2;
+                            pJS.particles.line_linked.distance = 100;
+                            pJS.particles.move.speed = 1.5;
+                            pJS.particles.number.value = 120;
+                            pJS.effects.waves.enable = true;
+                            lineToggle.checked = true;
+                            effectButtons[3].classList.add('active');
+                            break;
+                            
+                        case 'stars':
+                            pJS.particles.color.value = "#ffffff";
+                            pJS.particles.color.mode = "single";
+                            pJS.particles.opacity.value = 0.9;
+                            pJS.particles.size.value = 2;
+                            pJS.particles.size.random = true;
+                            pJS.particles.line_linked.enable = false;
+                            pJS.particles.move.speed = 0.1;
+                            pJS.particles.number.value = 300;
+                            pJS.particles.shape.type = "star";
+                            particleShapeSelect.value = "star";
+                            lineToggle.checked = false;
+                            break;
+                            
+                        case 'nebula':
+                            pJS.particles.color.value = ["#ff0080", "#8e2de2", "#4a00e0", "#2193b0"];
+                            pJS.particles.color.mode = "gradient";
+                            pJS.particles.opacity.value = 0.4;
+                            pJS.particles.size.value = 5;
+                            pJS.particles.line_linked.enable = true;
+                            pJS.particles.line_linked.color = "#8e2de2";
+                            pJS.particles.line_linked.opacity = 0.1;
+                            pJS.particles.line_linked.distance = 250;
+                            pJS.particles.move.speed = 0.2;
+                            pJS.particles.number.value = 100;
+                            pJS.effects.trails.enable = true;
+                            colorModeSelect.value = "gradient";
+                            lineToggle.checked = true;
+                            effectButtons[5].classList.add('active');
+                            break;
+                            
+                        case 'default':
+                            // 重置为默认设置
+                            pJS.fn.updateConfig({
+                                particles: {
+                                    number: { value: 120 },
+                                    color: { value: ["#ff8a00", "#da1b60", "#2193b0", "#8e2de2"], mode: "random" },
+                                    shape: { type: "circle" },
+                                    opacity: { value: 0.5, random: true },
+                                    size: { value: 3, random: true },
+                                    line_linked: { enable: true, distance: 150, color: "#ffffff", opacity: 0.2, width: 1 },
+                                    move: { enable: true, speed: 2, direction: "none", random: true, straight: false, out_mode: "out", bounce: false }
+                                },
+                                interactivity: {
+                                    events: {
+                                        onhover: { enable: true, mode: "attract", distance: 200, strength: 5 },
+                                        onclick: { enable: true, mode: "push" }
+                                    }
+                                },
+                                effects: {
+                                    gravity: { enable: false },
+                                    vortex: { enable: false },
+                                    pulse: { enable: false },
+                                    waves: { enable: false },
+                                    bounce: { enable: false },
+                                    trails: { enable: false }
+                                }
+                            });
+                            
+                            // 更新UI控件
+                            densitySlider.value = 120;
+                            sizeSlider.value = 3;
+                            speedSlider.value = 2;
+                            opacitySlider.value = 0.5;
+                            lineWidthSlider.value = 1;
+                            lineDistanceSlider.value = 150;
+                            lineOpacitySlider.value = 0.2;
+                            interactionDistanceSlider.value = 200;
+                            interactionStrengthSlider.value = 5;
+                            
+                            densityValue.textContent = 120;
+                            sizeValue.textContent = 3;
+                            speedValue.textContent = 2;
+                            opacityValue.textContent = 0.5;
+                            lineValue.textContent = 1;
+                            distanceValue.textContent = 150;
+                            lineOpacityValue.textContent = 0.2;
+                            interactionDistanceValue.textContent = 200;
+                            interactionStrengthValue.textContent = 5;
+                            
+                            lineToggle.checked = true;
+                            randomSizeToggle.checked = true;
+                            randomOpacityToggle.checked = true;
+                            bounceToggle.checked = false;
+                            
+                            particleShapeSelect.value = "circle";
+                            colorModeSelect.value = "random";
+                            interactionModeSelect.value = "attract";
+                            
+                            colorOptions.forEach(opt => opt.classList.remove('active'));
+                            colorOptions[0].classList.add('active');
+                            
+                            modeNameElement.textContent = "吸引";
+                            break;
+                    }
+                    
+                    pJS.fn.particlesRefresh();
+                    particleCountElement.textContent = pJS.particles.number.value;
+                    
+                    if (autoSaveToggle.checked) saveSettings();
+                });
+            });
+            
+            // 控制按钮事件
+            toggleLinesBtn.addEventListener('click', function() {
+                pJS.particles.line_linked.enable = !pJS.particles.line_linked.enable;
+                pJS.fn.particlesRefresh();
+                lineToggle.checked = pJS.particles.line_linked.enable;
+                this.innerHTML = pJS.particles.line_linked.enable ? '<i>🔗</i> 连线' : '<i>🚫</i> 连线';
+                if (autoSaveToggle.checked) saveSettings();
+            });
+            
+            toggleParticlesBtn.addEventListener('click', function() {
+                if (pJS.particles.number.value > 0) {
+                    pJS.particles.number.value = 0;
+                    this.innerHTML = '<i>⚛️</i> 显示';
+                    particleCountElement.textContent = "0";
+                } else {
+                    pJS.particles.number.value = parseInt(densitySlider.value);
+                    this.innerHTML = '<i>⚛️</i> 隐藏';
+                    particleCountElement.textContent = pJS.particles.number.value;
+                }
+                pJS.fn.particlesRefresh();
+                if (autoSaveToggle.checked) saveSettings();
+            });
+            
+            toggleMoveBtn.addEventListener('click', function() {
+                pJS.particles.move.enable = !pJS.particles.move.enable;
+                pJS.fn.particlesRefresh();
+                this.innerHTML = pJS.particles.move.enable ? '<i>⏸️</i> 暂停' : '<i>▶️</i> 继续';
+                if (autoSaveToggle.checked) saveSettings();
+            });
+            
+            clearEffectsBtn.addEventListener('click', function() {
+                // 关闭所有效果
+                Object.keys(pJS.effects).forEach(key => {
+                    if (pJS.effects[key] && typeof pJS.effects[key] === 'object') {
+                        pJS.effects[key].enable = false;
+                    }
+                });
+                
+                effectButtons.forEach(btn => btn.classList.remove('active'));
+                
+                pJS.fn.particlesRefresh();
+                if (autoSaveToggle.checked) saveSettings();
+                
+                showNotification("所有效果已清除");
+            });
+            
+            // 保存/加载预设
+            savePresetBtn.addEventListener('click', function() {
+                const config = pJS.fn.getConfig();
+                localStorage.setItem('particles-preset', JSON.stringify(config));
+                showNotification("预设已保存到本地存储");
+            });
+            
+            loadPresetBtn.addEventListener('click', function() {
+                const saved = localStorage.getItem('particles-preset');
+                if (saved) {
+                    try {
+                        const config = JSON.parse(saved);
+                        pJS.fn.updateConfig(config);
+                        showNotification("预设已从本地存储加载");
+                    } catch (e) {
+                        showNotification("加载预设时出错");
+                    }
+                } else {
+                    showNotification("未找到保存的预设");
+                }
+            });
+            
+            // 全屏切换
+            fullscreenBtn.addEventListener('click', function() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.error(`全屏请求失败: ${err.message}`);
+                    });
+                    this.innerHTML = '<i>⛶</i>';
+                } else {
+                    document.exitFullscreen();
+                    this.innerHTML = '<i>⛶</i>';
+                }
+            });
+            
+            // 键盘快捷键
+            document.addEventListener('keydown', function(e) {
+                switch(e.key.toLowerCase()) {
+                    case 'l':
+                        toggleLinesBtn.click();
+                        break;
+                    case 'p':
+                        toggleParticlesBtn.click();
+                        break;
+                    case ' ':
+                        e.preventDefault();
+                        toggleMoveBtn.click();
+                        break;
+                    case 'r':
+                        clearEffectsBtn.click();
+                        break;
+                    case 'escape':
+                        // 重置视图
+                        presetButtons[8].click();
+                        break;
+                }
+            });
+            
+            // 保存设置到本地存储
+            function saveSettings() {
+                const settings = {
+                    density: densitySlider.value,
+                    size: sizeSlider.value,
+                    speed: speedSlider.value,
+                    opacity: opacitySlider.value,
+                    lineWidth: lineWidthSlider.value,
+                    lineDistance: lineDistanceSlider.value,
+                    lineOpacity: lineOpacitySlider.value,
+                    interactionDistance: interactionDistanceSlider.value,
+                    interactionStrength: interactionStrengthSlider.value,
+                    lineEnabled: lineToggle.checked,
+                    randomSize: randomSizeToggle.checked,
+                    randomOpacity: randomOpacityToggle.checked,
+                    bounce: bounceToggle.checked,
+                    shape: particleShapeSelect.value,
+                    colorMode: colorModeSelect.value,
+                    interactionMode: interactionModeSelect.value,
+                    activeColor: document.querySelector('.color-option.active').dataset.color
+                };
+                
+                localStorage.setItem('particles-settings', JSON.stringify(settings));
+            }
+            
+            // 加载设置
+            function loadSettings() {
+                const saved = localStorage.getItem('particles-settings');
+                if (saved) {
+                    try {
+                        const settings = JSON.parse(saved);
+                        
+                        // 应用设置
+                        densitySlider.value = settings.density;
+                        sizeSlider.value = settings.size;
+                        speedSlider.value = settings.speed;
+                        opacitySlider.value = settings.opacity;
+                        lineWidthSlider.value = settings.lineWidth;
+                        lineDistanceSlider.value = settings.lineDistance;
+                        lineOpacitySlider.value = settings.lineOpacity;
+                        interactionDistanceSlider.value = settings.interactionDistance;
+                        interactionStrengthSlider.value = settings.interactionStrength;
+                        
+                        lineToggle.checked = settings.lineEnabled;
+                        randomSizeToggle.checked = settings.randomSize;
+                        randomOpacityToggle.checked = settings.randomOpacity;
+                        bounceToggle.checked = settings.bounce;
+                        
+                        particleShapeSelect.value = settings.shape;
+                        colorModeSelect.value = settings.colorMode;
+                        interactionModeSelect.value = settings.interactionMode;
+                        
+                        // 更新显示值
+                        densityValue.textContent = settings.density;
+                        sizeValue.textContent = settings.size;
+                        speedValue.textContent = settings.speed;
+                        opacityValue.textContent = settings.opacity;
+                        lineValue.textContent = settings.lineWidth;
+                        distanceValue.textContent = settings.lineDistance;
+                        lineOpacityValue.textContent = settings.lineOpacity;
+                        interactionDistanceValue.textContent = settings.interactionDistance;
+                        interactionStrengthValue.textContent = settings.interactionStrength;
+                        
+                        // 更新颜色选项
+                        colorOptions.forEach(opt => opt.classList.remove('active'));
+                        const activeColor = document.querySelector(`.color-option[data-color="${settings.activeColor}"]`);
+                        if (activeColor) activeColor.classList.add('active');
+                        
+                        // 更新模式名称
+                        modeNameElement.textContent = interactionModeSelect.options[interactionModeSelect.selectedIndex].text;
+                        
+                        // 应用粒子设置
+                        pJS.particles.number.value = parseInt(settings.density);
+                        pJS.particles.size.value = parseFloat(settings.size);
+                        pJS.particles.move.speed = parseFloat(settings.speed);
+                        pJS.particles.opacity.value = parseFloat(settings.opacity);
+                        pJS.particles.line_linked.width = parseFloat(settings.lineWidth);
+                        pJS.particles.line_linked.distance = parseInt(settings.lineDistance);
+                        pJS.particles.line_linked.opacity = parseFloat(settings.lineOpacity);
+                        pJS.particles.line_linked.enable = settings.lineEnabled;
+                        pJS.particles.size.random = settings.randomSize;
+                        pJS.particles.opacity.random = settings.randomOpacity;
+                        pJS.particles.move.bounce = settings.bounce;
+                        pJS.particles.shape.type = settings.shape;
+                        pJS.particles.color.mode = settings.colorMode;
+                        pJS.interactivity.events.onhover.mode = settings.interactionMode;
+                        pJS.interactivity.events.onhover.distance = parseInt(settings.interactionDistance);
+                        pJS.interactivity.events.onhover.strength = parseInt(settings.interactionStrength);
+                        
+                        // 更新颜色
+                        if (settings.activeColor === 'multi') {
+                            pJS.particles.color.value = ["#ff8a00", "#da1b60", "#2193b0", "#8e2de2"];
+                        } else if (settings.activeColor === 'rainbow') {
+                            pJS.particles.color.value = ["#ff0080", "#ff8c00", "#ffff00", "#00ff00", "#00ffff", "#0000ff", "#8a2be2"];
+                        } else {
+                            pJS.particles.color.value = settings.activeColor;
+                        }
+                        
+                        pJS.fn.particlesRefresh();
+                        particleCountElement.textContent = pJS.particles.number.value;
+                        
+                        console.log("设置已从本地存储加载");
+                    } catch (e) {
+                        console.error("加载设置时出错:", e);
+                    }
+                }
+            }
+            
+            // 显示通知
+            function showNotification(message) {
+                notification.textContent = message;
+                notification.classList.add('show');
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+            
+            // 初始加载设置
+            loadSettings();
+            
+            // 自动保存设置（定期保存）
+            setInterval(() => {
+                if (autoSaveToggle.checked) {
+                    saveSettings();
+                }
+            }, 10000);
+        }
+    </script>
+</body>
+</html>

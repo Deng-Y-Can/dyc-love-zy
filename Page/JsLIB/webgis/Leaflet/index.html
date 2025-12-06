@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>无数据库WebGIS演示</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        #map {
+            flex: 1;
+            height: 100%;
+            background: #e8e8e8;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: white;
+            border-right: 1px solid #ddd;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .control-panel {
+            margin-bottom: 30px;
+        }
+
+            .control-panel h3 {
+                color: #333;
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #4CAF50;
+            }
+
+        .layer-control {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 8px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+            .layer-control:hover {
+                background: #eef;
+                transform: translateX(5px);
+            }
+
+            .layer-control input {
+                margin-right: 10px;
+            }
+
+            .layer-control label {
+                flex: 1;
+                cursor: pointer;
+            }
+
+        .color-preview {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+            .btn:hover {
+                background: #45a049;
+            }
+
+            .btn.secondary {
+                background: #2196F3;
+            }
+
+                .btn.secondary:hover {
+                    background: #0b7dda;
+                }
+
+            .btn.danger {
+                background: #f44336;
+            }
+
+                .btn.danger:hover {
+                    background: #d32f2f;
+                }
+
+        .info-panel {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+
+        #coordinates {
+            font-family: monospace;
+            background: #f5f5f5;
+            padding: 5px;
+            border-radius: 3px;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <!-- 图层控制 -->
+            <div class="control-panel">
+                <h3>📁 图层控制</h3>
+                <div id="layer-controls">
+                    <!-- 动态生成图层控制 -->
+                </div>
+            </div>
+
+            <!-- 工具 -->
+            <div class="control-panel">
+                <h3>🛠️ 工具</h3>
+                <button class="btn" onclick="addMarker()">📍 添加标记</button>
+                <button class="btn" onclick="drawRectangle()">⬜ 绘制矩形</button>
+                <button class="btn" onclick="drawPolygon()">🔺 绘制多边形</button>
+                <button class="btn secondary" onclick="measureDistance()">📏 测量距离</button>
+                <button class="btn secondary" onclick="measureArea()">📐 测量面积</button>
+                <button class="btn danger" onclick="clearAll()">🗑️ 清除绘制</button>
+            </div>
+
+            <!-- 信息面板 -->
+            <div class="info-panel">
+                <h3>ℹ️ 地图信息</h3>
+                <p>比例尺: <span id="scale">1:100000</span></p>
+                <p>中心坐标: <span id="coordinates">0, 0</span></p>
+                <p>缩放级别: <span id="zoom-level">5</span></p>
+                <p>要素数量: <span id="feature-count">0</span></p>
+            </div>
+
+            <!-- 图例 -->
+            <div class="info-panel">
+                <h3>🎨 图例</h3>
+                <div class="legend" id="legend"></div>
+            </div>
+        </div>
+
+        <!-- 地图容器 -->
+        <div id="map"></div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+    <script>
+        // 1. 初始化地图
+        const map = L.map('map').setView([35.0, 105.0], 5);
+
+        // 2. 添加底图图层组
+        const baseLayers = {
+            "街道图": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }),
+            "卫星图": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: '© Esri'
+            }),
+            "地形图": L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenTopoMap'
+            })
+        };
+
+        baseLayers["街道图"].addTo(map);
+
+        // 3. 创建图层组来管理要素
+        const overlays = {
+            "主要城市": L.layerGroup(),
+            "主要河流": L.layerGroup(),
+            "省份边界": L.layerGroup(),
+            "绘制内容": L.layerGroup()
+        };
+
+        // 4. 创建图层控制
+        L.control.layers(baseLayers, overlays).addTo(map);
+
+        // 5. 添加静态数据（模拟数据库数据）
+        const citiesData = {
+            "type": "FeatureCollection",
+            "features": [
+                { "type": "Feature", "geometry": { "type": "Point", "coordinates": [116.4074, 39.9042] }, "properties": { "name": "北京", "type": "首都", "population": "2170万" } },
+                { "type": "Feature", "geometry": { "type": "Point", "coordinates": [121.4737, 31.2304] }, "properties": { "name": "上海", "type": "直辖市", "population": "2487万" } },
+                { "type": "Feature", "geometry": { "type": "Point", "coordinates": [113.2644, 23.1291] }, "properties": { "name": "广州", "type": "省会", "population": "1867万" } },
+                { "type": "Feature", "geometry": { "type": "Point", "coordinates": [114.0579, 22.5431] }, "properties": { "name": "深圳", "type": "经济特区", "population": "1768万" } },
+                { "type": "Feature", "geometry": { "type": "Point", "coordinates": [104.0668, 30.5728] }, "properties": { "name": "成都", "type": "省会", "population": "1658万" } }
+            ]
+        };
+
+        const riversData = {
+            "type": "FeatureCollection",
+            "features": [
+                { "type": "Feature", "geometry": { "type": "LineString", "coordinates": [[90.0, 35.0], [100.0, 35.0], [110.0, 35.0], [120.0, 32.0]] }, "properties": { "name": "长江", "length": "6387km" } },
+                { "type": "Feature", "geometry": { "type": "LineString", "coordinates": [[105.0, 40.0], [110.0, 38.0], [115.0, 36.0], [119.0, 37.0]] }, "properties": { "name": "黄河", "length": "5464km" } }
+            ]
+        };
+
+        const provincesData = {
+            "type": "FeatureCollection",
+            "features": [
+                { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[115.0, 40.0], [117.0, 40.0], [117.0, 38.0], [115.0, 38.0], [115.0, 40.0]]] }, "properties": { "name": "河北省", "capital": "石家庄" } },
+                { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[121.0, 32.0], [123.0, 32.0], [123.0, 30.0], [121.0, 30.0], [121.0, 32.0]]] }, "properties": { "name": "江苏省", "capital": "南京" } }
+            ]
+        };
+
+        // 6. 添加数据到图层
+        L.geoJSON(citiesData, {
+            pointToLayer: (feature, latlng) => {
+                return L.circleMarker(latlng, {
+                    radius: 8,
+                    fillColor: "#ff7800",
+                    color: "#000",
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                });
+            },
+            onEachFeature: (feature, layer) => {
+                layer.bindPopup(`
+                        <div style="font-weight: bold; color: #333; margin-bottom: 5px;">
+                            🏙️ ${feature.properties.name}
+                        </div>
+                        <div>类型: ${feature.properties.type}</div>
+                        <div>人口: ${feature.properties.population}</div>
+                    `);
+            }
+        }).addTo(overlays["主要城市"]);
+
+        L.geoJSON(riversData, {
+            style: {
+                color: "#3498db",
+                weight: 4,
+                opacity: 0.7
+            },
+            onEachFeature: (feature, layer) => {
+                layer.bindPopup(`
+                        <div style="font-weight: bold; color: #2980b9;">
+                            🌊 ${feature.properties.name}
+                        </div>
+                        <div>长度: ${feature.properties.length}</div>
+                    `);
+            }
+        }).addTo(overlays["主要河流"]);
+
+        L.geoJSON(provincesData, {
+            style: {
+                fillColor: "#2ecc71",
+                color: "#27ae60",
+                weight: 2,
+                opacity: 0.8,
+                fillOpacity: 0.2
+            },
+            onEachFeature: (feature, layer) => {
+                layer.bindPopup(`
+                        <div style="font-weight: bold; color: #27ae60;">
+                            🏛️ ${feature.properties.name}
+                        </div>
+                        <div>省会: ${feature.properties.capital}</div>
+                    `);
+            }
+        }).addTo(overlays["省份边界"]);
+
+        // 7. 初始化侧边栏控件
+        function initSidebarControls() {
+            const layerControls = document.getElementById('layer-controls');
+            const legend = document.getElementById('legend');
+
+            const layerConfigs = [
+                { name: "主要城市", color: "#ff7800", icon: "🏙️" },
+                { name: "主要河流", color: "#3498db", icon: "🌊" },
+                { name: "省份边界", color: "#2ecc71", icon: "🏛️" },
+                { name: "绘制内容", color: "#e74c3c", icon: "✏️" }
+            ];
+
+            layerConfigs.forEach(config => {
+                // 图层控制
+                const controlDiv = document.createElement('div');
+                controlDiv.className = 'layer-control';
+                controlDiv.innerHTML = `
+                        <div class="color-preview" style="background: ${config.color}"></div>
+                        <input type="checkbox" id="${config.name}" checked
+                               onchange="toggleLayer('${config.name}', this.checked)">
+                        <label for="${config.name}">${config.icon} ${config.name}</label>
+                    `;
+                layerControls.appendChild(controlDiv);
+
+                // 图例项
+                const legendItem = document.createElement('div');
+                legendItem.className = 'legend-item';
+                legendItem.innerHTML = `
+                        <div class="color-preview" style="background: ${config.color}"></div>
+                        <span>${config.name}</span>
+                    `;
+                legend.appendChild(legendItem);
+            });
+
+            // 默认显示所有图层
+            Object.values(overlays).forEach(layer => layer.addTo(map));
+        }
+
+        // 8. 工具函数
+        function toggleLayer(layerName, isVisible) {
+            if (isVisible) {
+                overlays[layerName].addTo(map);
+            } else {
+                map.removeLayer(overlays[layerName]);
+            }
+            updateFeatureCount();
+        }
+
+        function addMarker() {
+            const center = map.getCenter();
+            const marker = L.marker(center).addTo(overlays["绘制内容"]);
+            marker.bindPopup("新添加的标记<br>" + center.toString()).openPopup();
+            updateFeatureCount();
+        }
+
+        function drawRectangle() {
+            alert("点击地图并拖动绘制矩形");
+            const drawControl = new L.Draw.Rectangle(map);
+            drawControl.enable();
+        }
+
+        function drawPolygon() {
+            alert("点击地图各顶点绘制多边形，双击结束");
+            const drawControl = new L.Draw.Polygon(map);
+            drawControl.enable();
+        }
+
+        function measureDistance() {
+            alert("点击地图上的两点测量距离");
+            const drawControl = new L.Draw.Polyline(map, {
+                shapeOptions: {
+                    color: '#f1c40f',
+                    weight: 3
+                }
+            });
+            drawControl.enable();
+
+            map.on('draw:created', (e) => {
+                const layer = e.layer;
+                const latlngs = layer.getLatLngs();
+                let totalDistance = 0;
+
+                for (let i = 1; i < latlngs.length; i++) {
+                    totalDistance += latlngs[i - 1].distanceTo(latlngs[i]);
+                }
+
+                layer.bindPopup(`距离: ${(totalDistance / 1000).toFixed(2)} 公里`);
+                overlays["绘制内容"].addLayer(layer);
+                updateFeatureCount();
+            });
+        }
+
+        function measureArea() {
+            alert("绘制一个多边形测量面积");
+            const drawControl = new L.Draw.Polygon(map, {
+                shapeOptions: {
+                    color: '#9b59b6',
+                    weight: 3,
+                    fillOpacity: 0.2
+                }
+            });
+            drawControl.enable();
+
+            map.on('draw:created', (e) => {
+                const layer = e.layer;
+                const area = L.GeometryUtil.geodesicArea(layer.getLatLngs()[0]);
+                layer.bindPopup(`面积: ${(area / 1000000).toFixed(2)} 平方公里`);
+                overlays["绘制内容"].addLayer(layer);
+                updateFeatureCount();
+            });
+        }
+
+        function clearAll() {
+            overlays["绘制内容"].clearLayers();
+            updateFeatureCount();
+        }
+
+        function updateFeatureCount() {
+            let count = 0;
+            Object.values(overlays).forEach(layer => {
+                count += layer.getLayers().length;
+            });
+            document.getElementById('feature-count').textContent = count;
+        }
+
+        // 9. 地图事件监听
+        map.on('moveend', () => {
+            const center = map.getCenter();
+            document.getElementById('coordinates').textContent =
+                `${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}`;
+            document.getElementById('zoom-level').textContent = map.getZoom();
+        });
+
+        // 10. 监听绘制事件
+        map.on('draw:created', (e) => {
+            const layer = e.layer;
+            overlays["绘制内容"].addLayer(layer);
+            updateFeatureCount();
+        });
+
+        // 11. 初始化
+        initSidebarControls();
+        updateFeatureCount();
+        console.log("WebGIS演示系统已启动！");
+    </script>
+</body>
+</html>

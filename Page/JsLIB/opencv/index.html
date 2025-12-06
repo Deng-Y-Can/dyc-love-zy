@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenCV.js 多功能图像处理应用V1</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script async src="https://docs.opencv.org/4.5.0/opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #2c3e50);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #00b4db, #0083b0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #aaa;
+            margin-bottom: 20px;
+        }
+
+        .status {
+            display: inline-block;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+            .status.loading {
+                color: #ffcc00;
+            }
+
+            .status.ready {
+                color: #4CAF50;
+            }
+
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .panel {
+            background: rgba(30, 30, 40, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .image-panel {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .controls-panel {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .panel-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #00b4db;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+
+        .canvas-container {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        canvas {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            background-color: #000;
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #1a73e8, #0d47a1);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            min-width: 140px;
+            justify-content: center;
+        }
+
+            .btn:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            }
+
+            .btn:active {
+                transform: translateY(0);
+            }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #00b4db, #0083b0);
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #4CAF50, #2E7D32);
+        }
+
+        .btn-warning {
+            background: linear-gradient(45deg, #ff9800, #ef6c00);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #f44336, #c62828);
+        }
+
+        .btn-purple {
+            background: linear-gradient(45deg, #9c27b0, #6a1b9a);
+        }
+
+        .camera-container {
+            margin-top: 20px;
+            display: none;
+        }
+
+            .camera-container.active {
+                display: block;
+            }
+
+        #video {
+            width: 100%;
+            border-radius: 10px;
+            background-color: #000;
+        }
+
+        .controls-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #ff9800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slider-container {
+            margin-bottom: 15px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+            .slider::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                width: 20px;
+                height: 20px;
+                border-radius: 50%;
+                background: #00b4db;
+                cursor: pointer;
+            }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+            .checkbox-item input {
+                width: 18px;
+                height: 18px;
+                cursor: pointer;
+            }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .filter-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+            .filter-btn:hover {
+                background: rgba(0, 180, 219, 0.3);
+                transform: translateY(-2px);
+            }
+
+            .filter-btn.active {
+                background: rgba(0, 180, 219, 0.7);
+                border-color: #00b4db;
+            }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #aaa;
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+
+            h1 {
+                font-size: 2.2rem;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-camera"></i> OpenCV.js 图像处理实验室</h1>
+            <p class="subtitle">上传图像或使用摄像头，体验多种计算机视觉功能</p>
+            <div id="status" class="status loading">
+                <i class="fas fa-spinner fa-spin"></i> 正在加载 OpenCV.js，请稍候...
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="panel image-panel">
+                <h2 class="panel-title"><i class="fas fa-image"></i> 图像显示</h2>
+                <div class="canvas-container">
+                    <canvas id="canvasOutput"></canvas>
+                </div>
+                <div class="button-group">
+                    <button id="uploadBtn" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> 上传图像
+                    </button>
+                    <button id="cameraBtn" class="btn btn-success">
+                        <i class="fas fa-camera"></i> 开启摄像头
+                    </button>
+                    <button id="saveBtn" class="btn btn-warning">
+                        <i class="fas fa-download"></i> 保存图像
+                    </button>
+                    <button id="resetBtn" class="btn btn-danger">
+                        <i class="fas fa-redo"></i> 重置
+                    </button>
+                </div>
+
+                <div class="camera-container" id="cameraContainer">
+                    <h3 class="section-title"><i class="fas fa-video"></i> 摄像头预览</h3>
+                    <video id="video" width="640" height="480" autoplay></video>
+                    <div class="button-group" style="margin-top: 15px;">
+                        <button id="captureBtn" class="btn btn-purple">
+                            <i class="fas fa-camera-retro"></i> 捕捉画面
+                        </button>
+                        <button id="stopCameraBtn" class="btn btn-danger">
+                            <i class="fas fa-stop-circle"></i> 关闭摄像头
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel controls-panel">
+                <h2 class="panel-title"><i class="fas fa-sliders-h"></i> 处理控制</h2>
+
+                <div class="controls-section">
+                    <h3 class="section-title"><i class="fas fa-adjust"></i> 基本调整</h3>
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>亮度</span>
+                            <span id="brightnessValue">100%</span>
+                        </div>
+                        <input type="range" min="0" max="200" value="100" class="slider" id="brightnessSlider">
+                    </div>
+
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>对比度</span>
+                            <span id="contrastValue">100%</span>
+                        </div>
+                        <input type="range" min="0" max="200" value="100" class="slider" id="contrastSlider">
+                    </div>
+
+                    <div class="button-group">
+                        <button id="grayscaleBtn" class="btn">灰度化</button>
+                        <button id="invertBtn" class="btn">颜色反转</button>
+                        <button id="blurBtn" class="btn">模糊效果</button>
+                    </div>
+                </div>
+
+                <div class="controls-section">
+                    <h3 class="section-title"><i class="fas fa-border-all"></i> 边缘检测</h3>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="cannyEdge" name="edgeType">
+                            <span>Canny 边缘检测</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="sobelEdge" name="edgeType">
+                            <span>Sobel 边缘检测</span>
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" id="laplacianEdge" name="edgeType">
+                            <span>Laplacian 边缘检测</span>
+                        </label>
+                    </div>
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>阈值1</span>
+                            <span id="threshold1Value">50</span>
+                        </div>
+                        <input type="range" min="0" max="255" value="50" class="slider" id="threshold1Slider">
+                    </div>
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>阈值2</span>
+                            <span id="threshold2Value">150</span>
+                        </div>
+                        <input type="range" min="0" max="255" value="150" class="slider" id="threshold2Slider">
+                    </div>
+                </div>
+
+                <div class="controls-section">
+                    <h3 class="section-title"><i class="fas fa-palette"></i> 滤镜效果</h3>
+                    <div class="filter-grid">
+                        <div class="filter-btn" data-filter="sepia">怀旧滤镜</div>
+                        <div class="filter-btn" data-filter="sharpen">锐化</div>
+                        <div class="filter-btn" data-filter="emboss">浮雕效果</div>
+                        <div class="filter-btn" data-filter="cartoon">卡通效果</div>
+                        <div class="filter-btn" data-filter="sketch">素描效果</div>
+                        <div class="filter-btn" data-filter="oilPainting">油画效果</div>
+                    </div>
+                </div>
+
+                <div class="controls-section">
+                    <h3 class="section-title"><i class="fas fa-crop-alt"></i> 图像变换</h3>
+                    <div class="button-group">
+                        <button id="rotateLeftBtn" class="btn"><i class="fas fa-undo"></i> 左旋转</button>
+                        <button id="rotateRightBtn" class="btn"><i class="fas fa-redo"></i> 右旋转</button>
+                        <button id="flipHorizontalBtn" class="btn"><i class="fas fa-arrows-alt-h"></i> 水平翻转</button>
+                        <button id="flipVerticalBtn" class="btn"><i class="fas fa-arrows-alt-v"></i> 垂直翻转</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>OpenCV.js 多功能图像处理应用 | 基于 OpenCV 4.5.0 | 支持现代浏览器</p>
+            <p>注意：首次加载 OpenCV.js 可能需要一些时间，请耐心等待</p>
+        </div>
+    </div>
+
+    <input type="file" id="fileInput" accept="image/*" class="hidden">
+
+    <script>
+        // OpenCV 状态
+        let cvReady = false;
+        let srcMat = null;
+        let dstMat = null;
+        let currentFilter = null;
+
+        // DOM 元素
+        const statusDiv = document.getElementById('status');
+        const canvasOutput = document.getElementById('canvasOutput');
+        const ctx = canvasOutput.getContext('2d');
+        const fileInput = document.getElementById('fileInput');
+        const video = document.getElementById('video');
+        const cameraContainer = document.getElementById('cameraContainer');
+
+        // 摄像头相关变量
+        let stream = null;
+        let cameraActive = false;
+        let processingInterval = null;
+
+        // 初始化 Canvas
+        canvasOutput.width = 640;
+        canvasOutput.height = 480;
+
+        // OpenCV 准备就绪
+        function onOpenCvReady() {
+            cvReady = true;
+            statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> OpenCV.js 加载成功！';
+            statusDiv.className = 'status ready';
+            console.log('OpenCV.js is ready');
+        }
+
+        // 检查 OpenCV 是否加载完成
+        function checkOpenCv() {
+            if (!cvReady) {
+                alert('OpenCV.js 尚未加载完成，请稍后再试。');
+                return false;
+            }
+            return true;
+        }
+
+        // 上传图像
+        document.getElementById('uploadBtn').addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', handleImageUpload);
+
+        function handleImageUpload(event) {
+            if (!checkOpenCv()) return;
+
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = new Image();
+                img.onload = function () {
+                    processLoadedImage(img);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 处理加载的图像
+        function processLoadedImage(img) {
+            canvasOutput.width = img.width;
+            canvasOutput.height = img.height;
+
+            ctx.drawImage(img, 0, 0, canvasOutput.width, canvasOutput.height);
+
+            // 创建 OpenCV Mat
+            srcMat = cv.imread(canvasOutput);
+            dstMat = srcMat.clone();
+
+            // 重置滤镜
+            currentFilter = null;
+            resetCheckboxes();
+
+            // 如果摄像头正在运行，则关闭
+            if (cameraActive) {
+                stopCamera();
+            }
+        }
+
+        // 开启摄像头
+        document.getElementById('cameraBtn').addEventListener('click', startCamera);
+
+        function startCamera() {
+            if (!checkOpenCv()) return;
+
+            if (cameraActive) {
+                alert('摄像头已经在运行中');
+                return;
+            }
+
+            // 请求摄像头访问权限
+            navigator.mediaDevices.getUserMedia({
+                video: { width: 640, height: 480 },
+                audio: false
+            })
+                .then(function (s) {
+                    stream = s;
+                    video.srcObject = stream;
+                    cameraActive = true;
+                    cameraContainer.classList.add('active');
+
+                    // 开始处理视频流
+                    processingInterval = setInterval(processVideoFrame, 100);
+                })
+                .catch(function (err) {
+                    console.error("摄像头访问错误: " + err);
+                    alert("无法访问摄像头: " + err.message);
+                });
+        }
+
+        // 处理视频帧
+        function processVideoFrame() {
+            if (!cameraActive || !cvReady) return;
+
+            // 将视频帧绘制到 Canvas
+            ctx.drawImage(video, 0, 0, canvasOutput.width, canvasOutput.height);
+
+            // 读取图像到 OpenCV Mat
+            srcMat = cv.imread(canvasOutput);
+            dstMat = srcMat.clone();
+
+            // 应用当前选中的处理
+            applyCurrentProcessing();
+
+            // 显示处理后的图像
+            cv.imshow(canvasOutput, dstMat);
+
+            // 释放内存
+            srcMat.delete();
+            dstMat.delete();
+        }
+
+        // 停止摄像头
+        document.getElementById('stopCameraBtn').addEventListener('click', stopCamera);
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+
+            cameraActive = false;
+            cameraContainer.classList.remove('active');
+
+            if (processingInterval) {
+                clearInterval(processingInterval);
+                processingInterval = null;
+            }
+
+            // 清除视频元素
+            video.srcObject = null;
+        }
+
+        // 捕捉摄像头画面
+        document.getElementById('captureBtn').addEventListener('click', function () {
+            if (!cameraActive) {
+                alert('请先开启摄像头');
+                return;
+            }
+
+            // 停止摄像头处理
+            if (processingInterval) {
+                clearInterval(processingInterval);
+                processingInterval = null;
+            }
+
+            // 将当前帧保存为静态图像
+            srcMat = cv.imread(canvasOutput);
+            dstMat = srcMat.clone();
+
+            // 应用当前选中的处理
+            applyCurrentProcessing();
+
+            // 显示处理后的图像
+            cv.imshow(canvasOutput, dstMat);
+
+            // 停止摄像头
+            stopCamera();
+        });
+
+        // 保存图像
+        document.getElementById('saveBtn').addEventListener('click', function () {
+            if (!srcMat) {
+                alert('请先上传图像或开启摄像头');
+                return;
+            }
+
+            const link = document.createElement('a');
+            link.download = 'processed_image.png';
+            link.href = canvasOutput.toDataURL('image/png');
+            link.click();
+        });
+
+        // 重置图像
+        document.getElementById('resetBtn').addEventListener('click', function () {
+            if (!srcMat) return;
+
+            cv.imshow(canvasOutput, srcMat);
+            dstMat = srcMat.clone();
+
+            // 重置所有控制
+            document.getElementById('brightnessSlider').value = 100;
+            document.getElementById('brightnessValue').textContent = '100%';
+            document.getElementById('contrastSlider').value = 100;
+            document.getElementById('contrastValue').textContent = '100%';
+
+            document.getElementById('threshold1Slider').value = 50;
+            document.getElementById('threshold1Value').textContent = '50';
+            document.getElementById('threshold2Slider').value = 150;
+            document.getElementById('threshold2Value').textContent = '150';
+
+            currentFilter = null;
+            resetCheckboxes();
+            resetFilterButtons();
+
+            // 如果摄像头正在运行，则重启处理
+            if (cameraActive && !processingInterval) {
+                processingInterval = setInterval(processVideoFrame, 100);
+            }
+        });
+
+        // 重置复选框
+        function resetCheckboxes() {
+            document.querySelectorAll('input[name="edgeType"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+        }
+
+        // 重置滤镜按钮
+        function resetFilterButtons() {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+        }
+
+        // 灰度化
+        document.getElementById('grayscaleBtn').addEventListener('click', function () {
+            if (!srcMat) return;
+
+            applyProcessing(function () {
+                cv.cvtColor(srcMat, dstMat, cv.COLOR_RGBA2GRAY);
+                cv.cvtColor(dstMat, dstMat, cv.COLOR_GRAY2RGBA);
+            });
+        });
+
+        // 颜色反转
+        document.getElementById('invertBtn').addEventListener('click', function () {
+            if (!srcMat) return;
+
+            applyProcessing(function () {
+                cv.bitwise_not(srcMat, dstMat);
+            });
+        });
+
+        // 模糊效果
+        document.getElementById('blurBtn').addEventListener('click', function () {
+            if (!srcMat) return;
+
+            applyProcessing(function () {
+                let ksize = new cv.Size(15, 15);
+                cv.GaussianBlur(srcMat, dstMat, ksize, 0);
+            });
+        });
+
+        // 边缘检测复选框事件
+        document.querySelectorAll('input[name="edgeType"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function () {
+                if (!srcMat) return;
+
+                // 确保只有一个复选框被选中
+                if (this.checked) {
+                    document.querySelectorAll('input[name="edgeType"]').forEach(other => {
+                        if (other !== this) other.checked = false;
+                    });
+                }
+
+                applyCurrentProcessing();
+            });
+        });
+
+        // 滑块事件
+        document.getElementById('brightnessSlider').addEventListener('input', function () {
+            document.getElementById('brightnessValue').textContent = this.value + '%';
+            if (srcMat) applyCurrentProcessing();
+        });
+
+        document.getElementById('contrastSlider').addEventListener('input', function () {
+            document.getElementById('contrastValue').textContent = this.value + '%';
+            if (srcMat) applyCurrentProcessing();
+        });
+
+        document.getElementById('threshold1Slider').addEventListener('input', function () {
+            document.getElementById('threshold1Value').textContent = this.value;
+            if (srcMat) applyCurrentProcessing();
+        });
+
+        document.getElementById('threshold2Slider').addEventListener('input', function () {
+            document.getElementById('threshold2Value').textContent = this.value;
+            if (srcMat) applyCurrentProcessing();
+        });
+
+        // 滤镜按钮事件
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const filter = this.getAttribute('data-filter');
+
+                // 切换激活状态
+                if (currentFilter === filter) {
+                    currentFilter = null;
+                    this.classList.remove('active');
+                } else {
+                    currentFilter = filter;
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                }
+
+                if (srcMat) applyCurrentProcessing();
+            });
+        });
+
+        // 图像变换按钮
+        document.getElementById('rotateLeftBtn').addEventListener('click', function () {
+            if (!srcMat) return;
+
+            applyProcessing(function () {
+                let center = new cv.Point(srcMat.cols / 2, srcMat.rows / 2);
+                let M = cv.getRotationMatrix2D(center, 90, 1.0);
+                cv.warpAffine(srcMat, dstMat, M, new cv.Size(srcMat.cols, srcMat.rows));
+            });
+        });
+
+        document.getElementById('rotateRightBtn').addEventListener('click', function () {
+            if (!srcMat) return;
+
+            applyProcessing(function () {
+                let center = new cv.Point(srcMat.cols / 2, srcMat.rows / 2);
+                let M = cv.getRotationMatrix2D(center, -90, 1.0);
+                cv.warpAffine(srcMat, dstMat, M, new cv.Size(srcMat.cols, srcMat.rows));
+            });
+        });
+
+        document.getElementById('flipHorizontalBtn').addEventListener('click', function () {
+            if (!srcMat) return;
+
+            applyProcessing(function () {
+                cv.flip(srcMat, dstMat, 1);
+            });
+        });
+
+        document.getElementById('flipVerticalBtn').addEventListener('click', function () {
+            if (!srcMat) return;
+
+            applyProcessing(function () {
+                cv.flip(srcMat, dstMat, 0);
+            });
+        });
+
+        // 应用处理
+        function applyProcessing(processingFunc) {
+            if (!srcMat) return;
+
+            // 如果摄像头正在运行，停止自动处理
+            if (cameraActive && processingInterval) {
+                clearInterval(processingInterval);
+                processingInterval = null;
+            }
+
+            try {
+                // 复制源图像到目标
+                dstMat = srcMat.clone();
+
+                // 应用处理函数
+                processingFunc();
+
+                // 应用亮度和对比度调整
+                applyBrightnessContrast();
+
+                // 显示结果
+                cv.imshow(canvasOutput, dstMat);
+
+                // 释放内存
+                if (dstMat !== srcMat) {
+                    dstMat.delete();
+                }
+            } catch (err) {
+                console.error('处理错误:', err);
+            }
+        }
+
+        // 应用当前所有处理
+        function applyCurrentProcessing() {
+            if (!srcMat) return;
+
+            // 如果摄像头正在运行且没有处理间隔，则不需要手动处理
+            if (cameraActive && processingInterval) {
+                return;
+            }
+
+            // 复制源图像到目标
+            dstMat = srcMat.clone();
+
+            // 应用边缘检测
+            applyEdgeDetection();
+
+            // 应用滤镜
+            applyFilter();
+
+            // 应用亮度和对比度调整
+            applyBrightnessContrast();
+
+            // 显示结果
+            cv.imshow(canvasOutput, dstMat);
+
+            // 释放内存
+            if (dstMat !== srcMat) {
+                dstMat.delete();
+            }
+        }
+
+        // 应用边缘检测
+        function applyEdgeDetection() {
+            if (!srcMat) return;
+
+            const cannyChecked = document.getElementById('cannyEdge').checked;
+            const sobelChecked = document.getElementById('sobelEdge').checked;
+            const laplacianChecked = document.getElementById('laplacianEdge').checked;
+
+            if (cannyChecked) {
+                let gray = new cv.Mat();
+                cv.cvtColor(srcMat, gray, cv.COLOR_RGBA2GRAY);
+
+                let edges = new cv.Mat();
+                let threshold1 = parseInt(document.getElementById('threshold1Slider').value);
+                let threshold2 = parseInt(document.getElementById('threshold2Slider').value);
+
+                cv.Canny(gray, edges, threshold1, threshold2);
+                cv.cvtColor(edges, dstMat, cv.COLOR_GRAY2RGBA);
+
+                gray.delete();
+                edges.delete();
+            } else if (sobelChecked) {
+                let gray = new cv.Mat();
+                cv.cvtColor(srcMat, gray, cv.COLOR_RGBA2GRAY);
+
+                let gradX = new cv.Mat();
+                let gradY = new cv.Mat();
+                let absGradX = new cv.Mat();
+                let absGradY = new cv.Mat();
+
+                cv.Sobel(gray, gradX, cv.CV_16S, 1, 0, 3, 1, 0, cv.BORDER_DEFAULT);
+                cv.Sobel(gray, gradY, cv.CV_16S, 0, 1, 3, 1, 0, cv.BORDER_DEFAULT);
+
+                cv.convertScaleAbs(gradX, absGradX);
+                cv.convertScaleAbs(gradY, absGradY);
+
+                cv.addWeighted(absGradX, 0.5, absGradY, 0.5, 0, dstMat);
+                cv.cvtColor(dstMat, dstMat, cv.COLOR_GRAY2RGBA);
+
+                gray.delete();
+                gradX.delete();
+                gradY.delete();
+                absGradX.delete();
+                absGradY.delete();
+            } else if (laplacianChecked) {
+                let gray = new cv.Mat();
+                cv.cvtColor(srcMat, gray, cv.COLOR_RGBA2GRAY);
+
+                let laplacian = new cv.Mat();
+                cv.Laplacian(gray, laplacian, cv.CV_16S, 3, 1, 0, cv.BORDER_DEFAULT);
+
+                let absLaplacian = new cv.Mat();
+                cv.convertScaleAbs(laplacian, absLaplacian);
+                cv.cvtColor(absLaplacian, dstMat, cv.COLOR_GRAY2RGBA);
+
+                gray.delete();
+                laplacian.delete();
+                absLaplacian.delete();
+            }
+        }
+
+        // 应用滤镜
+        function applyFilter() {
+            if (!srcMat || !currentFilter) return;
+
+            switch (currentFilter) {
+                case 'sepia':
+                    // 怀旧滤镜
+                    let sepiaKernel = cv.matFromArray(4, 4, cv.CV_32FC1, [
+                        0.393, 0.769, 0.189, 0,
+                        0.349, 0.686, 0.168, 0,
+                        0.272, 0.534, 0.131, 0,
+                        0, 0, 0, 1
+                    ]);
+                    cv.transform(srcMat, dstMat, sepiaKernel);
+                    sepiaKernel.delete();
+                    break;
+
+                case 'sharpen':
+                    // 锐化
+                    let sharpenKernel = cv.matFromArray(3, 3, cv.CV_32FC1, [
+                        0, -1, 0,
+                        -1, 5, -1,
+                        0, -1, 0
+                    ]);
+                    cv.filter2D(srcMat, dstMat, -1, sharpenKernel);
+                    sharpenKernel.delete();
+                    break;
+
+                case 'emboss':
+                    // 浮雕效果
+                    let embossKernel = cv.matFromArray(3, 3, cv.CV_32FC1, [
+                        -2, -1, 0,
+                        -1, 1, 1,
+                        0, 1, 2
+                    ]);
+                    cv.filter2D(srcMat, dstMat, -1, embossKernel);
+                    embossKernel.delete();
+
+                    // 增加对比度
+                    let gray = new cv.Mat();
+                    cv.cvtColor(dstMat, gray, cv.COLOR_RGBA2GRAY);
+                    cv.cvtColor(gray, dstMat, cv.COLOR_GRAY2RGBA);
+                    gray.delete();
+                    break;
+
+                case 'cartoon':
+                    // 卡通效果
+                    let grayCartoon = new cv.Mat();
+                    cv.cvtColor(srcMat, grayCartoon, cv.COLOR_RGBA2GRAY);
+
+                    let blurred = new cv.Mat();
+                    cv.medianBlur(grayCartoon, blurred, 7);
+
+                    let edges = new cv.Mat();
+                    cv.adaptiveThreshold(blurred, edges, 255, cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY, 9, 2);
+
+                    let color = new cv.Mat();
+                    cv.bilateralFilter(srcMat, color, 9, 300, 300);
+
+                    cv.bitwise_and(color, color, dstMat, edges);
+
+                    grayCartoon.delete();
+                    blurred.delete();
+                    edges.delete();
+                    color.delete();
+                    break;
+
+                case 'sketch':
+                    // 素描效果
+                    let graySketch = new cv.Mat();
+                    cv.cvtColor(srcMat, graySketch, cv.COLOR_RGBA2GRAY);
+
+                    let inverted = new cv.Mat();
+                    cv.bitwise_not(graySketch, inverted);
+
+                    let blurredSketch = new cv.Mat();
+                    cv.GaussianBlur(inverted, blurredSketch, new cv.Size(21, 21), 0, 0);
+
+                    cv.divide(graySketch, blurredSketch, dstMat, 255);
+                    cv.cvtColor(dstMat, dstMat, cv.COLOR_GRAY2RGBA);
+
+                    graySketch.delete();
+                    inverted.delete();
+                    blurredSketch.delete();
+                    break;
+
+                case 'oilPainting':
+                    // 油画效果（简化版）
+                    let small = new cv.Mat();
+                    cv.resize(srcMat, small, new cv.Size(), 0.5, 0.5, cv.INTER_AREA);
+
+                    let oil = new cv.Mat();
+                    cv.resize(small, oil, new cv.Size(srcMat.cols, srcMat.rows), 0, 0, cv.INTER_NEAREST);
+
+                    cv.addWeighted(srcMat, 0.5, oil, 0.5, 0, dstMat);
+
+                    small.delete();
+                    oil.delete();
+                    break;
+            }
+        }
+
+        // 应用亮度和对比度调整
+        function applyBrightnessContrast() {
+            if (!srcMat) return;
+
+            let brightness = parseInt(document.getElementById('brightnessSlider').value) / 100;
+            let contrast = parseInt(document.getElementById('contrastSlider').value) / 100;
+
+            // 如果亮度和对比度都是默认值，则跳过
+            if (brightness === 1.0 && contrast === 1.0) {
+                return;
+            }
+
+            // 创建临时矩阵用于调整
+            let temp = dstMat.clone();
+
+            // 调整对比度
+            if (contrast !== 1.0) {
+                temp.convertTo(temp, -1, contrast, 0);
+            }
+
+            // 调整亮度
+            if (brightness !== 1.0) {
+                let offset = (brightness - 1.0) * 255;
+                temp.convertTo(dstMat, -1, 1, offset);
+            } else {
+                temp.copyTo(dstMat);
+            }
+
+            temp.delete();
+        }
+
+        // 页面卸载时清理资源
+        window.addEventListener('beforeunload', function () {
+            if (srcMat) srcMat.delete();
+            if (dstMat && dstMat !== srcMat) dstMat.delete();
+            stopCamera();
+        });
+
+        // 加载示例图像
+        window.addEventListener('load', function () {
+            // 创建一个简单的示例图像
+            const img = new Image();
+            img.onload = function () {
+                canvasOutput.width = img.width;
+                canvasOutput.height = img.height;
+                ctx.drawImage(img, 0, 0, canvasOutput.width, canvasOutput.height);
+
+                // 创建 OpenCV Mat
+                if (cvReady) {
+                    srcMat = cv.imread(canvasOutput);
+                    dstMat = srcMat.clone();
+                }
+            };
+
+            // 使用一个简单的彩色渐变作为示例
+            img.src = 'data:image/svg+xml;base64,' + btoa(`
+                        <svg xmlns="http://www.w3.org/2000/svg" width="640" height="480">
+                            <defs>
+                                <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:rgb(255,0,0);stop-opacity:1" />
+                                    <stop offset="50%" style="stop-color:rgb(0,255,0);stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:rgb(0,0,255);stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                            <rect width="100%" height="100%" fill="url(#grad1)"/>
+                            <circle cx="320" cy="240" r="100" fill="yellow" opacity="0.7"/>
+                            <text x="320" y="240" font-size="40" text-anchor="middle" fill="white" dy=".3em">OpenCV.js</text>
+                        </svg>
+                    `);
+        });
+    </script>
+</body>
+</html>

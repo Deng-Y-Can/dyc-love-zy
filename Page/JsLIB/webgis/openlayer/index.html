@@ -1,0 +1,2309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>功能全面的WebGIS系统 - openlayer</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v7.3.0/ol.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            overflow: hidden;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 自定义通知系统 */
+        .notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 350px;
+        }
+
+        .notification {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            border-left: 4px solid #3498db;
+            animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+
+            .notification.show {
+                transform: translateX(0);
+            }
+
+            .notification.success {
+                border-left-color: #2ecc71;
+            }
+
+            .notification.error {
+                border-left-color: #e74c3c;
+            }
+
+            .notification.warning {
+                border-left-color: #f39c12;
+            }
+
+            .notification.info {
+                border-left-color: #3498db;
+            }
+
+        .notification-icon {
+            font-size: 1.2rem;
+            margin-top: 2px;
+        }
+
+        .notification.success .notification-icon {
+            color: #2ecc71;
+        }
+
+        .notification.error .notification-icon {
+            color: #e74c3c;
+        }
+
+        .notification.warning .notification-icon {
+            color: #f39c12;
+        }
+
+        .notification.info .notification-icon {
+            color: #3498db;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .notification-message {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .notification-close {
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 0;
+            line-height: 1;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+            }
+
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        /* 控制面板 */
+        .control-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 12px;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            width: 350px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            z-index: 1000;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .panel-collapsed {
+            transform: translateX(-85%);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+            .panel-header h2 {
+                color: #2c3e50;
+                font-size: 1.5rem;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+        .toggle-btn {
+            background: #3498db;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+            .toggle-btn:hover {
+                background: #2980b9;
+                transform: rotate(90deg);
+            }
+
+        /* 选项卡样式 */
+        .tab-container {
+            margin-bottom: 25px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 4px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: 500;
+            color: #666;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+            .tab-btn.active {
+                background: white;
+                color: #3498db;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+        .tab-content {
+            display: none;
+        }
+
+            .tab-content.active {
+                display: block;
+            }
+
+        /* 工具按钮组 */
+        .tool-group {
+            margin-bottom: 20px;
+        }
+
+            .tool-group h3 {
+                color: #2c3e50;
+                margin-bottom: 15px;
+                font-size: 1.1rem;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .tool-btn {
+            padding: 12px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            color: #333;
+        }
+
+            .tool-btn:hover {
+                border-color: #3498db;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
+            }
+
+            .tool-btn.active {
+                background: #3498db;
+                color: white;
+                border-color: #3498db;
+            }
+
+            .tool-btn i {
+                font-size: 1.2rem;
+            }
+
+        /* 工具栏 */
+        .main-toolbar {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 1000;
+        }
+
+        .main-tool-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.98);
+            border: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: #2c3e50;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+            .main-tool-btn:hover {
+                background: #3498db;
+                color: white;
+                transform: translateY(-3px);
+                box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3);
+            }
+
+            .main-tool-btn.active {
+                background: #2980b9;
+                color: white;
+            }
+
+        .tool-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #e74c3c;
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        /* 图层列表 */
+        .layer-list {
+            list-style: none;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .layer-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+            .layer-item:hover {
+                background: #e9ecef;
+                border-color: #3498db;
+            }
+
+        .layer-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .layer-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: white;
+        }
+
+            .layer-icon.osm {
+                background: #4CAF50;
+            }
+
+            .layer-icon.satellite {
+                background: #2196F3;
+            }
+
+            .layer-icon.terrain {
+                background: #795548;
+            }
+
+            .layer-icon.vector {
+                background: #E91E63;
+            }
+
+            .layer-icon.measure {
+                background: #FF9800;
+            }
+
+        .layer-details {
+            flex: 1;
+        }
+
+        .layer-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .layer-type {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        /* 切换开关 */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 52px;
+            height: 26px;
+        }
+
+            .switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+            .slider:before {
+                position: absolute;
+                content: "";
+                height: 18px;
+                width: 18px;
+                left: 4px;
+                bottom: 4px;
+                background-color: white;
+                transition: .4s;
+                border-radius: 50%;
+            }
+
+        input:checked + .slider {
+            background-color: #3498db;
+        }
+
+            input:checked + .slider:before {
+                transform: translateX(26px);
+            }
+
+        /* 查询面板 */
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 45px 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+            .search-input:focus {
+                outline: none;
+                border-color: #3498db;
+                box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+            }
+
+        .search-btn {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #3498db;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+            .search-btn:hover {
+                background: #2980b9;
+                transform: translateY(-50%) rotate(15deg);
+            }
+
+        /* 结果面板 */
+        .results-panel {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .result-item {
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border: 1px solid #e9ecef;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+            .result-item:hover {
+                border-color: #3498db;
+                transform: translateX(5px);
+            }
+
+        .result-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .result-details {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        /* 坐标显示 */
+        .coordinate-display {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-family: 'Consolas', monospace;
+            z-index: 1000;
+            min-width: 250px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .coord-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .coord-label {
+            color: #bbb;
+        }
+
+        .coord-value {
+            color: white;
+            font-weight: 500;
+        }
+
+        /* 样式选择器 */
+        .style-picker {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+            .color-option:hover {
+                transform: scale(1.1);
+            }
+
+            .color-option.selected {
+                border-color: #333;
+                transform: scale(1.1);
+            }
+
+        /* 加载动画 */
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+            .loader i {
+                font-size: 2rem;
+                margin-bottom: 10px;
+                color: #3498db;
+                animation: spin 1s linear infinite;
+            }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* 属性表格 */
+        .attribute-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+            .attribute-table th,
+            .attribute-table td {
+                padding: 8px;
+                text-align: left;
+                border-bottom: 1px solid #eee;
+            }
+
+            .attribute-table th {
+                background: #f8f9fa;
+                font-weight: 600;
+                color: #333;
+            }
+
+            .attribute-table tr:hover {
+                background: #f0f7ff;
+            }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .control-panel {
+                width: 300px;
+                top: 10px;
+                left: 10px;
+            }
+
+            .main-toolbar {
+                top: 10px;
+                right: 10px;
+            }
+
+            .tool-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <!-- 自定义通知容器 -->
+    <div class="notification-container" id="notificationContainer"></div>
+
+    <!-- 控制面板 -->
+    <div class="control-panel" id="controlPanel">
+        <div class="panel-header">
+            <h2><i class="fas fa-map-marked-alt"></i> WebGIS 系统</h2>
+            <button class="toggle-btn" id="togglePanel">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+        </div>
+
+        <!-- 选项卡 -->
+        <div class="tab-container">
+            <div class="tab-buttons">
+                <button class="tab-btn active" data-tab="layers"><i class="fas fa-layer-group"></i> 图层</button>
+                <button class="tab-btn" data-tab="tools"><i class="fas fa-tools"></i> 工具</button>
+                <button class="tab-btn" data-tab="query"><i class="fas fa-search"></i> 查询</button>
+                <button class="tab-btn" data-tab="styles"><i class="fas fa-palette"></i> 样式</button>
+                <button class="tab-btn" data-tab="data"><i class="fas fa-database"></i> 数据</button>
+            </div>
+
+            <!-- 图层管理 -->
+            <div class="tab-content active" id="layers">
+                <div class="tool-group">
+                    <h3><i class="fas fa-layer-group"></i> 底图图层</h3>
+                    <div class="layer-list" id="baseLayerList">
+                        <!-- 底图图层动态生成 -->
+                    </div>
+                </div>
+
+                <div class="tool-group">
+                    <h3><i class="fas fa-draw-polygon"></i> 矢量图层</h3>
+                    <div class="layer-list" id="vectorLayerList">
+                        <!-- 矢量图层动态生成 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 工具面板 -->
+            <div class="tab-content" id="tools">
+                <div class="tool-group">
+                    <h3><i class="fas fa-draw-polygon"></i> 绘制工具</h3>
+                    <div class="tool-grid">
+                        <button class="tool-btn" id="drawPoint">
+                            <i class="fas fa-map-pin"></i>
+                            <span>点</span>
+                        </button>
+                        <button class="tool-btn" id="drawLine">
+                            <i class="fas fa-slash"></i>
+                            <span>线</span>
+                        </button>
+                        <button class="tool-btn" id="drawPolygon">
+                            <i class="fas fa-draw-polygon"></i>
+                            <span>多边形</span>
+                        </button>
+                        <button class="tool-btn" id="drawCircle">
+                            <i class="fas fa-circle"></i>
+                            <span>圆形</span>
+                        </button>
+                        <button class="tool-btn" id="drawRectangle">
+                            <i class="fas fa-square"></i>
+                            <span>矩形</span>
+                        </button>
+                        <button class="tool-btn" id="drawText">
+                            <i class="fas fa-font"></i>
+                            <span>标注</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="tool-group">
+                    <h3><i class="fas fa-ruler-combined"></i> 测量工具</h3>
+                    <div class="tool-grid">
+                        <button class="tool-btn" id="measureLength">
+                            <i class="fas fa-ruler-horizontal"></i>
+                            <span>长度</span>
+                        </button>
+                        <button class="tool-btn" id="measureArea">
+                            <i class="fas fa-ruler-combined"></i>
+                            <span>面积</span>
+                        </button>
+                        <button class="tool-btn" id="measureAngle">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>角度</span>
+                        </button>
+                        <button class="tool-btn" id="measureClear">
+                            <i class="fas fa-trash-alt"></i>
+                            <span>清除</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="tool-group">
+                    <h3><i class="fas fa-edit"></i> 编辑工具</h3>
+                    <div class="tool-grid">
+                        <button class="tool-btn" id="editSelect">
+                            <i class="fas fa-mouse-pointer"></i>
+                            <span>选择</span>
+                        </button>
+                        <button class="tool-btn" id="editMove">
+                            <i class="fas fa-arrows-alt"></i>
+                            <span>移动</span>
+                        </button>
+                        <button class="tool-btn" id="editDelete">
+                            <i class="fas fa-trash"></i>
+                            <span>删除</span>
+                        </button>
+                        <button class="tool-btn" id="editClear">
+                            <i class="fas fa-broom"></i>
+                            <span>清空</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="tool-group">
+                    <h3><i class="fas fa-map-marker-alt"></i> 高级工具</h3>
+                    <div class="tool-grid">
+                        <button class="tool-btn" id="toolBuffer">
+                            <i class="fas fa-bullseye"></i>
+                            <span>缓冲区</span>
+                        </button>
+                        <button class="tool-btn" id="toolUnion">
+                            <i class="fas fa-object-group"></i>
+                            <span>合并</span>
+                        </button>
+                        <button class="tool-btn" id="toolIntersect">
+                            <i class="fas fa-object-intersect"></i>
+                            <span>相交</span>
+                        </button>
+                        <button class="tool-btn" id="toolExport">
+                            <i class="fas fa-file-export"></i>
+                            <span>导出</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 查询面板 -->
+            <div class="tab-content" id="query">
+                <div class="search-box">
+                    <input type="text" class="search-input" id="searchInput" placeholder="搜索位置或要素...">
+                    <button class="search-btn" id="searchButton">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+
+                <div class="loader" id="searchLoader">
+                    <i class="fas fa-spinner"></i>
+                    <div>搜索中...</div>
+                </div>
+
+                <div class="results-panel" id="resultsPanel">
+                    <!-- 搜索结果动态生成 -->
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <h3><i class="fas fa-filter"></i> 空间查询</h3>
+                    <div class="tool-grid" style="margin-top: 15px;">
+                        <button class="tool-btn" id="queryPoint">
+                            <i class="fas fa-map-pin"></i>
+                            <span>点查询</span>
+                        </button>
+                        <button class="tool-btn" id="queryBuffer">
+                            <i class="fas fa-bullseye"></i>
+                            <span>缓冲区</span>
+                        </button>
+                        <button class="tool-btn" id="queryIntersect">
+                            <i class="fas fa-object-intersect"></i>
+                            <span>相交</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 样式面板 -->
+            <div class="tab-content" id="styles">
+                <div class="tool-group">
+                    <h3><i class="fas fa-paint-brush"></i> 绘制样式</h3>
+                    <div class="style-picker">
+                        <div>填充颜色:</div>
+                        <div class="color-picker" id="fillColorPicker">
+                            <div class="color-option selected" style="background-color: rgba(52, 152, 219, 0.3);" data-color="rgba(52, 152, 219, 0.3)"></div>
+                            <div class="color-option" style="background-color: rgba(46, 204, 113, 0.3);" data-color="rgba(46, 204, 113, 0.3)"></div>
+                            <div class="color-option" style="background-color: rgba(155, 89, 182, 0.3);" data-color="rgba(155, 89, 182, 0.3)"></div>
+                            <div class="color-option" style="background-color: rgba(241, 196, 15, 0.3);" data-color="rgba(241, 196, 15, 0.3)"></div>
+                            <div class="color-option" style="background-color: rgba(231, 76, 60, 0.3);" data-color="rgba(231, 76, 60, 0.3)"></div>
+                        </div>
+
+                        <div style="margin-top: 15px;">边框颜色:</div>
+                        <div class="color-picker" id="strokeColorPicker">
+                            <div class="color-option selected" style="background-color: #3498db;" data-color="#3498db"></div>
+                            <div class="color-option" style="background-color: #2ecc71;" data-color="#2ecc71"></div>
+                            <div class="color-option" style="background-color: #9b59b6;" data-color="#9b59b6"></div>
+                            <div class="color-option" style="background-color: #f1c40f;" data-color="#f1c40f"></div>
+                            <div class="color-option" style="background-color: #e74c3c;" data-color="#e74c3c"></div>
+                        </div>
+
+                        <div style="margin-top: 15px;">边框宽度:</div>
+                        <input type="range" id="strokeWidth" min="1" max="10" value="2" style="width: 100%; margin-top: 10px;">
+                    </div>
+                </div>
+
+                <div class="tool-group">
+                    <h3><i class="fas fa-map-marker-alt"></i> 点样式</h3>
+                    <div class="style-picker">
+                        <div>点大小:</div>
+                        <input type="range" id="pointSize" min="3" max="15" value="7" style="width: 100%; margin-top: 10px;">
+
+                        <div style="margin-top: 15px;">点形状:</div>
+                        <div class="tool-grid" style="margin-top: 10px;">
+                            <button class="tool-btn" id="shapeCircle">
+                                <i class="fas fa-circle"></i>
+                                <span>圆形</span>
+                            </button>
+                            <button class="tool-btn active" id="shapeSquare">
+                                <i class="fas fa-square"></i>
+                                <span>方形</span>
+                            </button>
+                            <button class="tool-btn" id="shapeTriangle">
+                                <i class="fas fa-play"></i>
+                                <span>三角</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 数据面板 -->
+            <div class="tab-content" id="data">
+                <div class="tool-group">
+                    <h3><i class="fas fa-database"></i> 数据管理</h3>
+                    <div class="tool-grid">
+                        <button class="tool-btn" id="dataImport">
+                            <i class="fas fa-file-import"></i>
+                            <span>导入</span>
+                        </button>
+                        <button class="tool-btn" id="dataExport">
+                            <i class="fas fa-file-export"></i>
+                            <span>导出</span>
+                        </button>
+                        <button class="tool-btn" id="dataClear">
+                            <i class="fas fa-trash"></i>
+                            <span>清空</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="tool-group">
+                    <h3><i class="fas fa-table"></i> 属性表</h3>
+                    <div id="attributeTableContainer">
+                        <table class="attribute-table" id="attributeTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>类型</th>
+                                    <th>名称</th>
+                                    <th>创建时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attributeTableBody">
+                                <!-- 属性数据动态生成 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主工具栏 -->
+    <div class="main-toolbar">
+        <button class="main-tool-btn" id="btnZoomIn" title="放大">
+            <i class="fas fa-search-plus"></i>
+        </button>
+        <button class="main-tool-btn" id="btnZoomOut" title="缩小">
+            <i class="fas fa-search-minus"></i>
+        </button>
+        <button class="main-tool-btn" id="btnFullExtent" title="全图显示">
+            <i class="fas fa-globe-americas"></i>
+        </button>
+        <button class="main-tool-btn" id="btnGeolocation" title="我的位置">
+            <i class="fas fa-location-arrow"></i>
+        </button>
+        <button class="main-tool-btn" id="btnExport" title="导出地图">
+            <i class="fas fa-download"></i>
+        </button>
+        <button class="main-tool-btn" id="btnPrint" title="打印地图">
+            <i class="fas fa-print"></i>
+        </button>
+        <button class="main-tool-btn" id="btnLayers" title="图层管理">
+            <i class="fas fa-layer-group"></i>
+            <span class="tool-badge" id="layerBadge">3</span>
+        </button>
+    </div>
+
+    <!-- 坐标显示 -->
+    <div class="coordinate-display" id="coordinateDisplay">
+        <div class="coord-line">
+            <span class="coord-label">经度:</span>
+            <span class="coord-value" id="lonValue">0.000000</span>
+        </div>
+        <div class="coord-line">
+            <span class="coord-label">纬度:</span>
+            <span class="coord-value" id="latValue">0.000000</span>
+        </div>
+        <div class="coord-line">
+            <span class="coord-label">缩放级别:</span>
+            <span class="coord-value" id="zoomValue">0</span>
+        </div>
+        <div class="coord-line">
+            <span class="coord-label">比例尺:</span>
+            <span class="coord-value" id="scaleValue">1:1</span>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/ol@v7.3.0/dist/ol.js"></script>
+
+    <script>
+        // 自定义通知系统
+        class NotificationSystem {
+            constructor() {
+                this.container = document.getElementById('notificationContainer');
+                this.notifications = [];
+                this.nextId = 1;
+            }
+
+            show(message, type = 'info', title = '', duration = 3000) {
+                const id = this.nextId++;
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.id = `notification-${id}`;
+
+                const icon = this.getIcon(type);
+
+                notification.innerHTML = `
+                            <div class="notification-icon">${icon}</div>
+                            <div class="notification-content">
+                                ${title ? `<div class="notification-title">${title}</div>` : ''}
+                                <div class="notification-message">${message}</div>
+                            </div>
+                            <button class="notification-close" onclick="notificationSystem.remove(${id})">×</button>
+                        `;
+
+                this.container.appendChild(notification);
+
+                // 触发动画
+                setTimeout(() => {
+                    notification.classList.add('show');
+                }, 10);
+
+                // 自动移除
+                if (duration > 0) {
+                    setTimeout(() => {
+                        this.remove(id);
+                    }, duration);
+                }
+
+                this.notifications.push({ id, element: notification });
+                return id;
+            }
+
+            getIcon(type) {
+                const icons = {
+                    success: '<i class="fas fa-check-circle"></i>',
+                    error: '<i class="fas fa-exclamation-circle"></i>',
+                    warning: '<i class="fas fa-exclamation-triangle"></i>',
+                    info: '<i class="fas fa-info-circle"></i>'
+                };
+                return icons[type] || icons.info;
+            }
+
+            remove(id) {
+                const index = this.notifications.findIndex(n => n.id === id);
+                if (index !== -1) {
+                    const notification = this.notifications[index];
+                    notification.element.classList.remove('show');
+
+                    setTimeout(() => {
+                        if (notification.element.parentNode) {
+                            notification.element.parentNode.removeChild(notification.element);
+                        }
+                    }, 300);
+
+                    this.notifications.splice(index, 1);
+                }
+            }
+
+            success(message, title = '成功') {
+                return this.show(message, 'success', title, 3000);
+            }
+
+            error(message, title = '错误') {
+                return this.show(message, 'error', title, 5000);
+            }
+
+            warning(message, title = '警告') {
+                return this.show(message, 'warning', title, 4000);
+            }
+
+            info(message, title = '信息') {
+                return this.show(message, 'info', title, 3000);
+            }
+        }
+
+        // 创建通知系统实例
+        const notificationSystem = new NotificationSystem();
+
+        // 全局变量
+        let map;
+        let drawInteraction, modifyInteraction, selectInteraction, rectangleDrawInteraction;
+        let drawSource, measureSource, editSource;
+        let drawLayer, measureLayer, editLayer;
+        let popupOverlay;
+        let currentDrawType = null;
+        let currentStyle = {
+            fillColor: 'rgba(52, 152, 219, 0.3)',
+            strokeColor: '#3498db',
+            strokeWidth: 2,
+            pointSize: 7,
+            pointShape: 'square'
+        };
+        let isDrawingRectangle = false;
+
+        // 使用可用的本地瓦片服务
+        const tileServices = {
+            carto: 'https://{a-c}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+            osm: 'https://{a-c}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            esri: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}'
+        };
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', function () {
+            initMap();
+            initUI();
+            initLayers();
+            bindEvents();
+            notificationSystem.success('WebGIS系统加载完成！', '欢迎使用');
+        });
+
+        // 初始化地图
+        function initMap() {
+            try {
+                // 创建数据源
+                drawSource = new ol.source.Vector();
+                measureSource = new ol.source.Vector();
+                editSource = new ol.source.Vector();
+
+                // 创建矢量图层样式函数
+                const createVectorStyle = function (feature) {
+                    const geometry = feature.getGeometry();
+                    const type = geometry.getType();
+
+                    let imageStyle;
+                    if (currentStyle.pointShape === 'circle') {
+                        imageStyle = new ol.style.Circle({
+                            radius: currentStyle.pointSize,
+                            fill: new ol.style.Fill({
+                                color: currentStyle.strokeColor
+                            }),
+                            stroke: new ol.style.Stroke({
+                                color: '#fff',
+                                width: 2
+                            })
+                        });
+                    } else if (currentStyle.pointShape === 'square') {
+                        imageStyle = new ol.style.RegularShape({
+                            points: 4,
+                            radius: currentStyle.pointSize,
+                            angle: Math.PI / 4,
+                            fill: new ol.style.Fill({
+                                color: currentStyle.strokeColor
+                            }),
+                            stroke: new ol.style.Stroke({
+                                color: '#fff',
+                                width: 2
+                            })
+                        });
+                    } else if (currentStyle.pointShape === 'triangle') {
+                        imageStyle = new ol.style.RegularShape({
+                            points: 3,
+                            radius: currentStyle.pointSize,
+                            rotation: 0,
+                            fill: new ol.style.Fill({
+                                color: currentStyle.strokeColor
+                            }),
+                            stroke: new ol.style.Stroke({
+                                color: '#fff',
+                                width: 2
+                            })
+                        });
+                    }
+
+                    // 矩形特殊样式
+                    if (feature.get('isRectangle')) {
+                        return new ol.style.Style({
+                            fill: new ol.style.Fill({
+                                color: currentStyle.fillColor
+                            }),
+                            stroke: new ol.style.Stroke({
+                                color: currentStyle.strokeColor,
+                                width: currentStyle.strokeWidth,
+                                lineDash: [5, 5]
+                            })
+                        });
+                    }
+
+                    return new ol.style.Style({
+                        fill: new ol.style.Fill({
+                            color: currentStyle.fillColor
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: currentStyle.strokeColor,
+                            width: currentStyle.strokeWidth
+                        }),
+                        image: imageStyle
+                    });
+                };
+
+                // 创建图层
+                drawLayer = new ol.layer.Vector({
+                    source: drawSource,
+                    style: createVectorStyle
+                });
+
+                measureLayer = new ol.layer.Vector({
+                    source: measureSource,
+                    style: new ol.style.Style({
+                        stroke: new ol.style.Stroke({
+                            color: '#ff5722',
+                            width: 2,
+                            lineDash: [10, 10]
+                        }),
+                        fill: new ol.style.Fill({
+                            color: 'rgba(255, 87, 34, 0.1)'
+                        }),
+                        image: new ol.style.Circle({
+                            radius: 6,
+                            fill: new ol.style.Fill({
+                                color: '#ff5722'
+                            })
+                        })
+                    })
+                });
+
+                editLayer = new ol.layer.Vector({
+                    source: editSource,
+                    style: new ol.style.Style({
+                        stroke: new ol.style.Stroke({
+                            color: '#4CAF50',
+                            width: 3
+                        }),
+                        fill: new ol.style.Fill({
+                            color: 'rgba(76, 175, 80, 0.2)'
+                        }),
+                        image: new ol.style.Circle({
+                            radius: 8,
+                            fill: new ol.style.Fill({
+                                color: '#4CAF50'
+                            })
+                        })
+                    })
+                });
+
+                // 创建地图
+                map = new ol.Map({
+                    target: 'map',
+                    layers: [
+                        // 底图
+                        new ol.layer.Tile({
+                            title: '街道地图',
+                            type: 'base',
+                            visible: true,
+                            source: new ol.source.XYZ({
+                                url: tileServices.carto,
+                                attributions: '© OpenStreetMap contributors, © CARTO'
+                            })
+                        }),
+                        new ol.layer.Tile({
+                            title: '卫星影像',
+                            type: 'base',
+                            visible: false,
+                            source: new ol.source.XYZ({
+                                url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                                attributions: '© Esri'
+                            })
+                        }),
+                        new ol.layer.Tile({
+                            title: '地形图',
+                            type: 'base',
+                            visible: false,
+                            source: new ol.source.XYZ({
+                                url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+                                attributions: '© Esri'
+                            })
+                        }),
+                        // 矢量图层
+                        drawLayer,
+                        measureLayer,
+                        editLayer
+                    ],
+                    view: new ol.View({
+                        center: ol.proj.fromLonLat([116.4074, 39.9042]),
+                        zoom: 10,
+                        minZoom: 2,
+                        maxZoom: 20
+                    })
+                });
+
+                // 添加默认控件
+                map.addControl(new ol.control.Zoom());
+                map.addControl(new ol.control.Rotate());
+                map.addControl(new ol.control.ScaleLine());
+                map.addControl(new ol.control.Attribution());
+
+                // 初始化弹窗
+                initPopup();
+
+                // 更新坐标显示
+                updateCoordinateDisplay();
+
+                // 地图视图变化时更新坐标
+                map.getView().on('change', function () {
+                    updateCoordinateDisplay();
+                });
+
+            } catch (error) {
+                console.error('地图初始化错误:', error);
+                notificationSystem.error('地图初始化失败: ' + error.message, '错误');
+            }
+        }
+
+        // 更新样式
+        function updateStyle() {
+            drawLayer.setStyle(function (feature) {
+                const geometry = feature.getGeometry();
+                const type = geometry.getType();
+
+                let imageStyle;
+                if (currentStyle.pointShape === 'circle') {
+                    imageStyle = new ol.style.Circle({
+                        radius: currentStyle.pointSize,
+                        fill: new ol.style.Fill({
+                            color: currentStyle.strokeColor
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: '#fff',
+                            width: 2
+                        })
+                    });
+                } else if (currentStyle.pointShape === 'square') {
+                    imageStyle = new ol.style.RegularShape({
+                        points: 4,
+                        radius: currentStyle.pointSize,
+                        angle: Math.PI / 4,
+                        fill: new ol.style.Fill({
+                            color: currentStyle.strokeColor
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: '#fff',
+                            width: 2
+                        })
+                    });
+                } else if (currentStyle.pointShape === 'triangle') {
+                    imageStyle = new ol.style.RegularShape({
+                        points: 3,
+                        radius: currentStyle.pointSize,
+                        rotation: 0,
+                        fill: new ol.style.Fill({
+                            color: currentStyle.strokeColor
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: '#fff',
+                            width: 2
+                        })
+                    });
+                }
+
+                // 矩形特殊样式
+                if (feature.get('isRectangle')) {
+                    return new ol.style.Style({
+                        fill: new ol.style.Fill({
+                            color: currentStyle.fillColor
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: currentStyle.strokeColor,
+                            width: currentStyle.strokeWidth,
+                            lineDash: [5, 5]
+                        })
+                    });
+                }
+
+                return new ol.style.Style({
+                    fill: new ol.style.Fill({
+                        color: currentStyle.fillColor
+                    }),
+                    stroke: new ol.style.Stroke({
+                        color: currentStyle.strokeColor,
+                        width: currentStyle.strokeWidth
+                    }),
+                    image: imageStyle
+                });
+            });
+        }
+
+        // 初始化弹窗
+        function initPopup() {
+            const popupElement = document.createElement('div');
+            popupElement.className = 'ol-popup';
+            popupElement.innerHTML = `
+                        <div class="popup-content"></div>
+                        <button class="popup-closer">×</button>
+                    `;
+
+            popupOverlay = new ol.Overlay({
+                element: popupElement,
+                autoPan: true,
+                autoPanAnimation: {
+                    duration: 250
+                }
+            });
+
+            map.addOverlay(popupOverlay);
+
+            // 关闭弹窗
+            popupElement.querySelector('.popup-closer').onclick = function () {
+                popupOverlay.setPosition(undefined);
+                return false;
+            };
+        }
+
+        // 显示弹窗
+        function showPopup(coordinate, content) {
+            const element = popupOverlay.getElement();
+            element.querySelector('.popup-content').innerHTML = content;
+            popupOverlay.setPosition(coordinate);
+        }
+
+        // 更新坐标显示
+        function updateCoordinateDisplay() {
+            const view = map.getView();
+            const center = view.getCenter();
+            const zoom = view.getZoom();
+
+            if (center) {
+                const lonLat = ol.proj.toLonLat(center);
+                document.getElementById('lonValue').textContent = lonLat[0].toFixed(6);
+                document.getElementById('latValue').textContent = lonLat[1].toFixed(6);
+                document.getElementById('zoomValue').textContent = Math.round(zoom);
+
+                // 计算比例尺
+                const resolution = view.getResolution();
+                const dpi = 96;
+                const inchesPerMeter = 39.37;
+                const scale = resolution * dpi * inchesPerMeter;
+                document.getElementById('scaleValue').textContent = '1:' + Math.round(scale);
+            }
+        }
+
+        // 初始化UI
+        function initUI() {
+            // 初始化选项卡
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const tabId = this.getAttribute('data-tab');
+
+                    // 更新按钮状态
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+
+                    // 显示对应内容
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+
+            // 初始化颜色选择器
+            document.querySelectorAll('.color-option').forEach(option => {
+                option.addEventListener('click', function () {
+                    const parentId = this.parentElement.id;
+                    const color = this.getAttribute('data-color');
+
+                    // 更新选择状态
+                    this.parentElement.querySelectorAll('.color-option').forEach(o => {
+                        o.classList.remove('selected');
+                    });
+                    this.classList.add('selected');
+
+                    // 更新样式
+                    if (parentId === 'fillColorPicker') {
+                        currentStyle.fillColor = color;
+                    } else if (parentId === 'strokeColorPicker') {
+                        currentStyle.strokeColor = color;
+                    }
+
+                    updateStyle();
+                    notificationSystem.info('样式已更新', '提示');
+                });
+            });
+
+            // 初始化滑块
+            document.getElementById('strokeWidth').addEventListener('input', function () {
+                currentStyle.strokeWidth = parseInt(this.value);
+                updateStyle();
+            });
+
+            document.getElementById('pointSize').addEventListener('input', function () {
+                currentStyle.pointSize = parseInt(this.value);
+                updateStyle();
+            });
+
+            // 初始化点形状
+            document.querySelectorAll('#shapeCircle, #shapeSquare, #shapeTriangle').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    document.querySelectorAll('#shapeCircle, #shapeSquare, #shapeTriangle').forEach(b => {
+                        b.classList.remove('active');
+                    });
+                    this.classList.add('active');
+
+                    const shape = this.id.replace('shape', '').toLowerCase();
+                    currentStyle.pointShape = shape;
+                    updateStyle();
+                });
+            });
+        }
+
+        // 初始化图层控制
+        function initLayers() {
+            const baseLayerList = document.getElementById('baseLayerList');
+            const vectorLayerList = document.getElementById('vectorLayerList');
+
+            // 清空列表
+            baseLayerList.innerHTML = '';
+            vectorLayerList.innerHTML = '';
+
+            const layers = map.getLayers().getArray();
+
+            layers.forEach((layer, index) => {
+                const title = layer.get('title');
+                if (!title) return;
+
+                const type = layer.get('type') || 'vector';
+                const isBase = type === 'base';
+                const isVisible = layer.getVisible();
+
+                let iconClass = 'vector';
+                if (title.includes('街道')) iconClass = 'osm';
+                else if (title.includes('卫星')) iconClass = 'satellite';
+                else if (title.includes('地形')) iconClass = 'terrain';
+
+                const layerItem = document.createElement('div');
+                layerItem.className = 'layer-item';
+                layerItem.innerHTML = `
+                            <div class="layer-info">
+                                <div class="layer-icon ${iconClass}">
+                                    <i class="fas fa-${iconClass === 'osm' ? 'road' : iconClass === 'satellite' ? 'satellite' : 'mountain'}"></i>
+                                </div>
+                                <div class="layer-details">
+                                    <div class="layer-name">${title}</div>
+                                    <div class="layer-type">${isBase ? '底图' : '矢量图层'}</div>
+                                </div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" ${isVisible ? 'checked' : ''} data-layer-index="${index}">
+                                <span class="slider"></span>
+                            </label>
+                        `;
+
+                if (isBase) {
+                    baseLayerList.appendChild(layerItem);
+                } else {
+                    vectorLayerList.appendChild(layerItem);
+                }
+            });
+
+            // 绑定图层切换事件
+            document.querySelectorAll('.layer-item input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', function () {
+                    const layerIndex = parseInt(this.getAttribute('data-layer-index'));
+                    const layer = layers[layerIndex];
+                    const isBase = layer.get('type') === 'base';
+
+                    if (isBase) {
+                        // 如果是底图，只显示一个
+                        layers.forEach((l, idx) => {
+                            if (l.get('type') === 'base') {
+                                const isVisible = idx === layerIndex;
+                                l.setVisible(isVisible);
+                                const input = document.querySelector(`input[data-layer-index="${idx}"]`);
+                                if (input) input.checked = isVisible;
+                            }
+                        });
+                    } else {
+                        layer.setVisible(this.checked);
+                    }
+
+                    // 更新图层计数
+                    updateLayerBadge();
+                    notificationSystem.info('图层状态已更新', '提示');
+                });
+            });
+
+            // 更新图层计数
+            updateLayerBadge();
+        }
+
+        // 更新图层计数
+        function updateLayerBadge() {
+            const layers = map.getLayers().getArray();
+            const visibleLayers = layers.filter(layer => layer.getVisible() && layer.get('title')).length;
+            document.getElementById('layerBadge').textContent = visibleLayers;
+        }
+
+        // 更新属性表
+        function updateAttributeTable() {
+            const tbody = document.getElementById('attributeTableBody');
+            tbody.innerHTML = '';
+
+            const features = drawSource.getFeatures();
+            features.forEach((feature, index) => {
+                const geometry = feature.getGeometry();
+                const type = geometry.getType();
+                const created = feature.get('created') || new Date().toISOString();
+                const name = feature.get('name') || `要素 ${index + 1}`;
+                const isRectangle = feature.get('isRectangle') || false;
+
+                const displayType = isRectangle ? '矩形' : type;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                            <td>${index + 1}</td>
+                            <td>${displayType}</td>
+                            <td>${name}</td>
+                            <td>${new Date(created).toLocaleString()}</td>
+                            <td>
+                                <button onclick="zoomToFeature(${index})" title="定位" style="background: none; border: none; color: #3498db; cursor: pointer; margin-right: 10px;">
+                                    <i class="fas fa-search-location"></i>
+                                </button>
+                                <button onclick="deleteFeature(${index})" title="删除" style="background: none; border: none; color: #e74c3c; cursor: pointer;">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // 定位到要素
+        function zoomToFeature(index) {
+            const features = drawSource.getFeatures();
+            if (features[index]) {
+                const geometry = features[index].getGeometry();
+                const extent = geometry.getExtent();
+                map.getView().fit(extent, {
+                    padding: [50, 50, 50, 50],
+                    duration: 1000
+                });
+                notificationSystem.info('已定位到要素', '提示');
+            }
+        }
+
+        // 删除要素
+        function deleteFeature(index) {
+            const features = drawSource.getFeatures();
+            if (features[index]) {
+                drawSource.removeFeature(features[index]);
+                updateAttributeTable();
+                notificationSystem.success('要素已删除', '成功');
+            }
+        }
+
+        // 绑定事件
+        function bindEvents() {
+            // 控制面板切换
+            document.getElementById('togglePanel').addEventListener('click', function () {
+                const panel = document.getElementById('controlPanel');
+                panel.classList.toggle('panel-collapsed');
+                const icon = this.querySelector('i');
+                icon.classList.toggle('fa-chevron-left');
+                icon.classList.toggle('fa-chevron-right');
+            });
+
+            // 主工具栏按钮
+            document.getElementById('btnZoomIn').addEventListener('click', function () {
+                const view = map.getView();
+                view.animate({
+                    zoom: view.getZoom() + 1,
+                    duration: 250
+                });
+            });
+
+            document.getElementById('btnZoomOut').addEventListener('click', function () {
+                const view = map.getView();
+                view.animate({
+                    zoom: view.getZoom() - 1,
+                    duration: 250
+                });
+            });
+
+            document.getElementById('btnFullExtent').addEventListener('click', function () {
+                map.getView().animate({
+                    center: ol.proj.fromLonLat([116.4074, 39.9042]),
+                    zoom: 10,
+                    duration: 1000
+                });
+            });
+
+            document.getElementById('btnGeolocation').addEventListener('click', function () {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(function (position) {
+                        const coords = ol.proj.fromLonLat([
+                            position.coords.longitude,
+                            position.coords.latitude
+                        ]);
+
+                        // 添加标记
+                        const marker = new ol.Feature({
+                            geometry: new ol.geom.Point(coords),
+                            name: '我的位置',
+                            created: new Date().toISOString()
+                        });
+
+                        drawSource.addFeature(marker);
+
+                        // 定位到位置
+                        map.getView().animate({
+                            center: coords,
+                            zoom: 15,
+                            duration: 1000
+                        });
+
+                        // 更新属性表
+                        updateAttributeTable();
+
+                        // 显示信息
+                        showPopup(coords, `
+                                    <strong>我的位置</strong><br>
+                                    纬度: ${position.coords.latitude.toFixed(6)}<br>
+                                    经度: ${position.coords.longitude.toFixed(6)}<br>
+                                    精度: ${position.coords.accuracy}米
+                                `);
+
+                        notificationSystem.success('已定位到您的位置', '成功');
+                    }, function (error) {
+                        notificationSystem.error('无法获取位置: ' + error.message, '错误');
+                    });
+                } else {
+                    notificationSystem.error('浏览器不支持地理定位', '错误');
+                }
+            });
+
+            document.getElementById('btnExport').addEventListener('click', function () {
+                exportMapImage();
+            });
+
+            document.getElementById('btnPrint').addEventListener('click', function () {
+                window.print();
+                notificationSystem.info('准备打印地图', '提示');
+            });
+
+            document.getElementById('btnLayers').addEventListener('click', function () {
+                document.querySelector('[data-tab="layers"]').click();
+                document.getElementById('controlPanel').classList.remove('panel-collapsed');
+            });
+
+            // 绘制工具
+            document.getElementById('drawPoint').addEventListener('click', function () {
+                activateDraw('Point');
+                updateToolButtonState(this);
+            });
+
+            document.getElementById('drawLine').addEventListener('click', function () {
+                activateDraw('LineString');
+                updateToolButtonState(this);
+            });
+
+            document.getElementById('drawPolygon').addEventListener('click', function () {
+                activateDraw('Polygon');
+                updateToolButtonState(this);
+            });
+
+            document.getElementById('drawCircle').addEventListener('click', function () {
+                activateDraw('Circle');
+                updateToolButtonState(this);
+            });
+
+            document.getElementById('drawRectangle').addEventListener('click', function () {
+                activateRectangleDraw();
+                updateToolButtonState(this);
+            });
+
+            document.getElementById('drawText').addEventListener('click', function () {
+                activateDraw('Point');
+                updateToolButtonState(this);
+            });
+
+            // 测量工具
+            document.getElementById('measureLength').addEventListener('click', function () {
+                activateMeasure('length');
+                updateToolButtonState(this);
+            });
+
+            document.getElementById('measureArea').addEventListener('click', function () {
+                activateMeasure('area');
+                updateToolButtonState(this);
+            });
+
+            document.getElementById('measureAngle').addEventListener('click', function () {
+                notificationSystem.info('角度测量功能开发中', '提示');
+            });
+
+            document.getElementById('measureClear').addEventListener('click', function () {
+                measureSource.clear();
+                notificationSystem.success('已清除所有测量', '成功');
+            });
+
+            // 编辑工具
+            document.getElementById('editSelect').addEventListener('click', function () {
+                activateSelect();
+                updateToolButtonState(this);
+            });
+
+            document.getElementById('editMove').addEventListener('click', function () {
+                activateModify();
+                updateToolButtonState(this);
+            });
+
+            document.getElementById('editDelete').addEventListener('click', function () {
+                if (selectInteraction) {
+                    const selectedFeatures = selectInteraction.getFeatures();
+                    const count = selectedFeatures.getLength();
+                    selectedFeatures.forEach(feature => {
+                        drawSource.removeFeature(feature);
+                    });
+                    selectedFeatures.clear();
+                    updateAttributeTable();
+                    notificationSystem.success(`已删除 ${count} 个要素`, '成功');
+                }
+            });
+
+            document.getElementById('editClear').addEventListener('click', function () {
+                drawSource.clear();
+                updateAttributeTable();
+                notificationSystem.success('已清除所有绘制', '成功');
+            });
+
+            // 高级工具
+            document.getElementById('toolBuffer').addEventListener('click', function () {
+                notificationSystem.info('缓冲区分析功能开发中', '提示');
+            });
+
+            document.getElementById('toolUnion').addEventListener('click', function () {
+                notificationSystem.info('合并功能开发中', '提示');
+            });
+
+            document.getElementById('toolIntersect').addEventListener('click', function () {
+                notificationSystem.info('相交分析功能开发中', '提示');
+            });
+
+            document.getElementById('toolExport').addEventListener('click', function () {
+                exportGeoJSON();
+            });
+
+            // 数据管理
+            document.getElementById('dataImport').addEventListener('click', function () {
+                notificationSystem.info('数据导入功能开发中', '提示');
+            });
+
+            document.getElementById('dataExport').addEventListener('click', function () {
+                exportGeoJSON();
+            });
+
+            document.getElementById('dataClear').addEventListener('click', function () {
+                drawSource.clear();
+                updateAttributeTable();
+                notificationSystem.success('已清空所有数据', '成功');
+            });
+
+            // 查询工具
+            document.getElementById('searchButton').addEventListener('click', function () {
+                const query = document.getElementById('searchInput').value;
+                if (query.trim()) {
+                    performSearch(query);
+                }
+            });
+
+            document.getElementById('searchInput').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    document.getElementById('searchButton').click();
+                }
+            });
+
+            // 空间查询
+            document.getElementById('queryPoint').addEventListener('click', function () {
+                notificationSystem.info('点查询功能开发中', '提示');
+            });
+
+            document.getElementById('queryBuffer').addEventListener('click', function () {
+                notificationSystem.info('缓冲区分析功能开发中', '提示');
+            });
+
+            document.getElementById('queryIntersect').addEventListener('click', function () {
+                notificationSystem.info('相交分析功能开发中', '提示');
+            });
+
+            // 地图点击事件
+            map.on('click', function (evt) {
+                const feature = map.forEachFeatureAtPixel(evt.pixel, function (feature) {
+                    return feature;
+                });
+
+                if (feature) {
+                    const geometry = feature.getGeometry();
+                    const type = geometry.getType();
+                    const name = feature.get('name') || '未命名要素';
+                    const created = feature.get('created') || new Date().toISOString();
+                    const isRectangle = feature.get('isRectangle') || false;
+
+                    let content = `<strong>${name}</strong><br>`;
+                    content += `类型: ${isRectangle ? '矩形' : type}<br>`;
+                    content += `创建时间: ${new Date(created).toLocaleString()}<br>`;
+
+                    if (type === 'Point') {
+                        const coords = geometry.getCoordinates();
+                        const lonLat = ol.proj.toLonLat(coords);
+                        content += `经度: ${lonLat[0].toFixed(6)}<br>`;
+                        content += `纬度: ${lonLat[1].toFixed(6)}<br>`;
+                    } else if (type === 'LineString') {
+                        const length = geometry.getLength();
+                        content += `长度: ${length.toFixed(2)}米<br>`;
+                        const coords = geometry.getCoordinates();
+                        content += `节点数: ${coords.length}<br>`;
+                    } else if (type === 'Polygon') {
+                        const area = geometry.getArea();
+                        content += `面积: ${area.toFixed(2)}平方米<br>`;
+                        const coords = geometry.getCoordinates();
+                        content += `节点数: ${coords[0].length}<br>`;
+                    } else if (type === 'Circle') {
+                        const radius = geometry.getRadius();
+                        const area = Math.PI * radius * radius;
+                        content += `半径: ${radius.toFixed(2)}米<br>`;
+                        content += `面积: ${area.toFixed(2)}平方米<br>`;
+                    }
+
+                    showPopup(evt.coordinate, content);
+                }
+            });
+
+            // 鼠标移动显示坐标
+            map.on('pointermove', function (evt) {
+                if (evt.dragging) return;
+
+                const coordinate = evt.coordinate;
+                const lonLat = ol.proj.toLonLat(coordinate);
+                document.getElementById('lonValue').textContent = lonLat[0].toFixed(6);
+                document.getElementById('latValue').textContent = lonLat[1].toFixed(6);
+            });
+        }
+
+        // 激活绘制工具
+        function activateDraw(type) {
+            // 移除现有交互
+            removeInteractions();
+
+            currentDrawType = type;
+            isDrawingRectangle = false;
+
+            drawInteraction = new ol.interaction.Draw({
+                source: drawSource,
+                type: type
+            });
+
+            map.addInteraction(drawInteraction);
+
+            drawInteraction.on('drawend', function (evt) {
+                const feature = evt.feature;
+                const geometry = feature.getGeometry();
+
+                // 添加属性
+                feature.set('type', type);
+                feature.set('created', new Date().toISOString());
+                feature.set('name', `${type}要素 ${drawSource.getFeatures().length}`);
+
+                // 显示信息
+                let content = `<strong>绘制完成</strong><br>`;
+                content += `类型: ${type}<br>`;
+
+                if (type === 'Point') {
+                    const coords = geometry.getCoordinates();
+                    const lonLat = ol.proj.toLonLat(coords);
+                    content += `经度: ${lonLat[0].toFixed(6)}<br>`;
+                    content += `纬度: ${lonLat[1].toFixed(6)}<br>`;
+                } else if (type === 'LineString') {
+                    const length = geometry.getLength();
+                    content += `长度: ${length.toFixed(2)}米<br>`;
+                } else if (type === 'Polygon') {
+                    const area = geometry.getArea();
+                    content += `面积: ${area.toFixed(2)}平方米<br>`;
+                } else if (type === 'Circle') {
+                    const radius = geometry.getRadius();
+                    const area = Math.PI * radius * radius;
+                    content += `半径: ${radius.toFixed(2)}米<br>`;
+                    content += `面积: ${area.toFixed(2)}平方米<br>`;
+                }
+
+                showPopup(geometry.getLastCoordinate(), content);
+                notificationSystem.success('要素绘制完成', '成功');
+
+                // 更新属性表和图层列表
+                updateAttributeTable();
+                initLayers();
+            });
+        }
+
+        // 激活矩形绘制
+        function activateRectangleDraw() {
+            // 移除现有交互
+            removeInteractions();
+
+            isDrawingRectangle = true;
+            currentDrawType = 'Rectangle';
+
+            // 使用Polygon绘制矩形
+            rectangleDrawInteraction = new ol.interaction.Draw({
+                source: drawSource,
+                type: 'Circle',
+                geometryFunction: ol.interaction.Draw.createBox()
+            });
+
+            map.addInteraction(rectangleDrawInteraction);
+
+            rectangleDrawInteraction.on('drawend', function (evt) {
+                const feature = evt.feature;
+                const geometry = feature.getGeometry();
+
+                // 将圆形转换为多边形（矩形）
+                const circleGeometry = geometry;
+                const center = circleGeometry.getCenter();
+                const radius = circleGeometry.getRadius();
+
+                // 创建矩形多边形
+                const polygonCoords = [
+                    [
+                        [center[0] - radius, center[1] - radius],
+                        [center[0] + radius, center[1] - radius],
+                        [center[0] + radius, center[1] + radius],
+                        [center[0] - radius, center[1] + radius],
+                        [center[0] - radius, center[1] - radius]
+                    ]
+                ];
+
+                const polygonGeometry = new ol.geom.Polygon(polygonCoords);
+
+                // 创建新的要素
+                const rectangleFeature = new ol.Feature({
+                    geometry: polygonGeometry,
+                    type: 'Polygon',
+                    isRectangle: true,
+                    created: new Date().toISOString(),
+                    name: `矩形 ${drawSource.getFeatures().length + 1}`
+                });
+
+                // 移除原来的圆形要素
+                drawSource.removeFeature(feature);
+
+                // 添加矩形要素
+                drawSource.addFeature(rectangleFeature);
+
+                // 计算面积和尺寸
+                const area = polygonGeometry.getArea();
+                const width = radius * 2;
+                const height = radius * 2;
+
+                // 显示信息
+                const content = `
+                            <strong>矩形绘制完成</strong><br>
+                            类型: 矩形<br>
+                            宽度: ${width.toFixed(2)}米<br>
+                            高度: ${height.toFixed(2)}米<br>
+                            面积: ${area.toFixed(2)}平方米<br>
+                        `;
+
+                showPopup(center, content);
+                notificationSystem.success('矩形绘制完成', '成功');
+
+                // 更新属性表和图层列表
+                updateAttributeTable();
+                initLayers();
+            });
+        }
+
+        // 激活测量工具
+        function activateMeasure(type) {
+            removeInteractions();
+
+            const measureInteraction = new ol.interaction.Draw({
+                source: measureSource,
+                type: type === 'length' ? 'LineString' : 'Polygon',
+                style: new ol.style.Style({
+                    stroke: new ol.style.Stroke({
+                        color: '#ff5722',
+                        width: 2,
+                        lineDash: [10, 10]
+                    }),
+                    fill: new ol.style.Fill({
+                        color: 'rgba(255, 87, 34, 0.1)'
+                    }),
+                    image: new ol.style.Circle({
+                        radius: 6,
+                        fill: new ol.style.Fill({
+                            color: '#ff5722'
+                        })
+                    })
+                })
+            });
+
+            map.addInteraction(measureInteraction);
+
+            measureInteraction.on('drawend', function (evt) {
+                const geometry = evt.feature.getGeometry();
+                let value, unit;
+
+                if (type === 'length') {
+                    value = geometry.getLength();
+                    unit = '米';
+                    if (value > 1000) {
+                        value = value / 1000;
+                        unit = '公里';
+                    }
+                    value = value.toFixed(2);
+                } else {
+                    value = geometry.getArea();
+                    unit = '平方米';
+                    if (value > 10000) {
+                        value = value / 1000000;
+                        unit = '平方公里';
+                    }
+                    value = value.toFixed(2);
+                }
+
+                const content = `<strong>测量结果</strong><br>${type === 'length' ? '长度' : '面积'}: ${value} ${unit}`;
+                showPopup(geometry.getLastCoordinate(), content);
+
+                notificationSystem.success(`${type === 'length' ? '长度' : '面积'}测量完成: ${value} ${unit}`, '测量结果');
+            });
+        }
+
+        // 激活选择工具
+        function activateSelect() {
+            removeInteractions();
+
+            selectInteraction = new ol.interaction.Select({
+                layers: [drawLayer]
+            });
+
+            map.addInteraction(selectInteraction);
+
+            selectInteraction.on('select', function (evt) {
+                const selected = evt.selected;
+                if (selected.length > 0) {
+                    notificationSystem.info(`选中了 ${selected.length} 个要素`, '选择结果');
+                }
+            });
+        }
+
+        // 激活修改工具
+        function activateModify() {
+            removeInteractions();
+
+            selectInteraction = new ol.interaction.Select({
+                layers: [drawLayer]
+            });
+
+            modifyInteraction = new ol.interaction.Modify({
+                features: selectInteraction.getFeatures()
+            });
+
+            map.addInteraction(selectInteraction);
+            map.addInteraction(modifyInteraction);
+
+            notificationSystem.info('进入编辑模式，选择要素进行修改', '提示');
+        }
+
+        // 移除所有交互
+        function removeInteractions() {
+            if (drawInteraction) {
+                map.removeInteraction(drawInteraction);
+                drawInteraction = null;
+            }
+            if (rectangleDrawInteraction) {
+                map.removeInteraction(rectangleDrawInteraction);
+                rectangleDrawInteraction = null;
+            }
+            if (modifyInteraction) {
+                map.removeInteraction(modifyInteraction);
+                modifyInteraction = null;
+            }
+            if (selectInteraction) {
+                map.removeInteraction(selectInteraction);
+                selectInteraction = null;
+            }
+
+            // 移除其他交互
+            map.getInteractions().getArray().forEach(interaction => {
+                if (interaction instanceof ol.interaction.Draw ||
+                    interaction instanceof ol.interaction.Modify ||
+                    interaction instanceof ol.interaction.Select) {
+                    map.removeInteraction(interaction);
+                }
+            });
+        }
+
+        // 更新工具按钮状态
+        function updateToolButtonState(activeButton) {
+            document.querySelectorAll('.tool-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            if (activeButton) {
+                activeButton.classList.add('active');
+            }
+        }
+
+        // 执行搜索
+        function performSearch(query) {
+            const loader = document.getElementById('searchLoader');
+            const resultsPanel = document.getElementById('resultsPanel');
+
+            // 显示加载动画
+            loader.style.display = 'block';
+            resultsPanel.style.display = 'none';
+
+            // 模拟搜索过程
+            setTimeout(() => {
+                loader.style.display = 'none';
+                resultsPanel.style.display = 'block';
+
+                // 清空现有结果
+                resultsPanel.innerHTML = '';
+
+                // 模拟搜索结果
+                const mockResults = [
+                    { title: '北京天安门', details: '中国北京市东城区，地标建筑' },
+                    { title: '上海外滩', details: '中国上海市黄浦区，历史建筑群' },
+                    { title: '广州塔', details: '中国广州市海珠区，电视塔' },
+                    { title: '深圳平安金融中心', details: '中国深圳市福田区，摩天大楼' }
+                ].filter(item => item.title.includes(query) || item.details.includes(query));
+
+                if (mockResults.length > 0) {
+                    mockResults.forEach(result => {
+                        const resultItem = document.createElement('div');
+                        resultItem.className = 'result-item';
+                        resultItem.innerHTML = `
+                                    <div class="result-title">${result.title}</div>
+                                    <div class="result-details">${result.details}</div>
+                                `;
+                        resultsPanel.appendChild(resultItem);
+                    });
+                } else {
+                    resultsPanel.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">未找到相关结果</div>';
+                }
+
+                notificationSystem.success(`找到 ${mockResults.length} 个相关位置`, '搜索完成');
+            }, 1500);
+        }
+
+        // 导出地图图片
+        function exportMapImage() {
+            map.once('rendercomplete', function () {
+                const mapCanvas = document.createElement('canvas');
+                const size = map.getSize();
+                mapCanvas.width = size[0];
+                mapCanvas.height = size[1];
+
+                const mapContext = mapCanvas.getContext('2d');
+                Array.prototype.forEach.call(
+                    document.querySelectorAll('.ol-layer canvas'),
+                    function (canvas) {
+                        if (canvas.width > 0) {
+                            const opacity = canvas.parentNode.style.opacity;
+                            mapContext.globalAlpha = opacity === '' ? 1 : Number(opacity);
+                            const transform = canvas.style.transform;
+                            const matrix = transform
+                                .match(/^matrix[Math Processing Error]
+$/)[1]
+                                .split(',')
+                                .map(Number);
+
+                            CanvasRenderingContext2D.prototype.setTransform.apply(
+                                mapContext,
+                                matrix
+                            );
+                            mapContext.drawImage(canvas, 0, 0);
+                        }
+                    }
+                );
+
+                const link = document.createElement('a');
+                link.download = 'map-export.png';
+                link.href = mapCanvas.toDataURL('image/png');
+                link.click();
+
+                notificationSystem.success('地图导出成功', '成功');
+            });
+
+            map.renderSync();
+        }
+
+        // 导出GeoJSON数据
+        function exportGeoJSON() {
+            const features = drawSource.getFeatures();
+            if (features.length === 0) {
+                notificationSystem.warning('没有数据可以导出', '警告');
+                return;
+            }
+
+            const format = new ol.format.GeoJSON();
+            const geojson = format.writeFeatures(features, {
+                featureProjection: map.getView().getProjection(),
+                dataProjection: 'EPSG:4326'
+            });
+
+            const blob = new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'webgis-data.geojson';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            notificationSystem.success(`导出 ${features.length} 个要素到GeoJSON文件`, '成功');
+        }
+    </script>
+</body>
+</html>

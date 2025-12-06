@@ -1,0 +1,1970 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anime.js 高级动画工坊</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0c0c2e, #1a1a3e, #2a2a5e);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* 头部样式 */
+        header {
+            text-align: center;
+            padding: 30px 0;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        h1 {
+            font-size: 3.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #ff0080, #00ffcc, #ffcc00, #cc00ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            letter-spacing: 1px;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .title-decoration {
+            width: 100px;
+            height: 5px;
+            background: linear-gradient(90deg, #ff0080, #00ffcc);
+            margin: 0 auto 15px;
+            border-radius: 5px;
+        }
+        
+        .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            margin-bottom: 15px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        /* 导航样式 */
+        nav {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .nav-item {
+            padding: 12px 25px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .nav-item.active {
+            background: linear-gradient(90deg, #ff0080, #cc00ff);
+            color: #fff;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(255, 0, 128, 0.3);
+        }
+        
+        /* 主内容区 */
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        /* 控制面板 */
+        .control-panel {
+            flex: 1;
+            min-width: 320px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 25px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .control-panel h2 {
+            margin-bottom: 10px;
+            color: #00ffcc;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+        }
+        
+        .control-group {
+            margin-bottom: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 18px;
+            border-radius: 12px;
+            border-left: 4px solid #00ffcc;
+        }
+        
+        .control-group h3 {
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            color: #ffcc00;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .slider-container {
+            margin-bottom: 18px;
+        }
+        
+        label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+        
+        .value-display {
+            color: #00ffcc;
+            font-weight: 600;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #ff0080;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 0, 128, 0.5);
+            border: 2px solid white;
+        }
+        
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 140px;
+            font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        button.primary {
+            background: linear-gradient(90deg, #ff0080, #cc00ff);
+            color: #fff;
+            font-weight: 600;
+        }
+        
+        button.primary:hover {
+            box-shadow: 0 8px 20px rgba(255, 0, 128, 0.4);
+        }
+        
+        button.secondary {
+            background: linear-gradient(90deg, #00ffcc, #00ccaa);
+            color: #000;
+            font-weight: 600;
+        }
+        
+        button.secondary:hover {
+            box-shadow: 0 8px 20px rgba(0, 255, 204, 0.4);
+        }
+        
+        /* 动画演示区 */
+        .animation-area {
+            flex: 2;
+            min-width: 300px;
+            min-height: 600px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 25px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .animation-area h2 {
+            margin-bottom: 20px;
+            color: #ffcc00;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+        }
+        
+        /* 动画元素容器 */
+        .animation-box {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            border-radius: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            flex-grow: 1;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .demo-element {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #ff0080, #cc00ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: bold;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            user-select: none;
+            transition: filter 0.3s;
+            z-index: 10;
+        }
+        
+        .demo-element:hover {
+            filter: brightness(1.2);
+        }
+        
+        .demo-element.draggable {
+            cursor: grab;
+        }
+        
+        .demo-element.draggable:active {
+            cursor: grabbing;
+        }
+        
+        .circle {
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00ffcc, #00aacc);
+        }
+        
+        .triangle {
+            width: 0;
+            height: 0;
+            background: transparent !important;
+            border-left: 35px solid transparent;
+            border-right: 35px solid transparent;
+            border-bottom: 60px solid #ffcc00;
+        }
+        
+        .hexagon {
+            width: 70px;
+            height: 40px;
+            background: linear-gradient(135deg, #ff9900, #ff5500);
+            position: relative;
+            border-radius: 8px;
+        }
+        
+        .hexagon:before, .hexagon:after {
+            content: "";
+            position: absolute;
+            width: 0;
+            border-left: 35px solid transparent;
+            border-right: 35px solid transparent;
+        }
+        
+        .hexagon:before {
+            bottom: 100%;
+            border-bottom: 20px solid #ff9900;
+        }
+        
+        .hexagon:after {
+            top: 100%;
+            border-top: 20px solid #ff5500;
+        }
+        
+        .demo-element i {
+            font-size: 1.8rem;
+            z-index: 2;
+        }
+        
+        .pulse {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.7);
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        /* 时间线控制 */
+        .timeline-controls {
+            margin-top: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 12px;
+            border-left: 4px solid #ffcc00;
+        }
+        
+        .timeline-slider {
+            width: 100%;
+            margin: 10px 0;
+        }
+        
+        .timeline-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        /* 动画示例展示 */
+        .animation-examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .example-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .example-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .example-card h3 {
+            margin-bottom: 10px;
+            color: #ffcc00;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .example-card p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 15px;
+        }
+        
+        .example-preview {
+            width: 100%;
+            height: 120px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .preview-item {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #00ffcc, #00aacc);
+        }
+        
+        /* 粒子系统 */
+        .particles-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.6);
+        }
+        
+        /* 页脚 */
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.95rem;
+            opacity: 0.8;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-item {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            min-width: 150px;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #00ffcc;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .control-panel, .animation-area {
+                width: 100%;
+            }
+            
+            .animation-examples {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.8rem;
+            }
+            
+            .nav-item {
+                padding: 10px 18px;
+                font-size: 0.9rem;
+            }
+            
+            .animation-examples {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            button {
+                min-width: 120px;
+            }
+        }
+        
+        @media (max-width: 580px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .nav-item {
+                padding: 8px 15px;
+                font-size: 0.85rem;
+            }
+            
+            .animation-examples {
+                grid-template-columns: 1fr;
+            }
+            
+            button {
+                min-width: 100%;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .stats {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+        
+        /* 进度条动画 */
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ff0080, #00ffcc);
+            width: 0%;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+        
+        /* 代码显示 */
+        .code-display {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            border-left: 4px solid #00ffcc;
+        }
+        
+        .code-keyword {
+            color: #ff9900;
+        }
+        
+        .code-string {
+            color: #00cc99;
+        }
+        
+        .code-number {
+            color: #cc00ff;
+        }
+        
+        .code-comment {
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Anime.js 高级动画工坊</h1>
+            <div class="title-decoration"></div>
+            <p class="subtitle">探索 Anime.js 的高级功能，包括时间线控制、SVG动画、粒子系统、交互式动画等。实时调整参数并查看效果。</p>
+        </header>
+        
+        <nav>
+            <div class="nav-item active" data-animation="basic">
+                <i class="fas fa-play-circle"></i> 基础动画
+            </div>
+            <div class="nav-item" data-animation="timeline">
+                <i class="fas fa-stream"></i> 时间线
+            </div>
+            <div class="nav-item" data-animation="svg">
+                <i class="fas fa-draw-polygon"></i> SVG动画
+            </div>
+            <div class="nav-item" data-animation="stagger">
+                <i class="fas fa-wave-square"></i> 交错动画
+            </div>
+            <div class="nav-item" data-animation="path">
+                <i class="fas fa-route"></i> 路径动画
+            </div>
+            <div class="nav-item" data-animation="particles">
+                <i class="fas fa-atom"></i> 粒子系统
+            </div>
+            <div class="nav-item" data-animation="morph">
+                <i class="fas fa-shapes"></i> 形变动画
+            </div>
+        </nav>
+        
+        <div class="main-content">
+            <div class="control-panel">
+                <div>
+                    <h2><i class="fas fa-sliders-h"></i> 动画控制台</h2>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="progress-bar"></div>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3><i class="fas fa-tachometer-alt"></i> 动画属性</h3>
+                    <div class="slider-container">
+                        <label>持续时间: <span class="value-display" id="duration-value">1000</span>ms</label>
+                        <input type="range" id="duration" min="100" max="5000" value="1000" step="100">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label>延迟: <span class="value-display" id="delay-value">0</span>ms</label>
+                        <input type="range" id="delay" min="0" max="3000" value="0" step="100">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label>弹性: <span class="value-display" id="elasticity-value">0.1</span></label>
+                        <input type="range" id="elasticity" min="0" max="2" value="0.1" step="0.1">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <label>循环次数: <span class="value-display" id="loop-value">1</span></label>
+                        <input type="range" id="loop" min="0" max="10" value="1" step="1">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3><i class="fas fa-film"></i> 动画类型</h3>
+                    <div class="btn-group">
+                        <button class="animation-btn primary" data-type="translate">
+                            <i class="fas fa-arrows-alt"></i> 移动
+                        </button>
+                        <button class="animation-btn" data-type="rotate">
+                            <i class="fas fa-sync-alt"></i> 旋转
+                        </button>
+                        <button class="animation-btn" data-type="scale">
+                            <i class="fas fa-expand-alt"></i> 缩放
+                        </button>
+                        <button class="animation-btn" data-type="color">
+                            <i class="fas fa-palette"></i> 颜色
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3><i class="fas fa-wave-square"></i> 缓动函数</h3>
+                    <div class="btn-group">
+                        <button class="easing-btn" data-easing="linear">
+                            <i class="fas fa-chart-line"></i> 线性
+                        </button>
+                        <button class="easing-btn" data-easing="easeInOutSine">
+                            <i class="fas fa-chart-area"></i> 缓入缓出
+                        </button>
+                        <button class="easing-btn" data-easing="spring">
+                            <i class="fas fa-bong"></i> 弹性
+                        </button>
+                        <button class="easing-btn" data-easing="easeOutBack">
+                            <i class="fas fa-reply-all"></i> 回弹
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3><i class="fas fa-play-circle"></i> 动画控制</h3>
+                    <div class="btn-group">
+                        <button class="primary" id="play-btn">
+                            <i class="fas fa-play"></i> 播放
+                        </button>
+                        <button id="pause-btn">
+                            <i class="fas fa-pause"></i> 暂停
+                        </button>
+                        <button id="reverse-btn">
+                            <i class="fas fa-backward"></i> 反转
+                        </button>
+                        <button id="reset-btn">
+                            <i class="fas fa-redo"></i> 重置
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3><i class="fas fa-plus-circle"></i> 创建元素</h3>
+                    <div class="btn-group">
+                        <button id="add-square">
+                            <i class="fas fa-square"></i> 方形
+                        </button>
+                        <button id="add-circle">
+                            <i class="fas fa-circle"></i> 圆形
+                        </button>
+                        <button id="add-triangle">
+                            <i class="fas fa-play"></i> 三角形
+                        </button>
+                        <button id="add-hexagon">
+                            <i class="fas fa-hexagon"></i> 六边形
+                        </button>
+                    </div>
+                    <div class="btn-group" style="margin-top: 10px;">
+                        <button id="clear-all" class="secondary">
+                            <i class="fas fa-trash"></i> 清除所有
+                        </button>
+                        <button id="toggle-drag">
+                            <i class="fas fa-hand-point-up"></i> 拖拽模式
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3><i class="fas fa-code"></i> 当前动画代码</h3>
+                    <div class="code-display" id="code-display">
+                        // 动画代码将在这里显示
+                    </div>
+                </div>
+            </div>
+            
+            <div class="animation-area">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h2><i class="fas fa-play-circle"></i> 动画演示区</h2>
+                    <div style="display: flex; gap: 10px;">
+                        <button id="toggle-grid" style="min-width: auto; padding: 8px 12px;">
+                            <i class="fas fa-th"></i> 网格
+                        </button>
+                        <button id="toggle-particles" style="min-width: auto; padding: 8px 12px;">
+                            <i class="fas fa-atom"></i> 粒子
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="animation-box" id="animation-box">
+                    <!-- 网格背景 -->
+                    <div id="grid-overlay" style="position: absolute; width: 100%; height: 100%; pointer-events: none; opacity: 0.1; display: none;"></div>
+                    
+                    <!-- 粒子容器 -->
+                    <div class="particles-container" id="particles-container"></div>
+                    
+                    <!-- 动画元素 -->
+                    <div class="demo-element" id="main-element" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="demo-element circle" style="top: 150px; left: 100px;">
+                        <i class="fas fa-moon"></i>
+                    </div>
+                    <div class="demo-element triangle" style="top: 250px; left: 200px;"></div>
+                    <div class="demo-element hexagon" style="top: 100px; left: 300px;">
+                        <i class="fas fa-gem"></i>
+                    </div>
+                    
+                    <!-- SVG元素 -->
+                    <svg id="svg-element" width="100%" height="100%" style="position: absolute; top: 0; left: 0; pointer-events: none; display: none;">
+                        <path id="svg-path" d="M50,100 C150,50 250,150 350,100" stroke="#00ffcc" stroke-width="3" fill="none"/>
+                        <circle id="svg-circle" cx="50" cy="100" r="15" fill="#ff0080"/>
+                    </svg>
+                </div>
+                
+                <div class="timeline-controls">
+                    <h3><i class="fas fa-stream"></i> 时间线控制</h3>
+                    <input type="range" class="timeline-slider" id="timeline-slider" min="0" max="1000" value="0">
+                    <div class="timeline-labels">
+                        <span>0%</span>
+                        <span>25%</span>
+                        <span>50%</span>
+                        <span>75%</span>
+                        <span>100%</span>
+                    </div>
+                </div>
+                
+                <div class="animation-examples">
+                    <div class="example-card" data-example="bounce">
+                        <div class="example-preview">
+                            <div class="preview-item" id="preview-bounce"></div>
+                        </div>
+                        <h3><i class="fas fa-basketball-ball"></i> 弹跳效果</h3>
+                        <p>模拟重力弹跳的动画效果，包含弹性缓动函数</p>
+                    </div>
+                    
+                    <div class="example-card" data-example="pulse">
+                        <div class="example-preview">
+                            <div class="preview-item" id="preview-pulse"></div>
+                        </div>
+                        <h3><i class="fas fa-heartbeat"></i> 脉动效果</h3>
+                        <p>元素有节奏地缩放，创建心跳般的脉动效果</p>
+                    </div>
+                    
+                    <div class="example-card" data-example="shake">
+                        <div class="example-preview">
+                            <div class="preview-item" id="preview-shake"></div>
+                        </div>
+                        <h3><i class="fas fa-vibrate"></i> 抖动效果</h3>
+                        <p>元素快速左右抖动，吸引注意力</p>
+                    </div>
+                    
+                    <div class="example-card" data-example="rainbow">
+                        <div class="example-preview">
+                            <div class="preview-item" id="preview-rainbow"></div>
+                        </div>
+                        <h3><i class="fas fa-rainbow"></i> 彩虹渐变</h3>
+                        <p>颜色在彩虹色之间平滑过渡，循环动画</p>
+                    </div>
+                    
+                    <div class="example-card" data-example="wave">
+                        <div class="example-preview">
+                            <div class="preview-item" id="preview-wave"></div>
+                        </div>
+                        <h3><i class="fas fa-water"></i> 波浪效果</h3>
+                        <p>元素按波浪轨迹运动，交错延迟创建波动效果</p>
+                    </div>
+                    
+                    <div class="example-card" data-example="orbit">
+                        <div class="example-preview">
+                            <div class="preview-item" id="preview-orbit"></div>
+                        </div>
+                        <h3><i class="fas fa-satellite"></i> 轨道运动</h3>
+                        <p>元素沿圆形轨道运动，模拟行星运动轨迹</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Anime.js 高级动画工坊 | 使用 Anime.js v3.2.1 | 包含时间线控制、SVG动画、粒子系统、形变动画等高级功能</p>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="element-count">4</div>
+                    <div class="stat-label">动画元素</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="animation-count">0</div>
+                    <div class="stat-label">活动动画</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="particle-count">0</div>
+                    <div class="stat-label">活动粒子</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="fps-counter">60</div>
+                    <div class="stat-label">帧率 (FPS)</div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentAnimation = null;
+        let timelineAnimation = null;
+        let animationElements = [];
+        let particles = [];
+        let isPlaying = false;
+        let currentEasing = 'easeInOutSine';
+        let currentAnimationType = 'translate';
+        let isDraggable = false;
+        let showGrid = false;
+        let showParticles = false;
+        let particleInterval = null;
+        let fps = 60;
+        let lastTimestamp = 0;
+        let frameCount = 0;
+        let activeAnimations = 0;
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取主要元素
+            const mainElement = document.getElementById('main-element');
+            const animationBox = document.getElementById('animation-box');
+            const gridOverlay = document.getElementById('grid-overlay');
+            
+            // 添加初始元素到动画元素数组
+            animationElements = [
+                mainElement,
+                document.querySelector('.circle'),
+                document.querySelector('.triangle'),
+                document.querySelector('.hexagon')
+            ];
+            
+            // 更新元素计数
+            updateElementCount();
+            
+            // 为每个元素添加点击事件
+            animationElements.forEach(element => {
+                element.addEventListener('click', function(e) {
+                    if (!isDraggable) {
+                        createPulse(e.clientX - animationBox.getBoundingClientRect().left, 
+                                   e.clientY - animationBox.getBoundingClientRect().top);
+                        elementClickAnimation(this);
+                    }
+                });
+                
+                // 添加拖拽功能
+                makeElementDraggable(element);
+            });
+            
+            // 导航点击事件
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                    this.classList.add('active');
+                    const animationType = this.getAttribute('data-animation');
+                    changeAnimationType(animationType);
+                });
+            });
+            
+            // 动画类型按钮点击事件
+            document.querySelectorAll('.animation-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.animation-btn').forEach(b => b.classList.remove('primary'));
+                    this.classList.add('primary');
+                    currentAnimationType = this.getAttribute('data-type');
+                    playAnimation(currentAnimationType);
+                });
+            });
+            
+            // 缓动函数按钮点击事件
+            document.querySelectorAll('.easing-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.easing-btn').forEach(b => b.classList.remove('primary'));
+                    this.classList.add('primary');
+                    currentEasing = this.getAttribute('data-easing');
+                    if (currentAnimation) {
+                        currentAnimation.easing = currentEasing;
+                        updateCodeDisplay();
+                    }
+                });
+            });
+            
+            // 默认选中第一个缓动函数按钮
+            document.querySelector('.easing-btn').classList.add('primary');
+            document.querySelector('.animation-btn').classList.add('primary');
+            
+            // 控制按钮事件
+            document.getElementById('play-btn').addEventListener('click', function() {
+                if (currentAnimation) {
+                    currentAnimation.play();
+                    isPlaying = true;
+                    updatePlayButton();
+                    updateActiveAnimationCount(1);
+                }
+            });
+            
+            document.getElementById('pause-btn').addEventListener('click', function() {
+                if (currentAnimation) {
+                    currentAnimation.pause();
+                    isPlaying = false;
+                    updatePlayButton();
+                    updateActiveAnimationCount(-1);
+                }
+            });
+            
+            document.getElementById('reverse-btn').addEventListener('click', function() {
+                if (currentAnimation) {
+                    currentAnimation.reverse();
+                    isPlaying = !isPlaying;
+                    updatePlayButton();
+                }
+            });
+            
+            document.getElementById('reset-btn').addEventListener('click', function() {
+                resetAnimation();
+            });
+            
+            // 添加元素按钮事件
+            document.getElementById('add-square').addEventListener('click', function() {
+                addElement('square');
+            });
+            
+            document.getElementById('add-circle').addEventListener('click', function() {
+                addElement('circle');
+            });
+            
+            document.getElementById('add-triangle').addEventListener('click', function() {
+                addElement('triangle');
+            });
+            
+            document.getElementById('add-hexagon').addEventListener('click', function() {
+                addElement('hexagon');
+            });
+            
+            document.getElementById('clear-all').addEventListener('click', function() {
+                clearAllElements();
+            });
+            
+            document.getElementById('toggle-drag').addEventListener('click', function() {
+                toggleDragMode();
+            });
+            
+            document.getElementById('toggle-grid').addEventListener('click', function() {
+                toggleGrid();
+            });
+            
+            document.getElementById('toggle-particles').addEventListener('click', function() {
+                toggleParticles();
+            });
+            
+            // 示例卡片点击事件
+            document.querySelectorAll('.example-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    const exampleType = this.getAttribute('data-example');
+                    playExampleAnimation(exampleType);
+                });
+            });
+            
+            // 滑块事件
+            document.getElementById('duration').addEventListener('input', function() {
+                document.getElementById('duration-value').textContent = this.value;
+                if (currentAnimation) {
+                    currentAnimation.duration = parseInt(this.value);
+                    updateCodeDisplay();
+                }
+            });
+            
+            document.getElementById('delay').addEventListener('input', function() {
+                document.getElementById('delay-value').textContent = this.value;
+                if (currentAnimation) {
+                    currentAnimation.delay = parseInt(this.value);
+                    updateCodeDisplay();
+                }
+            });
+            
+            document.getElementById('elasticity').addEventListener('input', function() {
+                document.getElementById('elasticity-value').textContent = this.value;
+                if (currentAnimation && currentAnimation.elasticity !== undefined) {
+                    currentAnimation.elasticity = parseFloat(this.value) * 100;
+                    updateCodeDisplay();
+                }
+            });
+            
+            document.getElementById('loop').addEventListener('input', function() {
+                document.getElementById('loop-value').textContent = this.value;
+                if (currentAnimation) {
+                    currentAnimation.loop = this.value === '0' ? true : parseInt(this.value);
+                    updateCodeDisplay();
+                }
+            });
+            
+            // 时间线滑块事件
+            document.getElementById('timeline-slider').addEventListener('input', function() {
+                if (currentAnimation) {
+                    const progress = this.value / 1000;
+                    currentAnimation.seek(currentAnimation.duration * progress);
+                    updateProgressBar(progress * 100);
+                }
+            });
+            
+            // 初始化网格
+            createGrid();
+            
+            // 初始化一个基础动画
+            playAnimation(currentAnimationType);
+            
+            // 启动示例预览动画
+            startPreviewAnimations();
+            
+            // 启动FPS计数器
+            startFPSCounter();
+            
+            // 初始化代码显示
+            updateCodeDisplay();
+        });
+        
+        // 播放动画
+        function playAnimation(type) {
+            const duration = parseInt(document.getElementById('duration').value);
+            const delay = parseInt(document.getElementById('delay').value);
+            const elasticity = parseFloat(document.getElementById('elasticity').value);
+            const loopValue = document.getElementById('loop').value;
+            const loop = loopValue === '0' ? true : parseInt(loopValue);
+            
+            // 停止当前动画
+            if (currentAnimation) {
+                currentAnimation.pause();
+                updateActiveAnimationCount(-1);
+            }
+            
+            // 根据类型创建不同动画
+            switch(type) {
+                case 'translate':
+                    currentAnimation = anime({
+                        targets: animationElements,
+                        translateX: function() {
+                            return anime.random(-200, 200);
+                        },
+                        translateY: function() {
+                            return anime.random(-150, 150);
+                        },
+                        duration: duration,
+                        delay: function(el, i) {
+                            return delay + (i * 100);
+                        },
+                        easing: currentEasing,
+                        elasticity: elasticity * 100,
+                        loop: loop,
+                        direction: 'alternate',
+                        update: function(anim) {
+                            updateProgressBar(anim.progress);
+                            updateActiveAnimationCount(anim.animations.length);
+                        },
+                        begin: function() {
+                            updateActiveAnimationCount(animationElements.length);
+                        },
+                        complete: function() {
+                            updateActiveAnimationCount(-animationElements.length);
+                        }
+                    });
+                    break;
+                    
+                case 'rotate':
+                    currentAnimation = anime({
+                        targets: animationElements,
+                        rotate: function() {
+                            return anime.random(0, 360);
+                        },
+                        duration: duration,
+                        delay: function(el, i) {
+                            return delay + (i * 100);
+                        },
+                        easing: currentEasing,
+                        elasticity: elasticity * 100,
+                        loop: loop,
+                        direction: 'alternate',
+                        update: function(anim) {
+                            updateProgressBar(anim.progress);
+                        }
+                    });
+                    break;
+                    
+                case 'scale':
+                    currentAnimation = anime({
+                        targets: animationElements,
+                        scale: function() {
+                            return anime.random(0.5, 1.5);
+                        },
+                        duration: duration,
+                        delay: function(el, i) {
+                            return delay + (i * 100);
+                        },
+                        easing: currentEasing,
+                        elasticity: elasticity * 100,
+                        loop: loop,
+                        direction: 'alternate',
+                        update: function(anim) {
+                            updateProgressBar(anim.progress);
+                        }
+                    });
+                    break;
+                    
+                case 'color':
+                    currentAnimation = anime({
+                        targets: animationElements,
+                        backgroundColor: function() {
+                            const colors = ['#FF0080', '#CC00FF', '#00FFCC', '#FFCC00', '#FF9900'];
+                            return colors[anime.random(0, colors.length-1)];
+                        },
+                        duration: duration,
+                        delay: function(el, i) {
+                            return delay + (i * 100);
+                        },
+                        easing: currentEasing,
+                        loop: loop,
+                        direction: 'alternate',
+                        update: function(anim) {
+                            updateProgressBar(anim.progress);
+                        }
+                    });
+                    break;
+            }
+            
+            isPlaying = true;
+            updatePlayButton();
+            updateCodeDisplay();
+            updateActiveAnimationCount(animationElements.length);
+        }
+        
+        // 元素点击动画
+        function elementClickAnimation(element) {
+            const clickAnimation = anime({
+                targets: element,
+                scale: [1, 1.3, 1],
+                rotate: [0, 15, -15, 0],
+                duration: 400,
+                easing: 'spring(1, 80, 10, 0)'
+            });
+            
+            updateActiveAnimationCount(1);
+            clickAnimation.finished.then(() => {
+                updateActiveAnimationCount(-1);
+            });
+        }
+        
+        // 创建脉冲效果
+        function createPulse(x, y) {
+            const pulse = document.createElement('div');
+            pulse.className = 'pulse';
+            pulse.style.left = x + 'px';
+            pulse.style.top = y + 'px';
+            
+            document.getElementById('animation-box').appendChild(pulse);
+            
+            anime({
+                targets: pulse,
+                width: ['20px', '150px'],
+                height: ['20px', '150px'],
+                opacity: [0.7, 0],
+                duration: 1000,
+                easing: 'easeOutQuad',
+                complete: function() {
+                    pulse.remove();
+                }
+            });
+        }
+        
+        // 添加新元素
+        function addElement(type) {
+            const animationBox = document.getElementById('animation-box');
+            const colors = ['#FF0080', '#CC00FF', '#00FFCC', '#FFCC00', '#FF9900'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            const color2 = colors[(Math.floor(Math.random() * colors.length) + 1) % colors.length];
+            
+            const element = document.createElement('div');
+            element.className = 'demo-element';
+            
+            // 随机位置
+            const maxX = animationBox.clientWidth - 70;
+            const maxY = animationBox.clientHeight - 70;
+            const x = Math.floor(Math.random() * maxX);
+            const y = Math.floor(Math.random() * maxY);
+            
+            element.style.left = x + 'px';
+            element.style.top = y + 'px';
+            
+            // 根据类型设置样式
+            const icons = ['fas fa-star', 'fas fa-heart', 'fas fa-bolt', 'fas fa-sun', 'fas fa-moon', 'fas fa-gem'];
+            const randomIcon = icons[Math.floor(Math.random() * icons.length)];
+            
+            if (type === 'circle') {
+                element.classList.add('circle');
+                element.innerHTML = `<i class="${randomIcon}"></i>`;
+                element.style.background = `linear-gradient(135deg, ${color}, ${color2})`;
+            } else if (type === 'triangle') {
+                element.classList.add('triangle');
+                element.style.borderBottomColor = color;
+            } else if (type === 'hexagon') {
+                element.classList.add('hexagon');
+                element.innerHTML = `<i class="${randomIcon}"></i>`;
+            } else {
+                element.innerHTML = `<i class="${randomIcon}"></i>`;
+                element.style.background = `linear-gradient(135deg, ${color}, ${color2})`;
+            }
+            
+            // 添加点击事件
+            element.addEventListener('click', function(e) {
+                if (!isDraggable) {
+                    createPulse(e.clientX - animationBox.getBoundingClientRect().left, 
+                               e.clientY - animationBox.getBoundingClientRect().top);
+                    elementClickAnimation(this);
+                }
+            });
+            
+            // 添加拖拽功能
+            makeElementDraggable(element);
+            
+            animationBox.appendChild(element);
+            animationElements.push(element);
+            
+            // 为新元素添加轻微入场动画
+            anime({
+                targets: element,
+                scale: [0, 1],
+                rotate: [180, 0],
+                duration: 600,
+                easing: 'spring(1, 80, 10, 0)'
+            });
+            
+            updateElementCount();
+        }
+        
+        // 使元素可拖拽
+        function makeElementDraggable(element) {
+            let isDragging = false;
+            let offsetX, offsetY;
+            
+            element.addEventListener('mousedown', startDrag);
+            element.addEventListener('touchstart', startDrag);
+            
+            function startDrag(e) {
+                if (!isDraggable) return;
+                
+                e.preventDefault();
+                isDragging = true;
+                
+                const rect = element.getBoundingClientRect();
+                if (e.type === 'mousedown') {
+                    offsetX = e.clientX - rect.left;
+                    offsetY = e.clientY - rect.top;
+                    document.addEventListener('mousemove', drag);
+                    document.addEventListener('mouseup', stopDrag);
+                } else {
+                    offsetX = e.touches[0].clientX - rect.left;
+                    offsetY = e.touches[0].clientY - rect.top;
+                    document.addEventListener('touchmove', drag);
+                    document.addEventListener('touchend', stopDrag);
+                }
+                
+                element.classList.add('draggable');
+            }
+            
+            function drag(e) {
+                if (!isDragging) return;
+                
+                e.preventDefault();
+                const animationBox = document.getElementById('animation-box');
+                const boxRect = animationBox.getBoundingClientRect();
+                
+                let clientX, clientY;
+                if (e.type === 'mousemove') {
+                    clientX = e.clientX;
+                    clientY = e.clientY;
+                } else {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                }
+                
+                // 计算新位置，确保元素在容器内
+                let newX = clientX - boxRect.left - offsetX;
+                let newY = clientY - boxRect.top - offsetY;
+                
+                // 边界检查
+                newX = Math.max(0, Math.min(newX, boxRect.width - element.offsetWidth));
+                newY = Math.max(0, Math.min(newY, boxRect.height - element.offsetHeight));
+                
+                element.style.left = newX + 'px';
+                element.style.top = newY + 'px';
+            }
+            
+            function stopDrag() {
+                isDragging = false;
+                element.classList.remove('draggable');
+                document.removeEventListener('mousemove', drag);
+                document.removeEventListener('mouseup', stopDrag);
+                document.removeEventListener('touchmove', drag);
+                document.removeEventListener('touchend', stopDrag);
+            }
+        }
+        
+        // 切换拖拽模式
+        function toggleDragMode() {
+            isDraggable = !isDraggable;
+            const toggleBtn = document.getElementById('toggle-drag');
+            
+            if (isDraggable) {
+                toggleBtn.innerHTML = '<i class="fas fa-hand-rock"></i> 拖拽模式 (开)';
+                toggleBtn.classList.add('secondary');
+                animationElements.forEach(el => {
+                    el.style.cursor = 'grab';
+                });
+            } else {
+                toggleBtn.innerHTML = '<i class="fas fa-hand-point-up"></i> 拖拽模式';
+                toggleBtn.classList.remove('secondary');
+                animationElements.forEach(el => {
+                    el.style.cursor = 'pointer';
+                });
+            }
+        }
+        
+        // 清除所有元素
+        function clearAllElements() {
+            const animationBox = document.getElementById('animation-box');
+            const elements = animationBox.querySelectorAll('.demo-element');
+            
+            // 为每个元素添加消失动画
+            anime({
+                targets: elements,
+                scale: 0,
+                rotate: 180,
+                opacity: 0,
+                duration: 500,
+                easing: 'easeInOutQuad',
+                delay: function(el, i) { return i * 50; },
+                complete: function() {
+                    elements.forEach(el => el.remove());
+                    animationElements = [];
+                    
+                    // 重新添加默认元素
+                    const mainElement = document.createElement('div');
+                    mainElement.className = 'demo-element';
+                    mainElement.id = 'main-element';
+                    mainElement.innerHTML = '<i class="fas fa-star"></i>';
+                    mainElement.style.left = '50%';
+                    mainElement.style.top = '50%';
+                    mainElement.style.transform = 'translate(-50%, -50%)';
+                    
+                    const circle = document.createElement('div');
+                    circle.className = 'demo-element circle';
+                    circle.innerHTML = '<i class="fas fa-moon"></i>';
+                    circle.style.top = '150px';
+                    circle.style.left = '100px';
+                    
+                    const triangle = document.createElement('div');
+                    triangle.className = 'demo-element triangle';
+                    triangle.style.top = '250px';
+                    triangle.style.left = '200px';
+                    
+                    const hexagon = document.createElement('div');
+                    hexagon.className = 'demo-element hexagon';
+                    hexagon.innerHTML = '<i class="fas fa-gem"></i>';
+                    hexagon.style.top = '100px';
+                    hexagon.style.left = '300px';
+                    
+                    animationBox.appendChild(mainElement);
+                    animationBox.appendChild(circle);
+                    animationBox.appendChild(triangle);
+                    animationBox.appendChild(hexagon);
+                    
+                    animationElements = [mainElement, circle, triangle, hexagon];
+                    
+                    // 为新元素添加事件
+                    animationElements.forEach(element => {
+                        element.addEventListener('click', function(e) {
+                            if (!isDraggable) {
+                                createPulse(e.clientX - animationBox.getBoundingClientRect().left, 
+                                           e.clientY - animationBox.getBoundingClientRect().top);
+                                elementClickAnimation(this);
+                            }
+                        });
+                        
+                        makeElementDraggable(element);
+                    });
+                    
+                    // 为新元素添加入场动画
+                    anime({
+                        targets: animationElements,
+                        scale: [0, 1],
+                        rotate: [180, 0],
+                        duration: 600,
+                        easing: 'spring(1, 80, 10, 0)',
+                        delay: function(el, i) { return i * 100; }
+                    });
+                    
+                    updateElementCount();
+                }
+            });
+        }
+        
+        // 重置动画
+        function resetAnimation() {
+            if (currentAnimation) {
+                currentAnimation.pause();
+                currentAnimation.seek(0);
+                updateActiveAnimationCount(-currentAnimation.animations.length);
+            }
+            
+            anime({
+                targets: animationElements,
+                translateX: 0,
+                translateY: 0,
+                rotate: 0,
+                scale: 1,
+                backgroundColor: function(el) {
+                    return window.getComputedStyle(el).backgroundColor;
+                },
+                duration: 500,
+                easing: 'easeOutQuad'
+            });
+            
+            updateProgressBar(0);
+            isPlaying = false;
+            updatePlayButton();
+        }
+        
+        // 更新播放按钮状态
+        function updatePlayButton() {
+            const playBtn = document.getElementById('play-btn');
+            if (isPlaying) {
+                playBtn.innerHTML = '<i class="fas fa-pause"></i> 暂停';
+                playBtn.classList.remove('primary');
+            } else {
+                playBtn.innerHTML = '<i class="fas fa-play"></i> 播放';
+                playBtn.classList.add('primary');
+            }
+        }
+        
+        // 更改动画类型
+        function changeAnimationType(type) {
+            // 显示/隐藏SVG元素
+            const svgElement = document.getElementById('svg-element');
+            if (type === 'svg' || type === 'path') {
+                svgElement.style.display = 'block';
+                // 初始化SVG动画
+                initSVGAnimation();
+            } else {
+                svgElement.style.display = 'none';
+            }
+            
+            // 粒子系统
+            if (type === 'particles') {
+                startParticleSystem();
+            } else {
+                stopParticleSystem();
+            }
+            
+            console.log('切换到动画类型:', type);
+        }
+        
+        // 初始化SVG动画
+        function initSVGAnimation() {
+            const svgCircle = document.getElementById('svg-circle');
+            const svgPath = document.getElementById('svg-path');
+            
+            anime({
+                targets: svgCircle,
+                translateX: [0, 300],
+                translateY: [0, 0],
+                easing: 'linear',
+                duration: 2000,
+                loop: true,
+                direction: 'alternate'
+            });
+        }
+        
+        // 播放示例动画
+        function playExampleAnimation(example) {
+            const targets = animationElements;
+            
+            // 停止当前动画
+            if (currentAnimation) {
+                currentAnimation.pause();
+                updateActiveAnimationCount(-currentAnimation.animations.length);
+            }
+            
+            switch(example) {
+                case 'bounce':
+                    currentAnimation = anime({
+                        targets: targets,
+                        translateY: [0, -150, 0],
+                        duration: 1200,
+                        easing: 'easeOutBounce',
+                        loop: true,
+                        delay: function(el, i) { return i * 150; },
+                        update: function(anim) {
+                            updateProgressBar(anim.progress);
+                        }
+                    });
+                    break;
+                    
+                case 'pulse':
+                    currentAnimation = anime({
+                        targets: targets,
+                        scale: [1, 1.3, 1],
+                        duration: 800,
+                        easing: 'easeInOutSine',
+                        loop: true,
+                        direction: 'alternate',
+                        delay: function(el, i) { return i * 200; },
+                        update: function(anim) {
+                            updateProgressBar(anim.progress);
+                        }
+                    });
+                    break;
+                    
+                case 'shake':
+                    currentAnimation = anime({
+                        targets: targets,
+                        translateX: [0, 20, -20, 20, -20, 0],
+                        duration: 800,
+                        easing: 'easeInOutSine',
+                        loop: true,
+                        delay: function(el, i) { return i * 150; },
+                        update: function(anim) {
+                            updateProgressBar(anim.progress);
+                        }
+                    });
+                    break;
+                    
+                case 'rainbow':
+                    currentAnimation = anime({
+                        targets: targets,
+                        backgroundColor: [
+                            {value: '#FF0080'},
+                            {value: '#CC00FF'},
+                            {value: '#00FFCC'},
+                            {value: '#FFCC00'},
+                            {value: '#FF9900'},
+                            {value: '#FF0080'}
+                        ],
+                        duration: 3000,
+                        easing: 'linear',
+                        loop: true,
+                        direction: 'alternate',
+                        delay: function(el, i) { return i * 300; },
+                        update: function(anim) {
+                            updateProgressBar(anim.progress);
+                        }
+                    });
+                    break;
+                    
+                case 'wave':
+                    currentAnimation = anime({
+                        targets: targets,
+                        translateY: function(el, i) {
+                            return Math.sin(i * 0.5) * 100;
+                        },
+                        duration: 2000,
+                        easing: 'easeInOutSine',
+                        loop: true,
+                        direction: 'alternate',
+                        delay: function(el, i) { return i * 100; },
+                        update: function(anim) {
+                            updateProgressBar(anim.progress);
+                        }
+                    });
+                    break;
+                    
+                case 'orbit':
+                    currentAnimation = anime({
+                        targets: targets,
+                        translateX: function(el, i) {
+                            return Math.cos(i * 0.8) * 150;
+                        },
+                        translateY: function(el, i) {
+                            return Math.sin(i * 0.8) * 150;
+                        },
+                        duration: 3000,
+                        easing: 'linear',
+                        loop: true,
+                        delay: function(el, i) { return i * 200; },
+                        update: function(anim) {
+                            updateProgressBar(anim.progress);
+                        }
+                    });
+                    break;
+            }
+            
+            isPlaying = true;
+            updatePlayButton();
+            updateActiveAnimationCount(targets.length);
+            updateCodeDisplay();
+        }
+        
+        // 启动预览动画
+        function startPreviewAnimations() {
+            // 弹跳预览
+            anime({
+                targets: '#preview-bounce',
+                translateY: [0, -40, 0],
+                duration: 1000,
+                easing: 'easeOutBounce',
+                loop: true
+            });
+            
+            // 脉动预览
+            anime({
+                targets: '#preview-pulse',
+                scale: [1, 1.4, 1],
+                duration: 1200,
+                easing: 'easeInOutSine',
+                loop: true,
+                direction: 'alternate'
+            });
+            
+            // 抖动预览
+            anime({
+                targets: '#preview-shake',
+                translateX: [0, 15, -15, 15, -15, 0],
+                duration: 1000,
+                easing: 'easeInOutSine',
+                loop: true
+            });
+            
+            // 彩虹预览
+            anime({
+                targets: '#preview-rainbow',
+                backgroundColor: [
+                    {value: '#FF0080'},
+                    {value: '#CC00FF'},
+                    {value: '#00FFCC'},
+                    {value: '#FFCC00'},
+                    {value: '#FF9900'},
+                    {value: '#FF0080'}
+                ],
+                duration: 2500,
+                easing: 'linear',
+                loop: true
+            });
+            
+            // 波浪预览
+            anime({
+                targets: '#preview-wave',
+                translateY: [0, 30, 0, -30, 0],
+                duration: 2000,
+                easing: 'easeInOutSine',
+                loop: true
+            });
+            
+            // 轨道预览
+            anime({
+                targets: '#preview-orbit',
+                translateX: [0, 30, 0, -30, 0],
+                translateY: [0, -30, 0, 30, 0],
+                duration: 3000,
+                easing: 'linear',
+                loop: true
+            });
+        }
+        
+        // 创建网格
+        function createGrid() {
+            const gridOverlay = document.getElementById('grid-overlay');
+            const size = 50;
+            const width = gridOverlay.offsetWidth;
+            const height = gridOverlay.offsetHeight;
+            
+            // 创建Canvas绘制网格
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            gridOverlay.appendChild(canvas);
+            
+            const ctx = canvas.getContext('2d');
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 1;
+            
+            // 绘制垂直线
+            for (let x = 0; x <= width; x += size) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+            
+            // 绘制水平线
+            for (let y = 0; y <= height; y += size) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+        }
+        
+        // 切换网格显示
+        function toggleGrid() {
+            showGrid = !showGrid;
+            const gridOverlay = document.getElementById('grid-overlay');
+            const toggleBtn = document.getElementById('toggle-grid');
+            
+            if (showGrid) {
+                gridOverlay.style.display = 'block';
+                toggleBtn.innerHTML = '<i class="fas fa-th-large"></i> 网格 (开)';
+                toggleBtn.classList.add('secondary');
+            } else {
+                gridOverlay.style.display = 'none';
+                toggleBtn.innerHTML = '<i class="fas fa-th"></i> 网格';
+                toggleBtn.classList.remove('secondary');
+            }
+        }
+        
+        // 切换粒子系统
+        function toggleParticles() {
+            showParticles = !showParticles;
+            const toggleBtn = document.getElementById('toggle-particles');
+            
+            if (showParticles) {
+                startParticleSystem();
+                toggleBtn.innerHTML = '<i class="fas fa-atom"></i> 粒子 (开)';
+                toggleBtn.classList.add('secondary');
+            } else {
+                stopParticleSystem();
+                toggleBtn.innerHTML = '<i class="fas fa-atom"></i> 粒子';
+                toggleBtn.classList.remove('secondary');
+            }
+        }
+        
+        // 启动粒子系统
+        function startParticleSystem() {
+            stopParticleSystem();
+            
+            const particleContainer = document.getElementById('particles-container');
+            const colors = ['#FF0080', '#00FFCC', '#FFCC00', '#CC00FF', '#FFFFFF'];
+            
+            particleInterval = setInterval(() => {
+                if (particles.length < 50) { // 限制粒子数量
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    
+                    // 随机属性
+                    const size = Math.random() * 10 + 5;
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    const x = Math.random() * 100;
+                    
+                    particle.style.width = `${size}px`;
+                    particle.style.height = `${size}px`;
+                    particle.style.backgroundColor = color;
+                    particle.style.left = `${x}%`;
+                    particle.style.top = '100%';
+                    particle.style.opacity = Math.random() * 0.7 + 0.3;
+                    
+                    particleContainer.appendChild(particle);
+                    particles.push(particle);
+                    
+                    // 粒子动画
+                    anime({
+                        targets: particle,
+                        translateY: -600,
+                        translateX: function() {
+                            return anime.random(-100, 100);
+                        },
+                        rotate: 360,
+                        opacity: 0,
+                        duration: anime.random(3000, 6000),
+                        easing: 'linear',
+                        complete: function() {
+                            particle.remove();
+                            particles = particles.filter(p => p !== particle);
+                            updateParticleCount();
+                        }
+                    });
+                    
+                    updateParticleCount();
+                }
+            }, 100);
+        }
+        
+        // 停止粒子系统
+        function stopParticleSystem() {
+            if (particleInterval) {
+                clearInterval(particleInterval);
+                particleInterval = null;
+            }
+            
+            // 移除所有粒子
+            particles.forEach(particle => {
+                particle.remove();
+            });
+            particles = [];
+            updateParticleCount();
+        }
+        
+        // 启动FPS计数器
+        function startFPSCounter() {
+            function updateFPS(timestamp) {
+                frameCount++;
+                
+                if (timestamp >= lastTimestamp + 1000) {
+                    fps = Math.round((frameCount * 1000) / (timestamp - lastTimestamp));
+                    frameCount = 0;
+                    lastTimestamp = timestamp;
+                    
+                    document.getElementById('fps-counter').textContent = fps;
+                }
+                
+                requestAnimationFrame(updateFPS);
+            }
+            
+            requestAnimationFrame(updateFPS);
+        }
+        
+        // 更新进度条
+        function updateProgressBar(progress) {
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+            document.getElementById('timeline-slider').value = progress * 10;
+        }
+        
+        // 更新元素计数
+        function updateElementCount() {
+            document.getElementById('element-count').textContent = animationElements.length;
+        }
+        
+        // 更新活动动画计数
+        function updateActiveAnimationCount(change) {
+            activeAnimations = Math.max(0, activeAnimations + change);
+            document.getElementById('animation-count').textContent = activeAnimations;
+        }
+        
+        // 更新粒子计数
+        function updateParticleCount() {
+            document.getElementById('particle-count').textContent = particles.length;
+        }
+        
+        // 更新代码显示
+        function updateCodeDisplay() {
+            if (!currentAnimation) return;
+            
+            const duration = parseInt(document.getElementById('duration').value);
+            const delay = parseInt(document.getElementById('delay').value);
+            const loopValue = document.getElementById('loop').value;
+            const loop = loopValue === '0' ? 'true' : loopValue;
+            
+            let code = `<span class="code-keyword">anime</span>({
+  <span class="code-string">targets</span>: elements,
+  <span class="code-string">${getAnimationProperty(currentAnimationType)}</span>: ${getAnimationValue(currentAnimationType)},
+  <span class="code-string">duration</span>: <span class="code-number">${duration}</span>,
+  <span class="code-string">delay</span>: <span class="code-number">${delay}</span>,
+  <span class="code-string">easing</span>: <span class="code-string">'${currentEasing}'</span>,
+  <span class="code-string">loop</span>: <span class="code-number">${loop}</span>,
+  <span class="code-string">direction</span>: <span class="code-string">'alternate'</span>
+});`;
+            
+            document.getElementById('code-display').innerHTML = code;
+        }
+        
+        // 获取动画属性
+        function getAnimationProperty(type) {
+            switch(type) {
+                case 'translate': return 'translateX / translateY';
+                case 'rotate': return 'rotate';
+                case 'scale': return 'scale';
+                case 'color': return 'backgroundColor';
+                default: return 'property';
+            }
+        }
+        
+        // 获取动画值
+        function getAnimationValue(type) {
+            switch(type) {
+                case 'translate': return 'anime.random(-200, 200)';
+                case 'rotate': return 'anime.random(0, 360)';
+                case 'scale': return 'anime.random(0.5, 1.5)';
+                case 'color': return 'randomColor()';
+                default: return 'value';
+            }
+        }
+    </script>
+</body>
+</html>

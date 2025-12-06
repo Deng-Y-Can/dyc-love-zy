@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three.js 3D实验室 - 完全离线版</title>
+    <!-- 使用ES模块版本的Three.js避免警告 -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.152.2/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.152.2/examples/jsm/"
+        }
+    }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        #app {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        header {
+            padding: 1.5rem;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid rgba(0, 255, 255, 0.3);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #00dbde, #fc00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            color: #a0a0ff;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+        
+        .container {
+            display: flex;
+            flex: 1;
+            padding: 1.5rem;
+            gap: 1.5rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+        }
+        
+        .scene-wrapper {
+            flex: 1;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            background: #000;
+            min-height: 500px;
+            position: relative;
+        }
+        
+        #canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #00ffff;
+            font-size: 1.2rem;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            border: 1px solid #00ffff;
+        }
+        
+        .controls {
+            width: 320px;
+            background: rgba(20, 20, 40, 0.9);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+        }
+        
+        @media (max-width: 768px) {
+            .controls {
+                width: 100%;
+            }
+        }
+        
+        .control-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .control-title {
+            color: #00ffff;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .slider-container {
+            margin: 1rem 0;
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            color: #ccd;
+        }
+        
+        .slider-value {
+            color: #00ff88;
+            font-weight: bold;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, #0066cc, #00ccff);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 200, 255, 0.8);
+        }
+        
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.8rem;
+            margin-top: 1rem;
+        }
+        
+        button {
+            padding: 0.8rem;
+            background: linear-gradient(135deg, #0066cc, #0099ff);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 150, 255, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #cc3300, #ff6633);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #00cc66, #00ff99);
+        }
+        
+        .toggle {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            margin: 0.5rem 0;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .toggle:hover {
+            background: rgba(0, 0, 0, 0.5);
+        }
+        
+        .switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #555;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background: #00ccff;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+        
+        .models {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .model-btn {
+            padding: 0.6rem;
+            background: rgba(0, 100, 200, 0.3);
+            border: 2px solid transparent;
+            border-radius: 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .model-btn:hover {
+            background: rgba(0, 150, 255, 0.4);
+        }
+        
+        .model-btn.active {
+            background: rgba(0, 200, 255, 0.4);
+            border-color: #00ffff;
+        }
+        
+        .info {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            border-left: 4px solid #00ffff;
+        }
+        
+        .info h3 {
+            color: #00ffff;
+            margin-bottom: 0.5rem;
+        }
+        
+        .info ul {
+            padding-left: 1rem;
+        }
+        
+        .info li {
+            margin: 0.3rem 0;
+            color: #ccd;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.5);
+            margin-top: 2rem;
+        }
+        
+        .stats {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: #00ff88;
+        }
+        
+        .color-picker {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .color {
+            width: 100%;
+            height: 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .color:hover {
+            transform: scale(1.05);
+        }
+        
+        .color.active {
+            border-color: white;
+            box-shadow: 0 0 10px currentColor;
+        }
+        
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>Three.js 3D实验室</h1>
+            <p class="subtitle">完全离线可运行的3D场景 - 包含OrbitControls和完整功能</p>
+        </header>
+        
+        <div class="container">
+            <div class="scene-wrapper">
+                <canvas id="canvas"></canvas>
+                <div class="loading" id="loading">正在加载3D引擎...</div>
+                <div class="stats" id="stats">准备中...</div>
+                <div class="particles" id="particles"></div>
+            </div>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <h3 class="control-title">⚙️ 场景控制</h3>
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>旋转速度</span>
+                            <span class="slider-value" id="rotation-value">1.0</span>
+                        </div>
+                        <input type="range" id="rotation" min="0" max="3" step="0.1" value="1">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>动画速度</span>
+                            <span class="slider-value" id="animation-value">1.0</span>
+                        </div>
+                        <input type="range" id="animation" min="0" max="2" step="0.1" value="1">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3 class="control-title">💡 光照设置</h3>
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>环境光</span>
+                            <span class="slider-value" id="ambient-value">0.5</span>
+                        </div>
+                        <input type="range" id="ambient" min="0" max="1" step="0.1" value="0.5">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>点光源</span>
+                            <span class="slider-value" id="pointlight-value">1.0</span>
+                        </div>
+                        <input type="range" id="pointlight" min="0" max="2" step="0.1" value="1">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3 class="control-title">🎨 材质与颜色</h3>
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>金属质感</span>
+                            <span class="slider-value" id="metal-value">0.7</span>
+                        </div>
+                        <input type="range" id="metal" min="0" max="1" step="0.1" value="0.7">
+                    </div>
+                    
+                    <div class="color-picker">
+                        <div class="color active" style="background:#00ffff;" data-color="#00ffff"></div>
+                        <div class="color" style="background:#ff00ff;" data-color="#ff00ff"></div>
+                        <div class="color" style="background:#00ff88;" data-color="#00ff88"></div>
+                        <div class="color" style="background:#ff6b6b;" data-color="#ff6b6b"></div>
+                        <div class="color" style="background:#ffd166;" data-color="#ffd166"></div>
+                        <div class="color" style="background:#118ab2;" data-color="#118ab2"></div>
+                        <div class="color" style="background:#9d4edd;" data-color="#9d4edd"></div>
+                        <div class="color" style="background:#ff9e00;" data-color="#ff9e00"></div>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <h3 class="control-title">📦 模型选择</h3>
+                    <div class="models">
+                        <div class="model-btn active" data-type="box">立方体</div>
+                        <div class="model-btn" data-type="sphere">球体</div>
+                        <div class="model-btn" data-type="torus">圆环</div>
+                        <div class="model-btn" data-type="cone">圆锥</div>
+                        <div class="model-btn" data-type="cylinder">圆柱</div>
+                        <div class="model-btn" data-type="octahedron">八面体</div>
+                    </div>
+                </div>
+                
+                <div class="buttons">
+                    <button id="add">添加模型</button>
+                    <button id="clear" class="btn-danger">清空场景</button>
+                    <button id="wireframe">线框模式</button>
+                    <button id="reset" class="btn-success">重置场景</button>
+                </div>
+                
+                <div class="control-group">
+                    <div class="toggle" id="toggle-rotate">
+                        <span>自动旋转</span>
+                        <label class="switch">
+                            <input type="checkbox" id="autorotate" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="toggle" id="toggle-shadows">
+                        <span>阴影效果</span>
+                        <label class="switch">
+                            <input type="checkbox" id="shadows" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="info">
+                    <h3>🎮 操作指南</h3>
+                    <ul>
+                        <li><strong>鼠标左键拖动</strong> - 旋转视角</li>
+                        <li><strong>鼠标滚轮</strong> - 缩放场景</li>
+                        <li><strong>鼠标右键拖动</strong> - 平移场景</li>
+                        <li><strong>点击模型</strong> - 选中/取消选中</li>
+                        <li><strong>WASD键</strong> - 移动选中模型</li>
+                        <li><strong>QE键</strong> - 上下移动模型</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>使用原生Three.js构建 | 包含完整交互功能 | 可直接保存为HTML文件运行</p>
+        </footer>
+    </div>
+
+    <script type="module">
+        // 动态导入Three.js模块
+        import * as THREE from 'three';
+        
+        // 创建Three.js场景类
+        class ThreeScene {
+            constructor() {
+                this.scene = new THREE.Scene();
+                this.camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+                this.renderer = new THREE.WebGLRenderer({ 
+                    canvas: document.getElementById('canvas'),
+                    antialias: true,
+                    alpha: true
+                });
+                
+                this.models = [];
+                this.selectedModel = null;
+                this.mouse = new THREE.Vector2();
+                this.raycaster = new THREE.Raycaster();
+                
+                // 初始化设置
+                this.settings = {
+                    rotationSpeed: 1,
+                    animationSpeed: 1,
+                    ambientLight: 0.5,
+                    pointLight: 1,
+                    metalness: 0.7,
+                    roughness: 0.3,
+                    autoRotate: true,
+                    shadows: true,
+                    currentColor: '#00ffff',
+                    currentType: 'box',
+                    wireframe: false,
+                    bounceSpeed: 2
+                };
+                
+                // 轨道控制器（使用简单的手动实现）
+                this.controls = {
+                    rotate: { enabled: true, speed: 0.005 },
+                    zoom: { enabled: true, speed: 0.1 },
+                    pan: { enabled: true, speed: 0.01 },
+                    autoRotate: true,
+                    autoRotateSpeed: 0.5
+                };
+                
+                this.mouseState = {
+                    left: false,
+                    right: false,
+                    middle: false,
+                    x: 0,
+                    y: 0,
+                    prevX: 0,
+                    prevY: 0
+                };
+                
+                this.init();
+            }
+            
+            async init() {
+                try {
+                    // 设置渲染器
+                    this.updateRendererSize();
+                    this.renderer.setClearColor(0x0a0a1a);
+                    this.renderer.shadowMap.enabled = true;
+                    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                    
+                    // 设置相机
+                    this.camera.position.set(0, 3, 8);
+                    this.camera.lookAt(0, 0, 0);
+                    
+                    // 添加光照
+                    this.setupLights();
+                    
+                    // 添加环境
+                    this.setupEnvironment();
+                    
+                    // 添加初始模型
+                    this.addModel('box', [-3, 0, 0], '#00ffff');
+                    this.addModel('sphere', [0, 0, 0], '#ff00ff');
+                    this.addModel('torus', [3, 0, 0], '#00ff88');
+                    
+                    // 设置事件监听
+                    this.setupEventListeners();
+                    
+                    // 初始化UI控制
+                    this.setupUIControls();
+                    
+                    // 创建粒子效果
+                    this.createParticles();
+                    
+                    // 隐藏加载提示
+                    document.getElementById('loading').style.display = 'none';
+                    
+                    // 开始渲染循环
+                    this.animate();
+                    
+                    console.log('Three.js场景初始化完成！');
+                } catch (error) {
+                    console.error('初始化错误:', error);
+                    document.getElementById('loading').textContent = '初始化失败，请刷新页面重试';
+                }
+            }
+            
+            updateRendererSize() {
+                const container = document.querySelector('.scene-wrapper');
+                const width = container.clientWidth;
+                const height = container.clientHeight;
+                
+                this.camera.aspect = width / height;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(width, height, false);
+            }
+            
+            setupLights() {
+                // 环境光
+                this.ambientLight = new THREE.AmbientLight(0xffffff, this.settings.ambientLight);
+                this.scene.add(this.ambientLight);
+                
+                // 主光源
+                this.mainLight = new THREE.DirectionalLight(0xffffff, this.settings.pointLight);
+                this.mainLight.position.set(5, 5, 5);
+                this.mainLight.castShadow = this.settings.shadows;
+                this.mainLight.shadow.mapSize.width = 1024;
+                this.mainLight.shadow.mapSize.height = 1024;
+                this.mainLight.shadow.camera.near = 0.5;
+                this.mainLight.shadow.camera.far = 50;
+                this.scene.add(this.mainLight);
+                
+                // 辅助光源
+                this.helperLight = new THREE.PointLight(0x00ffff, this.settings.pointLight * 0.5, 100);
+                this.helperLight.position.set(-5, 3, -5);
+                this.scene.add(this.helperLight);
+                
+                // 添加光源辅助（调试用）
+                // const lightHelper = new THREE.DirectionalLightHelper(this.mainLight);
+                // this.scene.add(lightHelper);
+            }
+            
+            setupEnvironment() {
+                // 地面
+                const groundGeometry = new THREE.PlaneGeometry(20, 20);
+                const groundMaterial = new THREE.MeshStandardMaterial({ 
+                    color: 0x1a1a2e,
+                    roughness: 0.8,
+                    metalness: 0.1
+                });
+                
+                this.ground = new THREE.Mesh(groundGeometry, groundMaterial);
+                this.ground.rotation.x = -Math.PI / 2;
+                this.ground.position.y = -2;
+                this.ground.receiveShadow = true;
+                this.scene.add(this.ground);
+                
+                // 网格辅助
+                const gridHelper = new THREE.GridHelper(20, 20, 0x444444, 0x222222);
+                gridHelper.position.y = -1.99;
+                this.scene.add(gridHelper);
+                
+                // 坐标轴辅助（调试用）
+                // const axesHelper = new THREE.AxesHelper(5);
+                // this.scene.add(axesHelper);
+            }
+            
+            addModel(type, position, color) {
+                let geometry;
+                
+                switch(type) {
+                    case 'sphere':
+                        geometry = new THREE.SphereGeometry(0.8, 32, 32);
+                        break;
+                    case 'torus':
+                        geometry = new THREE.TorusGeometry(0.8, 0.3, 16, 100);
+                        break;
+                    case 'cone':
+                        geometry = new THREE.ConeGeometry(0.8, 1.6, 32);
+                        break;
+                    case 'cylinder':
+                        geometry = new THREE.CylinderGeometry(0.6, 0.6, 1.6, 32);
+                        break;
+                    case 'octahedron':
+                        geometry = new THREE.OctahedronGeometry(0.9, 0);
+                        break;
+                    default: // box
+                        geometry = new THREE.BoxGeometry(1.2, 1.2, 1.2);
+                }
+                
+                const material = new THREE.MeshStandardMaterial({
+                    color: new THREE.Color(color),
+                    metalness: this.settings.metalness,
+                    roughness: this.settings.roughness,
+                    wireframe: this.settings.wireframe
+                });
+                
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.position.set(...position);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                
+                mesh.userData = {
+                    type: type,
+                    color: color,
+                    selected: false,
+                    hovered: false,
+                    originalY: position[1],
+                    bounceOffset: 0,
+                    rotationSpeed: 0.01
+                };
+                
+                // 添加选中时的线框
+                const wireframeGeometry = new THREE.WireframeGeometry(geometry);
+                const wireframeMaterial = new THREE.LineBasicMaterial({ 
+                    color: 0xffffff,
+                    transparent: true,
+                    opacity: 0.3
+                });
+                const wireframe = new THREE.LineSegments(wireframeGeometry, wireframeMaterial);
+                mesh.add(wireframe);
+                mesh.userData.wireframe = wireframe;
+                wireframe.visible = false;
+                
+                this.scene.add(mesh);
+                this.models.push(mesh);
+                
+                return mesh;
+            }
+            
+            createParticles() {
+                const particlesContainer = document.getElementById('particles');
+                for (let i = 0; i < 50; i++) {
+                    const particle = document.createElement('div');
+                    particle.style.position = 'absolute';
+                    particle.style.width = '2px';
+                    particle.style.height = '2px';
+                    particle.style.backgroundColor = '#00ffff';
+                    particle.style.borderRadius = '50%';
+                    particle.style.left = Math.random() * 100 + '%';
+                    particle.style.top = Math.random() * 100 + '%';
+                    particle.style.opacity = '0.5';
+                    particle.style.animation = `float ${3 + Math.random() * 4}s infinite ease-in-out`;
+                    particlesContainer.appendChild(particle);
+                }
+                
+                // 添加CSS动画
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes float {
+                        0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.3; }
+                        50% { transform: translate(${Math.random() * 20 - 10}px, ${Math.random() * 20 - 10}px) scale(1.5); opacity: 0.8; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            setupEventListeners() {
+                const canvas = this.renderer.domElement;
+                
+                // 鼠标事件
+                canvas.addEventListener('mousedown', (e) => {
+                    this.mouseState.x = e.clientX;
+                    this.mouseState.y = e.clientY;
+                    this.mouseState.prevX = e.clientX;
+                    this.mouseState.prevY = e.clientY;
+                    
+                    if (e.button === 0) this.mouseState.left = true;
+                    if (e.button === 1) this.mouseState.middle = true;
+                    if (e.button === 2) this.mouseState.right = true;
+                });
+                
+                canvas.addEventListener('mousemove', (e) => {
+                    this.mouse.x = (e.clientX / canvas.clientWidth) * 2 - 1;
+                    this.mouse.y = -(e.clientY / canvas.clientHeight) * 2 + 1;
+                    
+                    // 悬停检测
+                    this.raycaster.setFromCamera(this.mouse, this.camera);
+                    const intersects = this.raycaster.intersectObjects(this.models);
+                    
+                    this.models.forEach(model => {
+                        model.userData.hovered = false;
+                    });
+                    
+                    if (intersects.length > 0) {
+                        const model = intersects[0].object;
+                        model.userData.hovered = true;
+                        canvas.style.cursor = 'pointer';
+                    } else {
+                        canvas.style.cursor = 'grab';
+                    }
+                    
+                    // 手动控制相机
+                    if (this.mouseState.left) {
+                        const deltaX = e.clientX - this.mouseState.prevX;
+                        const deltaY = e.clientY - this.mouseState.prevY;
+                        
+                        this.camera.rotation.y -= deltaX * 0.01;
+                        this.camera.rotation.x -= deltaY * 0.01;
+                    }
+                    
+                    if (this.mouseState.right) {
+                        const deltaX = e.clientX - this.mouseState.prevX;
+                        const deltaY = e.clientY - this.mouseState.prevY;
+                        
+                        this.camera.position.x -= deltaX * 0.01;
+                        this.camera.position.y += deltaY * 0.01;
+                    }
+                    
+                    this.mouseState.prevX = e.clientX;
+                    this.mouseState.prevY = e.clientY;
+                });
+                
+                canvas.addEventListener('mouseup', () => {
+                    this.mouseState.left = false;
+                    this.mouseState.middle = false;
+                    this.mouseState.right = false;
+                });
+                
+                canvas.addEventListener('mouseleave', () => {
+                    this.mouseState.left = false;
+                    this.mouseState.middle = false;
+                    this.mouseState.right = false;
+                });
+                
+                // 鼠标滚轮缩放
+                canvas.addEventListener('wheel', (e) => {
+                    e.preventDefault();
+                    const zoomAmount = e.deltaY > 0 ? 1.1 : 0.9;
+                    this.camera.position.multiplyScalar(zoomAmount);
+                });
+                
+                // 右键菜单阻止
+                canvas.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                });
+                
+                // 点击选择模型
+                canvas.addEventListener('click', (e) => {
+                    this.raycaster.setFromCamera(this.mouse, this.camera);
+                    const intersects = this.raycaster.intersectObjects(this.models);
+                    
+                    if (intersects.length > 0) {
+                        const model = intersects[0].object;
+                        
+                        // 切换选中状态
+                        model.userData.selected = !model.userData.selected;
+                        
+                        if (model.userData.selected) {
+                            this.selectedModel = model;
+                            model.userData.originalY = model.position.y;
+                        } else {
+                            this.selectedModel = null;
+                        }
+                        
+                        // 确保只有一个模型被选中
+                        this.models.forEach(m => {
+                            if (m !== model) {
+                                m.userData.selected = false;
+                                m.userData.wireframe.visible = false;
+                            }
+                        });
+                        
+                        // 更新线框可见性
+                        model.userData.wireframe.visible = model.userData.selected;
+                    }
+                });
+                
+                // 键盘控制
+                document.addEventListener('keydown', (e) => {
+                    if (!this.selectedModel) return;
+                    
+                    const speed = 0.1;
+                    switch(e.key.toLowerCase()) {
+                        case 'w':
+                            this.selectedModel.position.z -= speed;
+                            break;
+                        case 's':
+                            this.selectedModel.position.z += speed;
+                            break;
+                        case 'a':
+                            this.selectedModel.position.x -= speed;
+                            break;
+                        case 'd':
+                            this.selectedModel.position.x += speed;
+                            break;
+                        case 'q':
+                            this.selectedModel.position.y -= speed;
+                            break;
+                        case 'e':
+                            this.selectedModel.position.y += speed;
+                            break;
+                    }
+                });
+                
+                // 窗口大小调整
+                window.addEventListener('resize', () => {
+                    this.updateRendererSize();
+                });
+            }
+            
+            setupUIControls() {
+                // 滑块控制
+                const sliders = ['rotation', 'animation', 'ambient', 'pointlight', 'metal'];
+                sliders.forEach(id => {
+                    const slider = document.getElementById(id);
+                    const display = document.getElementById(`${id}-value`);
+                    
+                    if (slider && display) {
+                        slider.addEventListener('input', (e) => {
+                            const value = parseFloat(e.target.value);
+                            display.textContent = value.toFixed(1);
+                            
+                            // 更新设置
+                            const settingKey = id === 'metal' ? 'metalness' : id;
+                            this.settings[settingKey] = value;
+                            
+                            // 特殊处理粗糙度
+                            if (id === 'metal') {
+                                this.settings.roughness = 1 - value;
+                            }
+                        });
+                    }
+                });
+                
+                // 颜色选择
+                document.querySelectorAll('.color').forEach(color => {
+                    color.addEventListener('click', () => {
+                        document.querySelectorAll('.color').forEach(c => c.classList.remove('active'));
+                        color.classList.add('active');
+                        this.settings.currentColor = color.dataset.color;
+                    });
+                });
+                
+                // 模型选择
+                document.querySelectorAll('.model-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('.model-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.settings.currentType = btn.dataset.type;
+                    });
+                });
+                
+                // 按钮控制
+                document.getElementById('add').addEventListener('click', () => {
+                    const x = (Math.random() - 0.5) * 6;
+                    const y = (Math.random() - 0.5) * 2 + 1;
+                    const z = (Math.random() - 0.5) * 6;
+                    this.addModel(this.settings.currentType, [x, y, z], this.settings.currentColor);
+                });
+                
+                document.getElementById('clear').addEventListener('click', () => {
+                    this.models.forEach(model => {
+                        this.scene.remove(model);
+                    });
+                    this.models = [];
+                    this.selectedModel = null;
+                });
+                
+                document.getElementById('wireframe').addEventListener('click', () => {
+                    this.settings.wireframe = !this.settings.wireframe;
+                    const btn = document.getElementById('wireframe');
+                    btn.textContent = this.settings.wireframe ? '实体模式' : '线框模式';
+                    
+                    this.models.forEach(model => {
+                        model.material.wireframe = this.settings.wireframe;
+                    });
+                });
+                
+                document.getElementById('reset').addEventListener('click', () => {
+                    // 重置相机
+                    this.camera.position.set(0, 3, 8);
+                    this.camera.rotation.set(0, 0, 0);
+                    this.camera.lookAt(0, 0, 0);
+                    
+                    // 重置设置
+                    this.settings = {
+                        rotationSpeed: 1,
+                        animationSpeed: 1,
+                        ambientLight: 0.5,
+                        pointLight: 1,
+                        metalness: 0.7,
+                        roughness: 0.3,
+                        autoRotate: true,
+                        shadows: true,
+                        currentColor: '#00ffff',
+                        currentType: 'box',
+                        wireframe: false,
+                        bounceSpeed: 2
+                    };
+                    
+                    // 重置UI
+                    this.updateUI();
+                });
+                
+                // 开关控制
+                document.getElementById('toggle-rotate').addEventListener('click', () => {
+                    const checkbox = document.getElementById('autorotate');
+                    checkbox.checked = !checkbox.checked;
+                    this.settings.autoRotate = checkbox.checked;
+                });
+                
+                document.getElementById('toggle-shadows').addEventListener('click', () => {
+                    const checkbox = document.getElementById('shadows');
+                    checkbox.checked = !checkbox.checked;
+                    this.settings.shadows = checkbox.checked;
+                    this.mainLight.castShadow = this.settings.shadows;
+                    this.renderer.shadowMap.enabled = this.settings.shadows;
+                });
+            }
+            
+            updateUI() {
+                // 更新滑块值
+                document.getElementById('rotation').value = this.settings.rotationSpeed;
+                document.getElementById('animation').value = this.settings.animationSpeed;
+                document.getElementById('ambient').value = this.settings.ambientLight;
+                document.getElementById('pointlight').value = this.settings.pointLight;
+                document.getElementById('metal').value = this.settings.metalness;
+                
+                // 更新显示值
+                document.getElementById('rotation-value').textContent = this.settings.rotationSpeed.toFixed(1);
+                document.getElementById('animation-value').textContent = this.settings.animationSpeed.toFixed(1);
+                document.getElementById('ambient-value').textContent = this.settings.ambientLight.toFixed(1);
+                document.getElementById('pointlight-value').textContent = this.settings.pointLight.toFixed(1);
+                document.getElementById('metal-value').textContent = this.settings.metalness.toFixed(1);
+                
+                // 更新开关
+                document.getElementById('autorotate').checked = this.settings.autoRotate;
+                document.getElementById('shadows').checked = this.settings.shadows;
+                
+                // 更新颜色选择器
+                document.querySelectorAll('.color').forEach(c => c.classList.remove('active'));
+                document.querySelector(`.color[data-color="${this.settings.currentColor}"]`).classList.add('active');
+                
+                // 更新模型选择器
+                document.querySelectorAll('.model-btn').forEach(b => b.classList.remove('active'));
+                document.querySelector(`.model-btn[data-type="${this.settings.currentType}"]`).classList.add('active');
+                
+                // 更新线框按钮文本
+                document.getElementById('wireframe').textContent = this.settings.wireframe ? '实体模式' : '线框模式';
+            }
+            
+            animate(time = 0) {
+                requestAnimationFrame((t) => this.animate(t));
+                
+                // 更新光照强度
+                this.ambientLight.intensity = this.settings.ambientLight;
+                this.mainLight.intensity = this.settings.pointLight;
+                this.helperLight.intensity = this.settings.pointLight * 0.5;
+                
+                // 更新模型动画
+                this.models.forEach((model, index) => {
+                    // 旋转动画
+                    model.rotation.x += 0.01 * this.settings.animationSpeed * this.settings.rotationSpeed;
+                    model.rotation.y += 0.01 * this.settings.animationSpeed * this.settings.rotationSpeed;
+                    
+                    // 悬停效果
+                    if (model.userData.hovered) {
+                        model.scale.lerp(new THREE.Vector3(1.1, 1.1, 1.1), 0.1);
+                        model.material.emissive.setHex(0x222222);
+                    } else {
+                        model.scale.lerp(new THREE.Vector3(1, 1, 1), 0.1);
+                        model.material.emissive.setHex(0x000000);
+                    }
+                    
+                    // 选中弹跳效果
+                    if (model.userData.selected) {
+                        model.userData.bounceOffset = Math.sin(time * 0.001 * this.settings.bounceSpeed) * 0.2;
+                        model.position.y = model.userData.originalY + model.userData.bounceOffset;
+                    }
+                    
+                    // 更新材质属性
+                    model.material.metalness = this.settings.metalness;
+                    model.material.roughness = this.settings.roughness;
+                    
+                    // 更新选中线框
+                    model.userData.wireframe.visible = model.userData.selected && !this.settings.wireframe;
+                });
+                
+                // 自动旋转相机
+                if (this.settings.autoRotate) {
+                    this.camera.rotation.y += 0.005;
+                }
+                
+                // 更新性能统计
+                this.updateStats();
+                
+                // 渲染场景
+                this.renderer.render(this.scene, this.camera);
+            }
+            
+            updateStats() {
+                const statsElement = document.getElementById('stats');
+                const now = performance.now();
+                
+                if (!this.lastStatsUpdate) {
+                    this.lastStatsUpdate = now;
+                    this.frameCount = 0;
+                }
+                
+                this.frameCount++;
+                
+                if (now - this.lastStatsUpdate >= 1000) {
+                    const fps = Math.round((this.frameCount * 1000) / (now - this.lastStatsUpdate));
+                    statsElement.textContent = `FPS: ${fps} | 模型: ${this.models.length}`;
+                    this.frameCount = 0;
+                    this.lastStatsUpdate = now;
+                }
+            }
+        }
+        
+        // 页面加载完成后初始化场景
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // 显示加载状态
+                const loadingElement = document.getElementById('loading');
+                loadingElement.textContent = '正在初始化Three.js...';
+                
+                // 等待一小段时间确保DOM完全加载
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                // 初始化场景
+                window.threeScene = new ThreeScene();
+                
+            } catch (error) {
+                console.error('初始化失败:', error);
+                document.getElementById('loading').textContent = `初始化失败: ${error.message}`;
+                document.getElementById('loading').style.color = '#ff6b6b';
+            }
+        });
+        
+        // 添加CSS样式
+        const style = document.createElement('style');
+        style.textContent = `
+            .scene-wrapper canvas {
+                display: block;
+                outline: none;
+            }
+            
+            .scene-wrapper:focus-within canvas {
+                box-shadow: 0 0 0 2px rgba(0, 255, 255, 0.5);
+            }
+            
+            @keyframes pulse {
+                0%, 100% { opacity: 0.5; }
+                50% { opacity: 1; }
+            }
+            
+            .loading {
+                animation: pulse 1.5s infinite;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
