@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+        <html lang="zh-CN">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>HTML文件导航 - 38 个文件</title>
+            <style>
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+
+                body {
+                    font-family: 'Microsoft YaHei', 'Segoe UI', Arial, sans-serif;
+                    line-height: 1.6;
+                    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                    min-height: 100vh;
+                    padding: 20px;
+                }
+
+                .container {
+                    max-width: 1400px;
+                    margin: 0 auto;
+                    background: white;
+                    border-radius: 15px;
+                    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+                    overflow: hidden;
+                }
+
+                .header {
+                    background: linear-gradient(to right, #4facfe 0%, #00f2fe 100%);
+                    color: white;
+                    padding: 40px 30px;
+                    text-align: center;
+                }
+
+                .header h1 {
+                    font-size: 2.5em;
+                    margin-bottom: 10px;
+                    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+                }
+
+                .header p {
+                    font-size: 1.2em;
+                    opacity: 0.9;
+                }
+
+                .mode-info {
+                    background: rgba(255,255,255,0.2);
+                    padding: 10px 20px;
+                    border-radius: 10px;
+                    margin-top: 15px;
+                    display: inline-block;
+                    font-size: 0.9em;
+                }
+
+                .stats {
+                    display: flex;
+                    justify-content: center;
+                    gap: 30px;
+                    margin-top: 25px;
+                    flex-wrap: wrap;
+                }
+
+                .stat-item {
+                    background: rgba(255,255,255,0.2);
+                    padding: 15px 25px;
+                    border-radius: 10px;
+                    backdrop-filter: blur(10px);
+                    font-size: 1.1em;
+                }
+
+                .search-box {
+                    margin: 30px;
+                    text-align: center;
+                }
+
+                #searchInput {
+                    width: 80%;
+                    max-width: 600px;
+                    padding: 15px 25px;
+                    font-size: 16px;
+                    border: 2px solid #4facfe;
+                    border-radius: 50px;
+                    outline: none;
+                    transition: all 0.3s ease;
+                    box-shadow: 0 4px 15px rgba(79, 172, 254, 0.1);
+                }
+
+                #searchInput:focus {
+                    border-color: #00f2fe;
+                    box-shadow: 0 0 20px rgba(79, 172, 254, 0.3);
+                }
+
+                .quick-filters {
+                    margin-top: 20px;
+                    display: flex;
+                    justify-content: center;
+                    gap: 15px;
+                    flex-wrap: wrap;
+                }
+
+                .filter-btn {
+                    padding: 10px 20px;
+                    background: linear-gradient(to right, #4facfe, #00f2fe);
+                    color: white;
+                    border: none;
+                    border-radius: 25px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    font-weight: bold;
+                }
+
+                .filter-btn:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+                }
+
+                .files-container {
+                    padding: 30px;
+                }
+
+                .folder-group {
+                    margin-bottom: 30px;
+                    background: #fff;
+                    border-radius: 12px;
+                    overflow: hidden;
+                    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+                    border: 1px solid #eaeaea;
+                }
+
+                .folder-header {
+                    background: linear-gradient(to right, #667eea, #764ba2);
+                    color: white;
+                    padding: 20px;
+                    font-size: 1.3em;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                }
+
+                .folder-header:hover {
+                    background: linear-gradient(to right, #764ba2, #667eea);
+                }
+
+                .folder-count {
+                    background: rgba(255,255,255,0.2);
+                    padding: 5px 15px;
+                    border-radius: 15px;
+                    font-size: 0.9em;
+                }
+
+                .file-list {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+                    gap: 20px;
+                    padding: 25px;
+                    background: #f9fafc;
+                }
+
+                .file-item {
+                    background: white;
+                    border-radius: 10px;
+                    padding: 25px;
+                    transition: all 0.3s ease;
+                    position: relative;
+                    overflow: hidden;
+                    border: 1px solid #e0e0e0;
+                    box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+                }
+
+                .file-item:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+                    border-color: #4facfe;
+                }
+
+                .file-item::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 4px;
+                    height: 100%;
+                    background: #4facfe;
+                    transition: all 0.3s ease;
+                }
+
+                .file-item:hover::before {
+                    width: 6px;
+                    background: #00f2fe;
+                }
+
+                .file-name {
+                    font-size: 1.2em;
+                    font-weight: bold;
+                    color: #2c3e50;
+                    margin-bottom: 12px;
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+
+                .file-name::before {
+                    content: '📄';
+                    font-size: 1.4em;
+                }
+
+                .file-path {
+                    color: #666;
+                    font-size: 0.95em;
+                    margin-bottom: 15px;
+                    word-break: break-all;
+                    line-height: 1.4;
+                    background: #f8f9fa;
+                    padding: 10px;
+                    border-radius: 5px;
+                    border-left: 3px solid #4facfe;
+                }
+
+                .file-meta {
+                    display: flex;
+                    justify-content: space-between;
+                    color: #777;
+                    font-size: 0.9em;
+                    margin: 15px 0;
+                    padding-top: 15px;
+                    border-top: 1px solid #eee;
+                }
+
+                .open-btn {
+                    display: inline-block;
+                    padding: 12px 25px;
+                    background: linear-gradient(to right, #4facfe, #00f2fe);
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 8px;
+                    margin-top: 10px;
+                    transition: all 0.3s ease;
+                    font-weight: bold;
+                    text-align: center;
+                    width: 100%;
+                    border: none;
+                    cursor: pointer;
+                    font-size: 1em;
+                }
+
+                .open-btn:hover {
+                    background: linear-gradient(to right, #00f2fe, #4facfe);
+                    transform: translateY(-2px);
+                    box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+                }
+
+                .missing-file {
+                    color: #ff6b6b;
+                    font-size: 0.9em;
+                    margin-top: 5px;
+                    padding: 5px;
+                    background: #fff5f5;
+                    border-radius: 3px;
+                    border-left: 3px solid #ff6b6b;
+                }
+
+                .footer {
+                    text-align: center;
+                    padding: 25px;
+                    color: #666;
+                    border-top: 1px solid #eee;
+                    background: #f8f9fa;
+                    font-size: 0.95em;
+                }
+
+                .no-results {
+                    text-align: center;
+                    padding: 60px 20px;
+                    color: #888;
+                    font-size: 1.3em;
+                }
+
+                .toggle-icon {
+                    font-size: 0.9em;
+                    margin-left: 10px;
+                }
+
+                @media (max-width: 768px) {
+                    .file-list {
+                        grid-template-columns: 1fr;
+                    }
+
+                    .stats {
+                        flex-direction: column;
+                        gap: 15px;
+                        align-items: center;
+                    }
+
+                    .stat-item {
+                        width: 80%;
+                        text-align: center;
+                    }
+
+                    .header h1 {
+                        font-size: 2em;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>📁 HTML文件导航系统</h1>
+                    <p>便捷访问您的HTML文件集合</p>
+                    <div class="mode-info">模式: 服务器模式</div>
+                    <div class="stats">
+                        <div class="stat-item">📊 文件总数: 38</div>
+                        <div class="stat-item">📁 文件夹数: 20</div>
+                        <div class="stat-item">🕒 生成时间: 2025-12-13 20:19:07</div>
+                    </div>
+                </div>
+
+                
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="输入文件名或路径进行搜索...">
+                    <div class="quick-filters">
+                        <button class="filter-btn" onclick="filterFiles('recent')">📅 最近修改</button>
+                        <button class="filter-btn" onclick="filterFiles('large')">💾 文件较大</button>
+                        <button class="filter-btn" onclick="filterFiles('clear')">🔄 显示全部</button>
+                        <button class="filter-btn" onclick="toggleAllFolders()">📂 展开/折叠所有</button>
+                    </div>
+                </div>
+                
+
+                <div class="files-container" id="filesContainer">
+                    
+                <div class="folder-group">
+                    <div class="folder-header">
+                        <span>📁 opencv <span class="toggle-icon">📂</span></span>
+                        <span class="folder-count">(2 个文件)</span>
+                    </div>
+                    <div class="file-list">
+                
+        <div class="file-item">
+            <div class="file-name">index.html</div>
+            <div class="file-path" title="./Page/Js库/opencv/index.html">./Page/Js库/opencv/index.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 38.2 KB</span>
+                <span class="file-date">📅 2025-12-06 10:52</span>
+            </div>
+            <a href="./Page/Js库/opencv/index.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+        <div class="file-item">
+            <div class="file-name">index2.html</div>
+            <div class="file-path" title="./Page/Js库/opencv/index2.html">./Page/Js库/opencv/index2.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 52.7 KB</span>
+                <span class="file-date">📅 2025-12-06 11:00</span>
+            </div>
+            <a href="./Page/Js库/opencv/index2.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+                    </div>
+                </div>
+                
+                <div class="folder-group">
+                    <div class="folder-header">
+                        <span>📁 Gun.js <span class="toggle-icon">📂</span></span>
+                        <span class="folder-count">(1 个文件)</span>
+                    </div>
+                    <div class="file-list">
+                
+        <div class="file-item">
+            <div class="file-name">index.html</div>
+            <div class="file-path" title="./Page/Js库/p2p/Gun.js/index.html">./Page/Js库/p2p/Gun.js/index.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 54.9 KB</span>
+                <span class="file-date">📅 2025-12-06 11:53</span>
+            </div>
+            <a href="./Page/Js库/p2p/Gun.js/index.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+                    </div>
+                </div>
+                
+                <div class="folder-group">
+                    <div class="folder-header">
+                        <span>📁 PeerJS <span class="toggle-icon">📂</span></span>
+                        <span class="folder-count">(3 个文件)</span>
+                    </div>
+                    <div class="file-list">
+                
+        <div class="file-item">
+            <div class="file-name">index.html</div>
+            <div class="file-path" title="./Page/Js库/p2p/PeerJS/index.html">./Page/Js库/p2p/PeerJS/index.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 3.7 KB</span>
+                <span class="file-date">📅 2025-12-06 11:50</span>
+            </div>
+            <a href="./Page/Js库/p2p/PeerJS/index.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+        <div class="file-item">
+            <div class="file-name">index2.html</div>
+            <div class="file-path" title="./Page/Js库/p2p/PeerJS/index2.html">./Page/Js库/p2p/PeerJS/index2.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 41.2 KB</span>
+                <span class="file-date">📅 2025-12-06 11:50</span>
+            </div>
+            <a href="./Page/Js库/p2p/PeerJS/index2.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+        <div class="file-item">
+            <div class="file-name">index3.html</div>
+            <div class="file-path" title="./Page/Js库/p2p/PeerJS/index3.html">./Page/Js库/p2p/PeerJS/index3.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 76.4 KB</span>
+                <span class="file-date">📅 2025-12-06 11:51</span>
+            </div>
+            <a href="./Page/Js库/p2p/PeerJS/index3.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+                    </div>
+                </div>
+                
+                <div class="folder-group">
+                    <div class="folder-header">
+                        <span>📁 Leaflet <span class="toggle-icon">📂</span></span>
+                        <span class="folder-count">(2 个文件)</span>
+                    </div>
+                    <div class="file-list">
+                
+        <div class="file-item">
+            <div class="file-name">index.html</div>
+            <div class="file-path" title="./Page/Js库/webgis/Leaflet/index.html">./Page/Js库/webgis/Leaflet/index.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 16.2 KB</span>
+                <span class="file-date">📅 2025-12-06 10:44</span>
+            </div>
+            <a href="./Page/Js库/webgis/Leaflet/index.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+        <div class="file-item">
+            <div class="file-name">index2.html</div>
+            <div class="file-path" title="./Page/Js库/webgis/Leaflet/index2.html">./Page/Js库/webgis/Leaflet/index2.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 42.3 KB</span>
+                <span class="file-date">📅 2025-12-06 10:44</span>
+            </div>
+            <a href="./Page/Js库/webgis/Leaflet/index2.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+                    </div>
+                </div>
+                
+                <div class="folder-group">
+                    <div class="folder-header">
+                        <span>📁 openlayer <span class="toggle-icon">📂</span></span>
+                        <span class="folder-count">(1 个文件)</span>
+                    </div>
+                    <div class="file-list">
+                
+        <div class="file-item">
+            <div class="file-name">index.html</div>
+            <div class="file-path" title="./Page/Js库/webgis/openlayer/index.html">./Page/Js库/webgis/openlayer/index.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 86.2 KB</span>
+                <span class="file-date">📅 2025-12-06 10:47</span>
+            </div>
+            <a href="./Page/Js库/webgis/openlayer/index.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+                    </div>
+                </div>
+                
+                <div class="folder-group">
+                    <div class="folder-header">
+                        <span>📁 Cannon <span class="toggle-icon">📂</span></span>
+                        <span class="folder-count">(2 个文件)</span>
+                    </div>
+                    <div class="file-list">
+                
+        <div class="file-item">
+            <div class="file-name">index.html</div>
+            <div class="file-path" title="./Page/Js库/三维空间/Cannon/index.html">./Page/Js库/三维空间/Cannon/index.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 72.0 KB</span>
+                <span class="file-date">📅 2025-12-06 11:31</span>
+            </div>
+            <a href="./Page/Js库/三维空间/Cannon/index.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+        <div class="file-item">
+            <div class="file-name">index2.html</div>
+            <div class="file-path" title="./Page/Js库/三维空间/Cannon/index2.html">./Page/Js库/三维空间/Cannon/index2.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 35.8 KB</span>
+                <span class="file-date">📅 2025-12-06 11:31</span>
+            </div>
+            <a href="./Page/Js库/三维空间/Cannon/index2.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+                    </div>
+                </div>
+                
+                <div class="folder-group">
+                    <div class="folder-header">
+                        <span>📁 Matter <span class="toggle-icon">📂</span></span>
+                        <span class="folder-count">(2 个文件)</span>
+                    </div>
+                    <div class="file-list">
+                
+        <div class="file-item">
+            <div class="file-name">index.html</div>
+            <div class="file-path" title="./Page/Js库/三维空间/Matter/index.html">./Page/Js库/三维空间/Matter/index.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 13.7 KB</span>
+                <span class="file-date">📅 2025-12-06 11:35</span>
+            </div>
+            <a href="./Page/Js库/三维空间/Matter/index.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+        <div class="file-item">
+            <div class="file-name">index2.html</div>
+            <div class="file-path" title="./Page/Js库/三维空间/Matter/index2.html">./Page/Js库/三维空间/Matter/index2.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 79.4 KB</span>
+                <span class="file-date">📅 2025-12-06 11:38</span>
+            </div>
+            <a href="./Page/Js库/三维空间/Matter/index2.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+                    </div>
+                </div>
+                
+                <div class="folder-group">
+                    <div class="folder-header">
+                        <span>📁 Three.js <span class="toggle-icon">📂</span></span>
+                        <span class="folder-count">(1 个文件)</span>
+                    </div>
+                    <div class="file-list">
+                
+        <div class="file-item">
+            <div class="file-name">index.html</div>
+            <div class="file-path" title="./Page/Js库/三维空间/Three.js/index.html">./Page/Js库/三维空间/Three.js/index.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 45.0 KB</span>
+                <span class="file-date">📅 2025-12-06 11:12</span>
+            </div>
+            <a href="./Page/Js库/三维空间/Three.js/index.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+                    </div>
+                </div>
+                
+                <div class="folder-group">
+                    <div class="folder-header">
+                        <span>📁 Anime <span class="toggle-icon">📂</span></span>
+                        <span class="folder-count">(2 个文件)</span>
+                    </div>
+                    <div class="file-list">
+                
+        <div class="file-item">
+            <div class="file-name">index.html</div>
+            <div class="file-path" title="./Page/Js库/图片/Anime/index.html">./Page/Js库/图片/Anime/index.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 36.9 KB</span>
+                <span class="file-date">📅 2025-12-06 10:57</span>
+            </div>
+            <a href="./Page/Js库/图片/Anime/index.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+        <div class="file-item">
+            <div class="file-name">index2.html</div>
+            <div class="file-path" title="./Page/Js库/图片/Anime/index2.html">./Page/Js库/图片/Anime/index2.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 74.0 KB</span>
+                <span class="file-date">📅 2025-12-06 10:57</span>
+            </div>
+            <a href="./Page/Js库/图片/Anime/index2.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+                    </div>
+                </div>
+                
+                <div class="folder-group">
+                    <div class="folder-header">
+                        <span>📁 GSAP <span class="toggle-icon">📂</span></span>
+                        <span class="folder-count">(2 个文件)</span>
+                    </div>
+                    <div class="file-list">
+                
+        <div class="file-item">
+            <div class="file-name">index.html</div>
+            <div class="file-path" title="./Page/Js库/图片/GSAP/index.html">./Page/Js库/图片/GSAP/index.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 66.8 KB</span>
+                <span class="file-date">📅 2025-12-06 11:40</span>
+            </div>
+            <a href="./Page/Js库/图片/GSAP/index.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+        <div class="file-item">
+            <div class="file-name">index2.html</div>
+            <div class="file-path" title="./Page/Js库/图片/GSAP/index2.html">./Page/Js库/图片/GSAP/index2.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 78.5 KB</span>
+                <span class="file-date">📅 2025-12-06 11:47</span>
+            </div>
+            <a href="./Page/Js库/图片/GSAP/index2.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+                    </div>
+                </div>
+                
+                <div class="folder-group">
+                    <div class="folder-header">
+                        <span>📁 Particles <span class="toggle-icon">📂</span></span>
+                        <span class="folder-count">(2 个文件)</span>
+                    </div>
+                    <div class="file-list">
+                
+        <div class="file-item">
+            <div class="file-name">index.html</div>
+            <div class="file-path" title="./Page/Js库/图片/Particles/index.html">./Page/Js库/图片/Particles/index.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 31.3 KB</span>
+                <span class="file-date">📅 2025-12-06 11:03</span>
+            </div>
+            <a href="./Page/Js库/图片/Particles/index.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+        <div class="file-item">
+            <div class="file-name">index2.html</div>
+            <div class="file-path" title="./Page/Js库/图片/Particles/index2.html">./Page/Js库/图片/Particles/index2.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 94.5 KB</span>
+                <span class="file-date">📅 2025-12-06 11:03</span>
+            </div>
+            <a href="./Page/Js库/图片/Particles/index2.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+                    </div>
+                </div>
+                
+                <div class="folder-group">
+                    <div class="folder-header">
+                        <span>📁 Pixi <span class="toggle-icon">📂</span></span>
+                        <span class="folder-count">(1 个文件)</span>
+                    </div>
+                    <div class="file-list">
+                
+        <div class="file-item">
+            <div class="file-name">index.html</div>
+            <div class="file-path" title="./Page/Js库/图片/Pixi/index.html">./Page/Js库/图片/Pixi/index.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 72.3 KB</span>
+                <span class="file-date">📅 2025-12-06 11:35</span>
+            </div>
+            <a href="./Page/Js库/图片/Pixi/index.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+                    </div>
+                </div>
+                
+                <div class="folder-group">
+                    <div class="folder-header">
+                        <span>📁 tsParticles <span class="toggle-icon">📂</span></span>
+                        <span class="folder-count">(1 个文件)</span>
+                    </div>
+                    <div class="file-list">
+                
+        <div class="file-item">
+            <div class="file-name">index.html</div>
+            <div class="file-path" title="./Page/Js库/图片/tsParticles/index.html">./Page/Js库/图片/tsParticles/index.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 24.8 KB</span>
+                <span class="file-date">📅 2025-12-06 11:47</span>
+            </div>
+            <a href="./Page/Js库/图片/tsParticles/index.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+                    </div>
+                </div>
+                
+                <div class="folder-group">
+                    <div class="folder-header">
+                        <span>📁 tldraw <span class="toggle-icon">📂</span></span>
+                        <span class="folder-count">(1 个文件)</span>
+                    </div>
+                    <div class="file-list">
+                
+        <div class="file-item">
+            <div class="file-name">index.html</div>
+            <div class="file-path" title="./Page/Js库/工作流/tldraw/index.html">./Page/Js库/工作流/tldraw/index.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 112.0 KB</span>
+                <span class="file-date">📅 2025-12-06 11:44</span>
+            </div>
+            <a href="./Page/Js库/工作流/tldraw/index.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+                    </div>
+                </div>
+                
+                <div class="folder-group">
+                    <div class="folder-header">
+                        <span>📁 Tone <span class="toggle-icon">📂</span></span>
+                        <span class="folder-count">(2 个文件)</span>
+                    </div>
+                    <div class="file-list">
+                
+        <div class="file-item">
+            <div class="file-name">index.html</div>
+            <div class="file-path" title="./Page/Js库/音乐/Tone/index.html">./Page/Js库/音乐/Tone/index.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 30.1 KB</span>
+                <span class="file-date">📅 2025-12-06 11:07</span>
+            </div>
+            <a href="./Page/Js库/音乐/Tone/index.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+        <div class="file-item">
+            <div class="file-name">index2.html</div>
+            <div class="file-path" title="./Page/Js库/音乐/Tone/index2.html">./Page/Js库/音乐/Tone/index2.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 56.1 KB</span>
+                <span class="file-date">📅 2025-12-06 11:07</span>
+            </div>
+            <a href="./Page/Js库/音乐/Tone/index2.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+                    </div>
+                </div>
+                
+                <div class="folder-group">
+                    <div class="folder-header">
+                        <span>📁 PoetryAndYou <span class="toggle-icon">📂</span></span>
+                        <span class="folder-count">(1 个文件)</span>
+                    </div>
+                    <div class="file-list">
+                
+        <div class="file-item">
+            <div class="file-name">index.html</div>
+            <div class="file-path" title="./Page/PoetryAndYou/index.html">./Page/PoetryAndYou/index.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 8.9 KB</span>
+                <span class="file-date">📅 2025-07-13 10:28</span>
+            </div>
+            <a href="./Page/PoetryAndYou/index.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+                    </div>
+                </div>
+                
+                <div class="folder-group">
+                    <div class="folder-header">
+                        <span>📁 Wedding <span class="toggle-icon">📂</span></span>
+                        <span class="folder-count">(1 个文件)</span>
+                    </div>
+                    <div class="file-list">
+                
+        <div class="file-item">
+            <div class="file-name">index.html</div>
+            <div class="file-path" title="./Page/Wedding/index.html">./Page/Wedding/index.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 20.9 KB</span>
+                <span class="file-date">📅 2025-07-13 10:28</span>
+            </div>
+            <a href="./Page/Wedding/index.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+                    </div>
+                </div>
+                
+                <div class="folder-group">
+                    <div class="folder-header">
+                        <span>📁 在线简历 <span class="toggle-icon">📂</span></span>
+                        <span class="folder-count">(8 个文件)</span>
+                    </div>
+                    <div class="file-list">
+                
+        <div class="file-item">
+            <div class="file-name">index.html</div>
+            <div class="file-path" title="./Page/在线简历/index.html">./Page/在线简历/index.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 65.3 KB</span>
+                <span class="file-date">📅 2025-08-30 10:16</span>
+            </div>
+            <a href="./Page/在线简历/index.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+        <div class="file-item">
+            <div class="file-name">index2.html</div>
+            <div class="file-path" title="./Page/在线简历/index2.html">./Page/在线简历/index2.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 59.9 KB</span>
+                <span class="file-date">📅 2025-08-30 10:18</span>
+            </div>
+            <a href="./Page/在线简历/index2.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+        <div class="file-item">
+            <div class="file-name">index3.html</div>
+            <div class="file-path" title="./Page/在线简历/index3.html">./Page/在线简历/index3.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 136.5 KB</span>
+                <span class="file-date">📅 2025-08-30 10:18</span>
+            </div>
+            <a href="./Page/在线简历/index3.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+        <div class="file-item">
+            <div class="file-name">zoe1.html</div>
+            <div class="file-path" title="./Page/在线简历/zoe1.html">./Page/在线简历/zoe1.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 6.3 KB</span>
+                <span class="file-date">📅 2025-11-29 19:25</span>
+            </div>
+            <a href="./Page/在线简历/zoe1.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+        <div class="file-item">
+            <div class="file-name">zoe2.html</div>
+            <div class="file-path" title="./Page/在线简历/zoe2.html">./Page/在线简历/zoe2.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 22.7 KB</span>
+                <span class="file-date">📅 2025-11-29 19:25</span>
+            </div>
+            <a href="./Page/在线简历/zoe2.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+        <div class="file-item">
+            <div class="file-name">zoe3.html</div>
+            <div class="file-path" title="./Page/在线简历/zoe3.html">./Page/在线简历/zoe3.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 14.4 KB</span>
+                <span class="file-date">📅 2025-11-29 19:26</span>
+            </div>
+            <a href="./Page/在线简历/zoe3.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+        <div class="file-item">
+            <div class="file-name">zoe4.html</div>
+            <div class="file-path" title="./Page/在线简历/zoe4.html">./Page/在线简历/zoe4.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 17.2 KB</span>
+                <span class="file-date">📅 2025-11-29 19:26</span>
+            </div>
+            <a href="./Page/在线简历/zoe4.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+        <div class="file-item">
+            <div class="file-name">zoe5.html</div>
+            <div class="file-path" title="./Page/在线简历/zoe5.html">./Page/在线简历/zoe5.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 30.2 KB</span>
+                <span class="file-date">📅 2025-11-29 19:28</span>
+            </div>
+            <a href="./Page/在线简历/zoe5.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+                    </div>
+                </div>
+                
+                <div class="folder-group">
+                    <div class="folder-header">
+                        <span>📁 Page <span class="toggle-icon">📂</span></span>
+                        <span class="folder-count">(2 个文件)</span>
+                    </div>
+                    <div class="file-list">
+                
+        <div class="file-item">
+            <div class="file-name">小爱心.html</div>
+            <div class="file-path" title="./Page/小爱心.html">./Page/小爱心.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 957.0 B</span>
+                <span class="file-date">📅 2025-07-13 10:28</span>
+            </div>
+            <a href="./Page/小爱心.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+        <div class="file-item">
+            <div class="file-name">浪漫背景.html</div>
+            <div class="file-path" title="./Page/浪漫背景.html">./Page/浪漫背景.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 2.2 KB</span>
+                <span class="file-date">📅 2025-07-13 10:28</span>
+            </div>
+            <a href="./Page/浪漫背景.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+                    </div>
+                </div>
+                
+                <div class="folder-group">
+                    <div class="folder-header">
+                        <span>📁 视频播放器 <span class="toggle-icon">📂</span></span>
+                        <span class="folder-count">(1 个文件)</span>
+                    </div>
+                    <div class="file-list">
+                
+        <div class="file-item">
+            <div class="file-name">index.html</div>
+            <div class="file-path" title="./Page/视频播放器/index.html">./Page/视频播放器/index.html</div>
+            
+            <div class="file-meta">
+                <span class="file-size">💾 14.0 KB</span>
+                <span class="file-date">📅 2025-07-13 10:28</span>
+            </div>
+            <a href="./Page/视频播放器/index.html" class="open-btn" target="_blank" >
+               🔗 打开文件
+            </a>
+        </div>
+        
+                    </div>
+                </div>
+                
+                </div>
+
+                <div class="footer">
+                    <p>📝 使用 HTML文件目录生成器 创建 • 最后更新: 2025-12-13 20:19:07</p>
+                    <p style="margin-top: 10px; font-size: 0.9em; color: #888;">
+                        共收录 38 个HTML文件 • 
+                        点击"打开文件"按钮可直接在浏览器中查看
+                    </p>
+                </div>
+            </div>
+
+            <script>
+                // 搜索功能
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) {
+                    searchInput.addEventListener('input', function(e) {
+                        const searchTerm = e.target.value.toLowerCase().trim();
+                        const fileItems = document.querySelectorAll('.file-item');
+                        let visibleCount = 0;
+
+                        fileItems.forEach(item => {
+                            const fileName = item.querySelector('.file-name').textContent.toLowerCase();
+                            const filePath = item.querySelector('.file-path').textContent.toLowerCase();
+
+                            if (!searchTerm || fileName.includes(searchTerm) || filePath.includes(searchTerm)) {
+                                item.style.display = 'block';
+                                visibleCount++;
+                            } else {
+                                item.style.display = 'none';
+                            }
+                        });
+
+                        // 更新文件夹计数
+                        document.querySelectorAll('.folder-group').forEach(folder => {
+                            const folderItems = folder.querySelectorAll('.file-item');
+                            const visibleItems = Array.from(folderItems).filter(item => 
+                                item.style.display !== 'none'
+                            ).length;
+
+                            const countSpan = folder.querySelector('.folder-count');
+                            if (countSpan) {
+                                countSpan.textContent = '(' + visibleItems + ' 个文件)';
+                            }
+
+                            // 如果文件夹内没有可见项目，隐藏整个文件夹
+                            if (visibleItems === 0) {
+                                folder.style.display = 'none';
+                            } else {
+                                folder.style.display = 'block';
+                            }
+                        });
+                    });
+                }
+
+                // 文件过滤功能
+                function filterFiles(type) {
+                    const fileLists = document.querySelectorAll('.file-list');
+
+                    fileLists.forEach(fileList => {
+                        const items = Array.from(fileList.querySelectorAll('.file-item'));
+
+                        items.sort((a, b) => {
+                            switch(type) {
+                                case 'recent':
+                                    const aDateText = a.querySelector('.file-date').textContent;
+                                    const bDateText = b.querySelector('.file-date').textContent;
+                                    const aDate = new Date(aDateText);
+                                    const bDate = new Date(bDateText);
+                                    return bDate - aDate;
+
+                                case 'large':
+                                    const aSizeText = a.querySelector('.file-size').textContent;
+                                    const bSizeText = b.querySelector('.file-size').textContent;
+                                    const aSize = parseFloat(aSizeText);
+                                    const bSize = parseFloat(bSizeText);
+                                    return bSize - aSize;
+
+                                default:
+                                    return 0;
+                            }
+                        });
+
+                        // 重新排序
+                        items.forEach(item => fileList.appendChild(item));
+                    });
+                }
+
+                // 文件夹折叠功能
+                function toggleAllFolders() {
+                    const folderHeaders = document.querySelectorAll('.folder-header');
+                    const allExpanded = Array.from(folderHeaders).every(header => {
+                        const content = header.nextElementSibling;
+                        return content.style.display !== 'none';
+                    });
+
+                    folderHeaders.forEach(header => {
+                        const content = header.nextElementSibling;
+                        const icon = header.querySelector('.toggle-icon');
+
+                        if (allExpanded) {
+                            content.style.display = 'none';
+                            if (icon) icon.textContent = '📁';
+                        } else {
+                            content.style.display = 'grid';
+                            if (icon) icon.textContent = '📂';
+                        }
+                    });
+                }
+
+                // 单个文件夹折叠
+                document.querySelectorAll('.folder-header').forEach(header => {
+                    header.addEventListener('click', function() {
+                        const content = this.nextElementSibling;
+                        const icon = this.querySelector('.toggle-icon');
+                        if (content.style.display === 'none') {
+                            content.style.display = 'grid';
+                            if (icon) icon.textContent = '📂';
+                        } else {
+                            content.style.display = 'none';
+                            if (icon) icon.textContent = '📁';
+                        }
+                    });
+                });
+
+                // 初始化显示所有文件夹为展开状态
+                document.querySelectorAll('.folder-header').forEach(header => {
+                    const content = header.nextElementSibling;
+                    const icon = header.querySelector('.toggle-icon');
+                    content.style.display = 'grid';
+                    if (icon) icon.textContent = '📂';
+                });
+            </script>
+        </body>
+        </html>
