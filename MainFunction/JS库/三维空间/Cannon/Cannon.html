@@ -1,0 +1,1776 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>增强版 Cannon.js 物理模拟器</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- 主要CDN -->
+    <script src="https://unpkg.com/cannon-es@0.20.0/dist/cannon-es.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #00c9ff, #92fe9d);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #a0a0c0;
+            margin-bottom: 15px;
+        }
+        
+        .content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .simulation-section {
+            flex: 3;
+            min-width: 300px;
+        }
+        
+        .controls-section {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .simulation-container {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+        }
+        
+        #simulation {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        .stats {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: monospace;
+            z-index: 10;
+        }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .control-group h3 {
+            font-size: 1.3rem;
+            color: #6ee7ff;
+            margin-bottom: 5px;
+            border-bottom: 1px solid rgba(110, 231, 255, 0.3);
+            padding-bottom: 5px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .control-group h3 i {
+            margin-right: 8px;
+            font-size: 1.2rem;
+        }
+        
+        .button {
+            background: linear-gradient(90deg, #4776E6, #8E54E9);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 15px rgba(142, 84, 233, 0.4);
+        }
+        
+        .button:active {
+            transform: translateY(0);
+        }
+        
+        .button-reset {
+            background: linear-gradient(90deg, #FF416C, #FF4B2B);
+        }
+        
+        .button-reset:hover {
+            box-shadow: 0 7px 15px rgba(255, 65, 108, 0.4);
+        }
+        
+        .button-green {
+            background: linear-gradient(90deg, #00b09b, #96c93d);
+        }
+        
+        .button-green:hover {
+            box-shadow: 0 7px 15px rgba(0, 176, 155, 0.4);
+        }
+        
+        .button-yellow {
+            background: linear-gradient(90deg, #f7971e, #ffd200);
+            color: #333;
+        }
+        
+        .button-yellow:hover {
+            box-shadow: 0 7px 15px rgba(247, 151, 30, 0.4);
+        }
+        
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .slider-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .slider-value {
+            color: #6ee7ff;
+            font-weight: bold;
+            min-width: 60px;
+            text-align: right;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #8E54E9;
+            cursor: pointer;
+            border: 2px solid white;
+        }
+        
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 5px;
+        }
+        
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .object-count {
+            display: flex;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-top: 5px;
+        }
+        
+        .description {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            line-height: 1.6;
+        }
+        
+        .description h2 {
+            color: #6ee7ff;
+            margin-bottom: 15px;
+        }
+        
+        .description p {
+            margin-bottom: 15px;
+            color: #c0c0e0;
+        }
+        
+        .highlight {
+            color: #6ee7ff;
+            font-weight: bold;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #a0a0c0;
+            font-size: 0.9rem;
+        }
+        
+        .warning {
+            background: rgba(255, 193, 7, 0.1);
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            color: #ffd54f;
+        }
+        
+        .info-box {
+            background: rgba(33, 150, 243, 0.1);
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            color: #90caf9;
+        }
+        
+        .material-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        
+        .material-button {
+            padding: 8px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .material-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .material-button.active {
+            background: #8E54E9;
+            box-shadow: 0 0 10px rgba(142, 84, 233, 0.5);
+        }
+        
+        .color-picker-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 5px;
+        }
+        
+        .color-picker {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 2px solid white;
+            cursor: pointer;
+            background: linear-gradient(45deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff);
+        }
+        
+        .shape-preview {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        .shape-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            padding: 10px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .shape-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .shape-item.active {
+            background: rgba(110, 231, 255, 0.2);
+            box-shadow: 0 0 10px rgba(110, 231, 255, 0.3);
+        }
+        
+        .shape-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .shape-name {
+            font-size: 0.8rem;
+            text-align: center;
+        }
+        
+        @media (max-width: 1024px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            .simulation-container {
+                height: 500px;
+            }
+            
+            .controls-section {
+                min-width: 100%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .simulation-container {
+                height: 400px;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+        }
+    </style>
+    <!-- 图标字体 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-atom"></i> 增强版物理模拟器</h1>
+            <p class="subtitle">使用Cannon.js和Three.js创建的高级物理模拟环境</p>
+            <div id="cdnWarning" class="warning" style="display: none;">
+                正在从备用源加载物理引擎，某些高级功能可能受限。
+            </div>
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i> 提示：您可以添加多种物体，调整物理参数，创建复杂场景，甚至添加约束和力场！
+            </div>
+        </header>
+        
+        <div class="content">
+            <section class="simulation-section">
+                <div class="simulation-container">
+                    <canvas id="simulation"></canvas>
+                    <div class="stats">
+                        <div>物体数量: <span id="objectCount">0</span></div>
+                        <div>FPS: <span id="fpsCounter">0</span></div>
+                        <div>物理状态: <span id="physicsStatus">正在初始化...</span></div>
+                        <div>场景模式: <span id="sceneMode">基础模式</span></div>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="controls-section">
+                <div class="controls">
+                    <div class="control-group">
+                        <h3><i class="fas fa-shapes"></i> 添加物体</h3>
+                        <div class="shape-preview" id="shapeSelector">
+                            <div class="shape-item active" data-shape="sphere">
+                                <div class="shape-icon">●</div>
+                                <div class="shape-name">球体</div>
+                            </div>
+                            <div class="shape-item" data-shape="box">
+                                <div class="shape-icon">▢</div>
+                                <div class="shape-name">立方体</div>
+                            </div>
+                            <div class="shape-item" data-shape="cylinder">
+                                <div class="shape-icon">▭</div>
+                                <div class="shape-name">圆柱体</div>
+                            </div>
+                            <div class="shape-item" data-shape="cone">
+                                <div class="shape-icon">△</div>
+                                <div class="shape-name">圆锥体</div>
+                            </div>
+                            <div class="shape-item" data-shape="torus">
+                                <div class="shape-icon">◎</div>
+                                <div class="shape-name">圆环体</div>
+                            </div>
+                            <div class="shape-item" data-shape="compound">
+                                <div class="shape-icon">◈</div>
+                                <div class="shape-name">复合体</div>
+                            </div>
+                        </div>
+                        
+                        <div class="slider-container">
+                            <div class="slider-label">
+                                <span>物体大小</span>
+                                <span class="slider-value" id="sizeValue">1.0</span>
+                            </div>
+                            <input type="range" id="sizeSlider" min="0.2" max="3" step="0.1" value="1.0">
+                        </div>
+                        
+                        <div class="color-picker-container">
+                            <span>物体颜色:</span>
+                            <div class="color-picker" id="colorPicker" style="background-color: #ff6b6b;"></div>
+                            <input type="color" id="colorInput" value="#ff6b6b" style="display: none;">
+                        </div>
+                        
+                        <div class="button-grid">
+                            <button id="addObject" class="button button-green">添加选定物体</button>
+                            <button id="addMultiple" class="button button-yellow">添加5个物体</button>
+                            <button id="addRandomScene" class="button">创建随机场景</button>
+                            <button id="addPhysicsChain" class="button">添加物理链</button>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <h3><i class="fas fa-sliders-h"></i> 物理参数</h3>
+                        <div class="slider-container">
+                            <div class="slider-label">
+                                <span><i class="fas fa-weight-hanging"></i> 重力强度</span>
+                                <span class="slider-value" id="gravityValue">-9.8</span>
+                            </div>
+                            <input type="range" id="gravitySlider" min="-30" max="0" step="0.1" value="-9.8">
+                        </div>
+                        
+                        <div class="slider-container">
+                            <div class="slider-label">
+                                <span><i class="fas fa-ruler-combined"></i> 空气阻力</span>
+                                <span class="slider-value" id="dampingValue">0.01</span>
+                            </div>
+                            <input type="range" id="dampingSlider" min="0" max="0.1" step="0.001" value="0.01">
+                        </div>
+                        
+                        <div class="slider-container">
+                            <div class="slider-label">
+                                <span><i class="fas fa-hand-paper"></i> 摩擦力</span>
+                                <span class="slider-value" id="frictionValue">0.3</span>
+                            </div>
+                            <input type="range" id="frictionSlider" min="0" max="1" step="0.01" value="0.3">
+                        </div>
+                        
+                        <div class="slider-container">
+                            <div class="slider-label">
+                                <span><i class="fas fa-bounce"></i> 弹性系数</span>
+                                <span class="slider-value" id="restitutionValue">0.3</span>
+                            </div>
+                            <input type="range" id="restitutionSlider" min="0" max="1" step="0.01" value="0.3">
+                        </div>
+                        
+                        <div class="slider-container">
+                            <div class="slider-label">
+                                <span><i class="fas fa-cogs"></i> 物理精度</span>
+                                <span class="slider-value" id="precisionValue">10</span>
+                            </div>
+                            <input type="range" id="precisionSlider" min="1" max="20" step="1" value="10">
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <h3><i class="fas fa-cogs"></i> 场景与特效</h3>
+                        <div class="button-grid">
+                            <button id="addForceField" class="button">添加力场</button>
+                            <button id="addWind" class="button">添加风力</button>
+                            <button id="addExplosion" class="button button-reset">模拟爆炸</button>
+                            <button id="toggleWireframe" class="button">切换线框模式</button>
+                        </div>
+                        
+                        <div class="checkbox-container">
+                            <input type="checkbox" id="showTrails" checked>
+                            <label for="showTrails">显示运动轨迹</label>
+                        </div>
+                        
+                        <div class="checkbox-container">
+                            <input type="checkbox" id="enableCollisionSound">
+                            <label for="enableCollisionSound">启用碰撞声音</label>
+                        </div>
+                        
+                        <div class="checkbox-container">
+                            <input type="checkbox" id="enableShadows" checked>
+                            <label for="enableShadows">启用阴影</label>
+                        </div>
+                        
+                        <div class="material-buttons" id="materialSelector">
+                            <button class="material-button active" data-material="standard">标准</button>
+                            <button class="material-button" data-material="phong">高光</button>
+                            <button class="material-button" data-material="lambert">漫反射</button>
+                            <button class="material-button" data-material="basic">基础</button>
+                            <button class="material-button" data-material="toon">卡通</button>
+                            <button class="material-button" data-material="glass">玻璃</button>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <h3><i class="fas fa-tools"></i> 系统控制</h3>
+                        <button id="resetSimulation" class="button button-reset">重置模拟</button>
+                        <button id="clearObjects" class="button">清除所有物体</button>
+                        <button id="saveScene" class="button button-green">保存场景</button>
+                        <button id="loadScene" class="button">加载场景</button>
+                        
+                        <div class="object-count">
+                            <span><i class="fas fa-cube"></i> 场景中物体:</span>
+                            <span id="sceneObjectCount">0</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        
+        <section class="description">
+            <h2><i class="fas fa-info-circle"></i> 增强功能说明</h2>
+            <p><span class="highlight">1. 更多物体类型</span> - 新增圆锥体、圆环体、复合体等6种不同形状的物体。</p>
+            <p><span class="highlight">2. 高级物理参数</span> - 可调整空气阻力、物理精度、弹性系数等更多参数。</p>
+            <p><span class="highlight">3. 材质系统</span> - 提供6种不同材质，包括玻璃、卡通、高光等特效。</p>
+            <p><span class="highlight">4. 特效功能</span> - 添加力场、风力、爆炸效果，切换线框模式和运动轨迹。</p>
+            <p><span class="highlight">5. 场景管理</span> - 可保存和加载场景，创建随机场景和物理链。</p>
+            <p><span class="highlight">6. 视觉增强</span> - 支持阴影、颜色选择、运动轨迹等视觉特效。</p>
+        </section>
+        
+        <footer>
+            <p><i class="fas fa-code"></i> 使用 Cannon.js 和 Three.js 创建的高级物理模拟器 | <i class="fas fa-bolt"></i> 支持WebGL 3D渲染</p>
+        </footer>
+    </div>
+
+    <script>
+        // 保存初始化函数以便备选方案调用
+        window.initPhysicsSimulation = init;
+        
+        // 初始化变量
+        let scene, camera, renderer, world;
+        let physicsObjects = [];
+        let trails = [];
+        let lastTime = 0;
+        let frameCount = 0;
+        let fps = 0;
+        let lastFpsUpdate = 0;
+        let isPhysicsReady = false;
+        let selectedShape = 'sphere';
+        let selectedMaterial = 'standard';
+        let selectedColor = '#ff6b6b';
+        let objectSize = 1.0;
+        let forceFields = [];
+        let windForce = { x: 0, y: 0, z: 0 };
+        let explosionActive = false;
+        let explosionTime = 0;
+        let wireframeMode = false;
+        let showTrails = true;
+        
+        // 物理参数
+        let gravity = -9.8;
+        let friction = 0.3;
+        let restitution = 0.3;
+        let damping = 0.01;
+        let solverIterations = 10;
+        
+        // 检查Cannon.js是否已加载
+        function checkCannonLoaded() {
+            if (typeof CANNON !== 'undefined') {
+                console.log('Cannon.js 加载成功');
+                document.getElementById('physicsStatus').textContent = '物理引擎就绪';
+                init();
+                isPhysicsReady = true;
+            } else {
+                document.getElementById('physicsStatus').textContent = '等待物理引擎加载...';
+                setTimeout(checkCannonLoaded, 500);
+            }
+        }
+        
+        // 初始化函数
+        function init() {
+            // 更新状态
+            document.getElementById('physicsStatus').textContent = '正在初始化...';
+            
+            // 创建Three.js场景
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a1a);
+            scene.fog = new THREE.Fog(0x0a0a1a, 10, 50);
+            
+            // 创建相机
+            const canvas = document.getElementById('simulation');
+            camera = new THREE.PerspectiveCamera(75, 
+                canvas.clientWidth / canvas.clientHeight, 
+                0.1, 1000);
+            camera.position.set(0, 15, 30);
+            camera.lookAt(0, 5, 0);
+            
+            // 创建渲染器
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: canvas,
+                antialias: true 
+            });
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.setPixelRatio(window.devicePixelRatio);
+            
+            try {
+                // 尝试创建Cannon.js物理世界
+                world = new CANNON.World();
+                world.gravity.set(0, gravity, 0);
+                world.broadphase = new CANNON.NaiveBroadphase();
+                world.solver.iterations = solverIterations;
+                world.defaultContactMaterial.friction = friction;
+                world.defaultContactMaterial.restitution = restitution;
+                
+                document.getElementById('physicsStatus').textContent = '物理引擎就绪';
+                isPhysicsReady = true;
+            } catch (error) {
+                console.error('创建物理世界时出错:', error);
+                document.getElementById('physicsStatus').textContent = '使用简化物理引擎';
+                document.getElementById('cdnWarning').style.display = 'block';
+                isPhysicsReady = true;
+                
+                // 创建简化版本的世界
+                world = new CANNON.World();
+                world.gravity = {x: 0, y: gravity, z: 0};
+                world.bodies = [];
+                world.defaultContactMaterial = { friction: friction, restitution: restitution };
+                world.step = function(dt) {
+                    for (const body of world.bodies) {
+                        if (body.mass > 0) {
+                            // 应用重力
+                            body.velocity.y += world.gravity.y * dt;
+                            body.position.x += body.velocity.x * dt;
+                            body.position.y += body.velocity.y * dt;
+                            body.position.z += body.velocity.z * dt;
+                            
+                            // 简单的地面碰撞
+                            if (body.position.y < (body.shapeSize || 0.5)) {
+                                body.position.y = body.shapeSize || 0.5;
+                                body.velocity.y *= -body.material.restitution || 0.5;
+                                // 摩擦力
+                                body.velocity.x *= 0.95;
+                                body.velocity.z *= 0.95;
+                            }
+                        }
+                    }
+                };
+                world.addBody = function(body) {
+                    world.bodies.push(body);
+                };
+                world.removeBody = function(body) {
+                    const index = world.bodies.indexOf(body);
+                    if (index > -1) world.bodies.splice(index, 1);
+                };
+            }
+            
+            // 添加光源
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(15, 30, 10);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.camera.left = -30;
+            directionalLight.shadow.camera.right = 30;
+            directionalLight.shadow.camera.top = 30;
+            directionalLight.shadow.camera.bottom = -30;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+            
+            // 添加辅助光源
+            const hemisphereLight = new THREE.HemisphereLight(0x87CEEB, 0x8B4513, 0.3);
+            scene.add(hemisphereLight);
+            
+            // 添加地面
+            createGround();
+            
+            // 添加初始物体
+            createInitialObjects();
+            
+            // 添加事件监听器
+            setupEventListeners();
+            
+            // 开始动画循环
+            animate();
+            
+            // 处理窗口大小变化
+            window.addEventListener('resize', onWindowResize);
+            
+            // 更新状态
+            document.getElementById('physicsStatus').textContent = '运行中';
+        }
+        
+        // 创建地面
+        function createGround() {
+            // Three.js 地面
+            const groundGeometry = new THREE.PlaneGeometry(60, 60);
+            const groundMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x2a5caa,
+                roughness: 0.8,
+                metalness: 0.2
+            });
+            const groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
+            groundMesh.rotation.x = -Math.PI / 2;
+            groundMesh.receiveShadow = true;
+            scene.add(groundMesh);
+            
+            // 添加网格地面
+            const gridHelper = new THREE.GridHelper(60, 30, 0x000000, 0x303050);
+            gridHelper.position.y = 0.01;
+            scene.add(gridHelper);
+            
+            // Cannon.js 地面
+            if (typeof CANNON !== 'undefined' && CANNON.Body) {
+                try {
+                    const groundShape = new CANNON.Plane();
+                    const groundBody = new CANNON.Body({ mass: 0 });
+                    groundBody.addShape(groundShape);
+                    groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+                    world.addBody(groundBody);
+                } catch (e) {
+                    console.log('使用简化地面物理');
+                }
+            }
+        }
+        
+        // 创建初始物体
+        function createInitialObjects() {
+            // 添加几个初始物体
+            createObject('sphere', 0, 8, 0, objectSize, selectedColor);
+            createObject('box', -4, 10, -4, objectSize, '#6bff8d');
+            createObject('cylinder', 4, 12, -4, objectSize, '#6b9dff');
+        }
+        
+        // 创建物体
+        function createObject(shapeType, x, y, z, size = 1.0, color = '#ff6b6b') {
+            // 将HEX颜色转换为THREE.Color
+            const threeColor = new THREE.Color(color);
+            
+            // 创建Three.js网格
+            let geometry, mesh;
+            let material;
+            
+            // 根据选择的材质创建不同的材质
+            switch(selectedMaterial) {
+                case 'phong':
+                    material = new THREE.MeshPhongMaterial({ 
+                        color: threeColor,
+                        shininess: 100
+                    });
+                    break;
+                case 'lambert':
+                    material = new THREE.MeshLambertMaterial({ 
+                        color: threeColor
+                    });
+                    break;
+                case 'basic':
+                    material = new THREE.MeshBasicMaterial({ 
+                        color: threeColor
+                    });
+                    break;
+                case 'toon':
+                    material = new THREE.MeshToonMaterial({ 
+                        color: threeColor,
+                        gradientMap: null
+                    });
+                    break;
+                case 'glass':
+                    material = new THREE.MeshPhysicalMaterial({ 
+                        color: threeColor,
+                        transmission: 0.9,
+                        roughness: 0.1,
+                        metalness: 0,
+                        clearcoat: 1,
+                        clearcoatRoughness: 0
+                    });
+                    break;
+                default: // standard
+                    material = new THREE.MeshStandardMaterial({ 
+                        color: threeColor,
+                        roughness: 0.4,
+                        metalness: 0.2
+                    });
+            }
+            
+            // 如果启用线框模式，添加线框
+            if (wireframeMode) {
+                material.wireframe = true;
+            }
+            
+            // 根据形状类型创建几何体
+            switch(shapeType) {
+                case 'sphere':
+                    geometry = new THREE.SphereGeometry(size, 32, 32);
+                    break;
+                case 'box':
+                    geometry = new THREE.BoxGeometry(size, size, size);
+                    break;
+                case 'cylinder':
+                    geometry = new THREE.CylinderGeometry(size/2, size/2, size*2, 32);
+                    break;
+                case 'cone':
+                    geometry = new THREE.ConeGeometry(size, size*2, 32);
+                    break;
+                case 'torus':
+                    geometry = new THREE.TorusGeometry(size, size/3, 16, 100);
+                    break;
+                case 'compound':
+                    // 复合体 - 一个球体和一个立方体的组合
+                    geometry = new THREE.Group();
+                    const sphereGeo = new THREE.SphereGeometry(size/2, 16, 16);
+                    const boxGeo = new THREE.BoxGeometry(size, size, size);
+                    const sphereMesh = new THREE.Mesh(sphereGeo, material);
+                    const boxMesh = new THREE.Mesh(boxGeo, material);
+                    sphereMesh.position.y = size;
+                    geometry.add(sphereMesh);
+                    geometry.add(boxMesh);
+                    break;
+            }
+            
+            if (shapeType === 'compound') {
+                mesh = geometry; // 对于复合体，几何体已经是Group
+            } else {
+                mesh = new THREE.Mesh(geometry, material);
+            }
+            
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            mesh.position.set(x, y, z);
+            scene.add(mesh);
+            
+            // 为复合体设置位置
+            if (shapeType === 'compound') {
+                mesh.position.set(x, y, z);
+            }
+            
+            // 创建物理体
+            let body;
+            if (typeof CANNON !== 'undefined' && CANNON.Body) {
+                try {
+                    body = new CANNON.Body({ 
+                        mass: 1,
+                        material: new CANNON.Material({
+                            friction: friction,
+                            restitution: restitution
+                        })
+                    });
+                    
+                    // 根据形状类型添加物理形状
+                    switch(shapeType) {
+                        case 'sphere':
+                            body.addShape(new CANNON.Sphere(size));
+                            break;
+                        case 'box':
+                            body.addShape(new CANNON.Box(new CANNON.Vec3(size/2, size/2, size/2)));
+                            break;
+                        case 'cylinder':
+                            body.addShape(new CANNON.Cylinder(size/2, size/2, size*2, 8));
+                            // 圆柱体需要旋转
+                            body.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+                            break;
+                        case 'cone':
+                            // 圆锥体近似为圆柱体
+                            body.addShape(new CANNON.Cylinder(0.001, size, size*2, 8));
+                            body.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+                            break;
+                        case 'torus':
+                            // 圆环体近似为球体
+                            body.addShape(new CANNON.Sphere(size));
+                            break;
+                        case 'compound':
+                            // 复合体物理
+                            body.addShape(new CANNON.Sphere(size/2), new CANNON.Vec3(0, size, 0));
+                            body.addShape(new CANNON.Box(new CANNON.Vec3(size/2, size/2, size/2)));
+                            break;
+                    }
+                    
+                    body.position.set(x, y, z);
+                    body.linearDamping = damping;
+                    body.angularDamping = damping;
+                    world.addBody(body);
+                } catch (e) {
+                    console.log('使用简化物理体');
+                    body = createSimpleBody(x, y, z, shapeType, size);
+                }
+            } else {
+                body = createSimpleBody(x, y, z, shapeType, size);
+            }
+            
+            // 保存对象以便更新
+            const physicsObject = { 
+                mesh, 
+                body,
+                shapeType,
+                color,
+                trail: null
+            };
+            
+            physicsObjects.push(physicsObject);
+            
+            // 如果启用了轨迹，创建轨迹
+            if (showTrails) {
+                createTrail(physicsObject);
+            }
+            
+            updateObjectCount();
+            return physicsObject;
+        }
+        
+        // 创建简化物理体
+        function createSimpleBody(x, y, z, shapeType, size) {
+            const body = {
+                position: {x, y, z},
+                velocity: {x: (Math.random() - 0.5) * 3, y: 0, z: (Math.random() - 0.5) * 3},
+                quaternion: {x: 0, y: 0, z: 0, w: 1},
+                mass: 1,
+                shapeSize: size || 1,
+                linearDamping: damping,
+                angularDamping: damping,
+                material: { friction: friction, restitution: restitution }
+            };
+            
+            if (world.addBody) {
+                world.addBody(body);
+            } else if (world.bodies) {
+                world.bodies.push(body);
+            }
+            
+            return body;
+        }
+        
+        // 创建运动轨迹
+        function createTrail(physicsObject) {
+            const trailGeometry = new THREE.BufferGeometry();
+            const trailMaterial = new THREE.LineBasicMaterial({ 
+                color: new THREE.Color(physicsObject.color),
+                transparent: true,
+                opacity: 0.6
+            });
+            
+            const trail = new THREE.Line(trailGeometry, trailMaterial);
+            scene.add(trail);
+            physicsObject.trail = trail;
+            trails.push({ object: physicsObject, points: [], maxPoints: 50 });
+        }
+        
+        // 更新运动轨迹
+        function updateTrails() {
+            if (!showTrails) return;
+            
+            trails.forEach(trailData => {
+                const obj = trailData.object;
+                const trail = obj.trail;
+                
+                if (!trail) return;
+                
+                // 添加新点
+                trailData.points.push({
+                    x: obj.body.position.x,
+                    y: obj.body.position.y,
+                    z: obj.body.position.z
+                });
+                
+                // 限制点数
+                if (trailData.points.length > trailData.maxPoints) {
+                    trailData.points.shift();
+                }
+                
+                // 更新几何体
+                const positions = new Float32Array(trailData.points.length * 3);
+                for (let i = 0; i < trailData.points.length; i++) {
+                    positions[i * 3] = trailData.points[i].x;
+                    positions[i * 3 + 1] = trailData.points[i].y;
+                    positions[i * 3 + 2] = trailData.points[i].z;
+                }
+                
+                trail.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                trail.geometry.attributes.position.needsUpdate = true;
+            });
+        }
+        
+        // 更新对象计数
+        function updateObjectCount() {
+            document.getElementById('objectCount').textContent = physicsObjects.length;
+            document.getElementById('sceneObjectCount').textContent = physicsObjects.length;
+        }
+        
+        // 添加力场
+        function addForceField(x, y, z, strength = 10, radius = 15) {
+            const forceField = { x, y, z, strength, radius };
+            forceFields.push(forceField);
+            
+            // 可视化力场
+            const geometry = new THREE.SphereGeometry(radius, 16, 16);
+            const material = new THREE.MeshBasicMaterial({ 
+                color: 0x00ff00,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.2
+            });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.position.set(x, y, z);
+            scene.add(mesh);
+            
+            forceField.mesh = mesh;
+            
+            return forceField;
+        }
+        
+        // 应用力场
+        function applyForceFields() {
+            forceFields.forEach(forceField => {
+                physicsObjects.forEach(obj => {
+                    const dx = obj.body.position.x - forceField.x;
+                    const dy = obj.body.position.y - forceField.y;
+                    const dz = obj.body.position.z - forceField.z;
+                    
+                    const distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
+                    
+                    if (distance < forceField.radius && distance > 0.1) {
+                        const force = forceField.strength / (distance * distance);
+                        
+                        // 应用排斥力
+                        if (obj.body.applyForce) {
+                            obj.body.applyForce(
+                                new CANNON.Vec3(-dx * force, -dy * force, -dz * force),
+                                obj.body.position
+                            );
+                        } else {
+                            obj.body.velocity.x -= dx * force * 0.1;
+                            obj.body.velocity.y -= dy * force * 0.1;
+                            obj.body.velocity.z -= dz * force * 0.1;
+                        }
+                    }
+                });
+            });
+        }
+        
+        // 添加风力
+        function addWind(strength = 5, direction = { x: 1, y: 0, z: 0 }) {
+            windForce = {
+                x: direction.x * strength,
+                y: direction.y * strength,
+                z: direction.z * strength
+            };
+            
+            document.getElementById('sceneMode').textContent = '风场模式';
+        }
+        
+        // 应用风力
+        function applyWind() {
+            if (windForce.x === 0 && windForce.y === 0 && windForce.z === 0) return;
+            
+            physicsObjects.forEach(obj => {
+                if (obj.body.applyForce) {
+                    obj.body.applyForce(
+                        new CANNON.Vec3(windForce.x, windForce.y, windForce.z),
+                        obj.body.position
+                    );
+                } else {
+                    obj.body.velocity.x += windForce.x * 0.01;
+                    obj.body.velocity.y += windForce.y * 0.01;
+                    obj.body.velocity.z += windForce.z * 0.01;
+                }
+            });
+        }
+        
+        // 模拟爆炸
+        function simulateExplosion(x = 0, y = 10, z = 0, strength = 50, radius = 20) {
+            explosionActive = true;
+            explosionTime = Date.now();
+            
+            physicsObjects.forEach(obj => {
+                const dx = obj.body.position.x - x;
+                const dy = obj.body.position.y - y;
+                const dz = obj.body.position.z - z;
+                
+                const distance = Math.sqrt(dx*dx + dy*dy + dz*dz);
+                
+                if (distance < radius) {
+                    const force = strength * (1 - distance / radius);
+                    
+                    // 应用爆炸力
+                    if (obj.body.applyImpulse) {
+                        obj.body.applyImpulse(
+                            new CANNON.Vec3(dx * force, dy * force, dz * force),
+                            obj.body.position
+                        );
+                    } else {
+                        obj.body.velocity.x += dx * force * 0.1;
+                        obj.body.velocity.y += dy * force * 0.1;
+                        obj.body.velocity.z += dz * force * 0.1;
+                    }
+                }
+            });
+            
+            // 爆炸视觉效果
+            const explosionGeometry = new THREE.SphereGeometry(1, 16, 16);
+            const explosionMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0xff4500,
+                transparent: true
+            });
+            const explosionMesh = new THREE.Mesh(explosionGeometry, explosionMaterial);
+            explosionMesh.position.set(x, y, z);
+            scene.add(explosionMesh);
+            
+            // 动画爆炸效果
+            let scale = 1;
+            const explode = () => {
+                scale += 0.5;
+                explosionMesh.scale.set(scale, scale, scale);
+                explosionMaterial.opacity = 1 - scale / 10;
+                
+                if (scale < 10) {
+                    requestAnimationFrame(explode);
+                } else {
+                    scene.remove(explosionMesh);
+                }
+            };
+            explode();
+            
+            document.getElementById('sceneMode').textContent = '爆炸效果';
+        }
+        
+        // 添加物理链
+        function addPhysicsChain(x, y, z, length = 5, spacing = 2) {
+            const chain = [];
+            
+            for (let i = 0; i < length; i++) {
+                const obj = createObject('sphere', x, y - i * spacing, z, 0.8, '#ff9966');
+                chain.push(obj);
+                
+                // 如果是第一个球体，固定它
+                if (i === 0 && obj.body.mass) {
+                    obj.body.mass = 0; // 固定第一个球体
+                }
+                
+                // 如果不是第一个球体，添加约束
+                if (i > 0 && typeof CANNON !== 'undefined' && CANNON.Constraint) {
+                    try {
+                        const prevObj = chain[i-1];
+                        const constraint = new CANNON.DistanceConstraint(
+                            obj.body,
+                            prevObj.body,
+                            spacing
+                        );
+                        world.addConstraint(constraint);
+                        obj.constraint = constraint;
+                    } catch (e) {
+                        console.log('无法创建物理约束');
+                    }
+                }
+            }
+            
+            document.getElementById('sceneMode').textContent = '物理链模式';
+        }
+        
+        // 切换线框模式
+        function toggleWireframe() {
+            wireframeMode = !wireframeMode;
+            
+            physicsObjects.forEach(obj => {
+                if (obj.mesh.material) {
+                    obj.mesh.material.wireframe = wireframeMode;
+                } else if (obj.mesh.children) {
+                    // 对于复合体
+                    obj.mesh.children.forEach(child => {
+                        if (child.material) {
+                            child.material.wireframe = wireframeMode;
+                        }
+                    });
+                }
+            });
+            
+            document.getElementById('toggleWireframe').textContent = 
+                wireframeMode ? '切换实体模式' : '切换线框模式';
+        }
+        
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 形状选择器
+            document.querySelectorAll('.shape-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    document.querySelectorAll('.shape-item').forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                    selectedShape = item.dataset.shape;
+                });
+            });
+            
+            // 材质选择器
+            document.querySelectorAll('.material-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    document.querySelectorAll('.material-button').forEach(b => b.classList.remove('active'));
+                    button.classList.add('active');
+                    selectedMaterial = button.dataset.material;
+                });
+            });
+            
+            // 颜色选择器
+            document.getElementById('colorPicker').addEventListener('click', () => {
+                document.getElementById('colorInput').click();
+            });
+            
+            document.getElementById('colorInput').addEventListener('input', (e) => {
+                selectedColor = e.target.value;
+                document.getElementById('colorPicker').style.backgroundColor = selectedColor;
+            });
+            
+            // 大小滑块
+            const sizeSlider = document.getElementById('sizeSlider');
+            sizeSlider.addEventListener('input', (e) => {
+                objectSize = parseFloat(e.target.value);
+                document.getElementById('sizeValue').textContent = objectSize.toFixed(1);
+            });
+            
+            // 添加物体按钮
+            document.getElementById('addObject').addEventListener('click', () => {
+                if (!isPhysicsReady) return;
+                const x = (Math.random() - 0.5) * 15;
+                const z = (Math.random() - 0.5) * 15;
+                createObject(selectedShape, x, 15 + Math.random() * 10, z, objectSize, selectedColor);
+            });
+            
+            // 添加多个物体
+            document.getElementById('addMultiple').addEventListener('click', () => {
+                if (!isPhysicsReady) return;
+                for (let i = 0; i < 5; i++) {
+                    const x = (Math.random() - 0.5) * 20;
+                    const z = (Math.random() - 0.5) * 20;
+                    const shapes = ['sphere', 'box', 'cylinder', 'cone', 'torus'];
+                    const randomShape = shapes[Math.floor(Math.random() * shapes.length)];
+                    createObject(randomShape, x, 15 + Math.random() * 10, z, 
+                                Math.random() * 1.5 + 0.5, 
+                                `hsl(${Math.random() * 360}, 70%, 60%)`);
+                }
+            });
+            
+            // 创建随机场景
+            document.getElementById('addRandomScene').addEventListener('click', () => {
+                if (!isPhysicsReady) return;
+                
+                // 清除现有物体
+                clearAllObjects();
+                
+                // 添加地面
+                createGround();
+                
+                // 添加随机物体
+                for (let i = 0; i < 15; i++) {
+                    const x = (Math.random() - 0.5) * 25;
+                    const z = (Math.random() - 0.5) * 25;
+                    const shapes = ['sphere', 'box', 'cylinder', 'cone', 'torus', 'compound'];
+                    const randomShape = shapes[Math.floor(Math.random() * shapes.length)];
+                    createObject(randomShape, x, 5 + Math.random() * 15, z, 
+                                Math.random() * 2 + 0.5, 
+                                `hsl(${Math.random() * 360}, 80%, 60%)`);
+                }
+                
+                document.getElementById('sceneMode').textContent = '随机场景';
+            });
+            
+            // 添加物理链
+            document.getElementById('addPhysicsChain').addEventListener('click', () => {
+                if (!isPhysicsReady) return;
+                addPhysicsChain(0, 20, 0, 8, 1.5);
+            });
+            
+            // 添加力场
+            document.getElementById('addForceField').addEventListener('click', () => {
+                if (!isPhysicsReady) return;
+                const x = (Math.random() - 0.5) * 20;
+                const z = (Math.random() - 0.5) * 20;
+                addForceField(x, 10, z, 15, 12);
+                document.getElementById('sceneMode').textContent = '力场模式';
+            });
+            
+            // 添加风力
+            document.getElementById('addWind').addEventListener('click', () => {
+                if (!isPhysicsReady) return;
+                const direction = {
+                    x: Math.random() - 0.5,
+                    y: 0,
+                    z: Math.random() - 0.5
+                };
+                addWind(8, direction);
+            });
+            
+            // 模拟爆炸
+            document.getElementById('addExplosion').addEventListener('click', () => {
+                if (!isPhysicsReady) return;
+                const x = (Math.random() - 0.5) * 15;
+                const z = (Math.random() - 0.5) * 15;
+                simulateExplosion(x, 10, z, 80, 25);
+            });
+            
+            // 切换线框模式
+            document.getElementById('toggleWireframe').addEventListener('click', toggleWireframe);
+            
+            // 显示轨迹复选框
+            document.getElementById('showTrails').addEventListener('change', (e) => {
+                showTrails = e.target.checked;
+                
+                if (!showTrails) {
+                    // 移除所有轨迹
+                    trails.forEach(trailData => {
+                        if (trailData.object.trail) {
+                            scene.remove(trailData.object.trail);
+                            trailData.object.trail = null;
+                        }
+                    });
+                    trails = [];
+                } else {
+                    // 为现有物体添加轨迹
+                    physicsObjects.forEach(obj => {
+                        if (!obj.trail) {
+                            createTrail(obj);
+                        }
+                    });
+                }
+            });
+            
+            // 启用阴影复选框
+            document.getElementById('enableShadows').addEventListener('change', (e) => {
+                renderer.shadowMap.enabled = e.target.checked;
+            });
+            
+            // 重置模拟按钮
+            document.getElementById('resetSimulation').addEventListener('click', () => {
+                if (!isPhysicsReady) return;
+                clearAllObjects();
+                forceFields = [];
+                windForce = { x: 0, y: 0, z: 0 };
+                explosionActive = false;
+                createGround();
+                createInitialObjects();
+                document.getElementById('sceneMode').textContent = '基础模式';
+            });
+            
+            // 清除所有物体
+            document.getElementById('clearObjects').addEventListener('click', () => {
+                if (!isPhysicsReady) return;
+                clearAllObjects();
+                createGround();
+            });
+            
+            // 保存场景
+            document.getElementById('saveScene').addEventListener('click', () => {
+                if (!isPhysicsReady) return;
+                
+                const sceneData = {
+                    objects: physicsObjects.map(obj => ({
+                        shapeType: obj.shapeType,
+                        position: {
+                            x: obj.body.position.x,
+                            y: obj.body.position.y,
+                            z: obj.body.position.z
+                        },
+                        size: objectSize,
+                        color: obj.color
+                    })),
+                    forceFields: forceFields.map(f => ({
+                        x: f.x, y: f.y, z: f.z, strength: f.strength, radius: f.radius
+                    })),
+                    windForce,
+                    gravity,
+                    friction,
+                    restitution
+                };
+                
+                localStorage.setItem('physicsScene', JSON.stringify(sceneData));
+                alert('场景已保存到本地存储！');
+            });
+            
+            // 加载场景
+            document.getElementById('loadScene').addEventListener('click', () => {
+                if (!isPhysicsReady) return;
+                
+                const sceneData = localStorage.getItem('physicsScene');
+                if (!sceneData) {
+                    alert('没有找到保存的场景！');
+                    return;
+                }
+                
+                try {
+                    const data = JSON.parse(sceneData);
+                    
+                    // 清除当前场景
+                    clearAllObjects();
+                    forceFields.forEach(f => scene.remove(f.mesh));
+                    forceFields = [];
+                    
+                    // 恢复地面
+                    createGround();
+                    
+                    // 恢复物体
+                    data.objects.forEach(objData => {
+                        createObject(
+                            objData.shapeType,
+                            objData.position.x,
+                            objData.position.y,
+                            objData.position.z,
+                            objData.size || 1.0,
+                            objData.color
+                        );
+                    });
+                    
+                    // 恢复力场
+                    data.forceFields.forEach(f => {
+                        addForceField(f.x, f.y, f.z, f.strength, f.radius);
+                    });
+                    
+                    // 恢复风力
+                    windForce = data.windForce || { x: 0, y: 0, z: 0 };
+                    
+                    // 恢复物理参数
+                    gravity = data.gravity || -9.8;
+                    friction = data.friction || 0.3;
+                    restitution = data.restitution || 0.3;
+                    
+                    // 更新UI
+                    document.getElementById('gravitySlider').value = gravity;
+                    document.getElementById('gravityValue').textContent = gravity.toFixed(1);
+                    document.getElementById('frictionSlider').value = friction;
+                    document.getElementById('frictionValue').textContent = friction.toFixed(2);
+                    document.getElementById('restitutionSlider').value = restitution;
+                    document.getElementById('restitutionValue').textContent = restitution.toFixed(2);
+                    
+                    // 更新物理世界
+                    if (world.gravity && world.gravity.set) {
+                        world.gravity.set(0, gravity, 0);
+                    } else {
+                        world.gravity = { x: 0, y: gravity, z: 0 };
+                    }
+                    
+                    document.getElementById('sceneMode').textContent = '加载的场景';
+                    alert('场景加载成功！');
+                } catch (e) {
+                    alert('加载场景时出错：' + e.message);
+                }
+            });
+            
+            // 物理参数滑块
+            const gravitySlider = document.getElementById('gravitySlider');
+            const frictionSlider = document.getElementById('frictionSlider');
+            const restitutionSlider = document.getElementById('restitutionSlider');
+            const dampingSlider = document.getElementById('dampingSlider');
+            const precisionSlider = document.getElementById('precisionSlider');
+            
+            gravitySlider.addEventListener('input', (e) => {
+                if (!isPhysicsReady) return;
+                gravity = parseFloat(e.target.value);
+                document.getElementById('gravityValue').textContent = gravity.toFixed(1);
+                
+                if (world.gravity && world.gravity.set) {
+                    world.gravity.set(0, gravity, 0);
+                } else {
+                    world.gravity = {x: 0, y: gravity, z: 0};
+                }
+            });
+            
+            frictionSlider.addEventListener('input', (e) => {
+                if (!isPhysicsReady) return;
+                friction = parseFloat(e.target.value);
+                document.getElementById('frictionValue').textContent = friction.toFixed(2);
+                
+                if (world.defaultContactMaterial) {
+                    world.defaultContactMaterial.friction = friction;
+                }
+                
+                physicsObjects.forEach(obj => {
+                    if (obj.body.material) {
+                        obj.body.material.friction = friction;
+                    }
+                });
+            });
+            
+            restitutionSlider.addEventListener('input', (e) => {
+                if (!isPhysicsReady) return;
+                restitution = parseFloat(e.target.value);
+                document.getElementById('restitutionValue').textContent = restitution.toFixed(2);
+                
+                if (world.defaultContactMaterial) {
+                    world.defaultContactMaterial.restitution = restitution;
+                }
+                
+                physicsObjects.forEach(obj => {
+                    if (obj.body.material) {
+                        obj.body.material.restitution = restitution;
+                    }
+                });
+            });
+            
+            dampingSlider.addEventListener('input', (e) => {
+                if (!isPhysicsReady) return;
+                damping = parseFloat(e.target.value);
+                document.getElementById('dampingValue').textContent = damping.toFixed(3);
+                
+                physicsObjects.forEach(obj => {
+                    if (obj.body.linearDamping !== undefined) {
+                        obj.body.linearDamping = damping;
+                        obj.body.angularDamping = damping;
+                    }
+                });
+            });
+            
+            precisionSlider.addEventListener('input', (e) => {
+                if (!isPhysicsReady) return;
+                solverIterations = parseInt(e.target.value);
+                document.getElementById('precisionValue').textContent = solverIterations;
+                
+                if (world.solver) {
+                    world.solver.iterations = solverIterations;
+                }
+            });
+        }
+        
+        // 清除所有物体
+        function clearAllObjects() {
+            // 移除所有物理物体
+            physicsObjects.forEach(obj => {
+                scene.remove(obj.mesh);
+                
+                // 移除轨迹
+                if (obj.trail) {
+                    scene.remove(obj.trail);
+                }
+                
+                // 释放Three.js资源
+                if (obj.mesh.geometry) obj.mesh.geometry.dispose();
+                if (obj.mesh.material) {
+                    if (Array.isArray(obj.mesh.material)) {
+                        obj.mesh.material.forEach(m => m.dispose());
+                    } else {
+                        obj.mesh.material.dispose();
+                    }
+                }
+                
+                // 从物理世界移除
+                if (world.removeBody) {
+                    world.removeBody(obj.body);
+                } else if (world.bodies) {
+                    const index = world.bodies.indexOf(obj.body);
+                    if (index > -1) world.bodies.splice(index, 1);
+                }
+            });
+            
+            // 清空数组
+            physicsObjects = [];
+            trails = [];
+            
+            updateObjectCount();
+        }
+        
+        // 动画循环
+        function animate(currentTime = 0) {
+            requestAnimationFrame(animate);
+            
+            // 计算FPS
+            frameCount++;
+            if (currentTime >= lastFpsUpdate + 1000) {
+                fps = Math.round((frameCount * 1000) / (currentTime - lastFpsUpdate));
+                document.getElementById('fpsCounter').textContent = fps;
+                frameCount = 0;
+                lastFpsUpdate = currentTime;
+            }
+            
+            // 计算时间步长
+            const deltaTime = Math.min(currentTime - lastTime, 100) / 1000; // 限制最大deltaTime
+            lastTime = currentTime;
+            
+            // 如果物理引擎就绪，更新物理世界
+            if (isPhysicsReady && world) {
+                // 应用力场
+                applyForceFields();
+                
+                // 应用风力
+                applyWind();
+                
+                // 更新物理世界
+                if (world.step) {
+                    world.step(1/60, deltaTime, 3);
+                }
+                
+                // 同步Three.js对象和物理体
+                physicsObjects.forEach(obj => {
+                    if (obj.body.position) {
+                        obj.mesh.position.set(
+                            obj.body.position.x || 0,
+                            obj.body.position.y || 0,
+                            obj.body.position.z || 0
+                        );
+                    }
+                    
+                    if (obj.body.quaternion) {
+                        obj.mesh.quaternion.set(
+                            obj.body.quaternion.x || 0,
+                            obj.body.quaternion.y || 0,
+                            obj.body.quaternion.z || 0,
+                            obj.body.quaternion.w || 1
+                        );
+                    }
+                });
+                
+                // 更新轨迹
+                updateTrails();
+            }
+            
+            // 控制相机运动
+            const time = currentTime * 0.0005;
+            if (physicsObjects.length > 0) {
+                // 如果有物体，让相机围绕场景中心旋转
+                camera.position.x = Math.sin(time) * 30;
+                camera.position.z = Math.cos(time) * 30;
+                camera.lookAt(0, 10, 0);
+            } else {
+                // 如果没有物体，使用默认相机动画
+                camera.position.x = Math.sin(time) * 25;
+                camera.position.z = Math.cos(time) * 25;
+                camera.lookAt(0, 5, 0);
+            }
+            
+            // 渲染场景
+            if (renderer) {
+                renderer.render(scene, camera);
+            }
+        }
+        
+        // 处理窗口大小变化
+        function onWindowResize() {
+            if (!camera || !renderer) return;
+            
+            const canvas = document.getElementById('simulation');
+            camera.aspect = canvas.clientWidth / canvas.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+        }
+        
+        // 页面加载完成后检查Cannon.js是否已加载
+        window.addEventListener('DOMContentLoaded', function() {
+            // 检查Three.js是否已加载
+            if (typeof THREE === 'undefined') {
+                document.getElementById('physicsStatus').textContent = '错误: Three.js 未加载';
+                return;
+            }
+            
+            // 开始检查Cannon.js
+            checkCannonLoaded();
+            
+            // 设置超时，如果10秒后仍未加载则使用备选方案
+            setTimeout(function() {
+                if (!isPhysicsReady) {
+                    console.log('Cannon.js加载超时，使用备选方案');
+                    if (typeof CANNON === 'undefined') {
+                        // 创建简化物理引擎
+                        window.CANNON = {
+                            World: class World {
+                                constructor() {
+                                    this.gravity = {x: 0, y: -9.8, z: 0};
+                                    this.bodies = [];
+                                    this.defaultContactMaterial = { friction: 0.3, restitution: 0.3 };
+                                }
+                                addBody(body) { this.bodies.push(body); }
+                                removeBody(body) {
+                                    const index = this.bodies.indexOf(body);
+                                    if (index > -1) this.bodies.splice(index, 1);
+                                }
+                                step() {
+                                    for (const body of this.bodies) {
+                                        if (body.mass > 0) {
+                                            body.velocity.y += this.gravity.y * 0.016;
+                                            body.position.x += body.velocity.x * 0.016;
+                                            body.position.y += body.velocity.y * 0.016;
+                                            body.position.z += body.velocity.z * 0.016;
+                                            
+                                            if (body.position.y < (body.shapeSize || 0.5)) {
+                                                body.position.y = body.shapeSize || 0.5;
+                                                body.velocity.y *= -body.material.restitution || 0.5;
+                                                body.velocity.x *= 0.95;
+                                                body.velocity.z *= 0.95;
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            Body: class Body {
+                                constructor(options = {}) {
+                                    this.mass = options.mass || 1;
+                                    this.position = options.position || {x: 0, y: 0, z: 0};
+                                    this.velocity = {x: 0, y: 0, z: 0};
+                                    this.quaternion = {x: 0, y: 0, z: 0, w: 1};
+                                    this.material = options.material || {friction: 0.3, restitution: 0.3};
+                                    this.shapeSize = 1;
+                                    this.linearDamping = 0.01;
+                                    this.angularDamping = 0.01;
+                                }
+                                addShape(shape) {
+                                    if (shape.radius) this.shapeSize = shape.radius;
+                                    else if (shape.halfExtents) this.shapeSize = shape.halfExtents.y;
+                                }
+                            },
+                            Sphere: class { constructor(radius) { this.radius = radius; } },
+                            Box: class { constructor(halfExtents) { this.halfExtents = halfExtents; } },
+                            Cylinder: class { constructor(r, h) { this.radius = r; this.height = h; } },
+                            Plane: class {},
+                            Vec3: class { constructor(x, y, z) { this.x = x||0; this.y = y||0; this.z = z||0; } },
+                            Material: class { constructor(o) { this.friction = o.friction||0.3; this.restitution = o.restitution||0.3; } },
+                            NaiveBroadphase: class {}
+                        };
+                        
+                        if (window.initPhysicsSimulation) {
+                            window.initPhysicsSimulation();
+                        }
+                    }
+                }
+            }, 10000);
+        });
+    </script>
+</body>
+</html>

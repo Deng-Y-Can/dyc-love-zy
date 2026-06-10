@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Zoe - 卓越的财务战略伙伴</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    :root {
+      --primary-color: #0d47a1; /* 深蓝色主色调 */
+      --secondary-color: #ffd600; /* 黄金色强调色 */
+      --accent-color: #e3f2fd; /* 浅蓝色辅助色 */
+      --dark-bg: #0a192f; /* 深色背景 */
+      --card-bg: rgba(25, 35, 55, 0.85); /* 卡片背景 */
+      --text-light: #e6f7ff;
+      --transition-speed: 0.4s;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--dark-bg);
+      color: var(--text-light);
+      line-height: 1.7;
+      overflow-x: hidden;
+      /* 自定义滚动条 */
+      scrollbar-width: thin;
+      scrollbar-color: var(--secondary-color) var(--dark-bg);
+    }
+
+    body::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    body::-webkit-scrollbar-track {
+      background: var(--dark-bg);
+    }
+
+    body::-webkit-scrollbar-thumb {
+      background-color: var(--secondary-color);
+      border-radius: 10px;
+      border: 2px solid var(--dark-bg);
+    }
+
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    /* --- Header & Hero Section --- */
+    header {
+      text-align: center;
+      margin-bottom: 60px;
+      position: relative;
+      overflow: hidden; /* 防止伪元素溢出 */
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .profile-pic {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      border: 4px solid var(--secondary-color);
+      margin: 0 auto 25px;
+      background: #ddd url('https://via.placeholder.com/160') no-repeat center;
+      background-size: cover;
+      box-shadow: 0 0 25px var(--secondary-color), 0 8px 20px rgba(0, 0, 0, 0.5);
+      transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+    }
+
+    .profile-pic:hover {
+       transform: scale(1.05);
+       box-shadow: 0 0 35px var(--secondary-color), 0 12px 30px rgba(0, 0, 0, 0.7);
+    }
+
+    h1 {
+      font-size: 3.2rem;
+      margin-bottom: 15px;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+      animation: slideInDown 1s ease-out forwards;
+      opacity: 0;
+    }
+
+    .tagline {
+      font-size: 1.4rem;
+      margin-bottom: 20px;
+      color: var(--secondary-color);
+      animation: slideInUp 1s ease-out 0.3s forwards;
+      opacity: 0;
+    }
+
+    .cta-button {
+      display: inline-block;
+      padding: 12px 30px;
+      background: transparent;
+      color: var(--secondary-color);
+      border: 2px solid var(--secondary-color);
+      border-radius: 30px;
+      text-decoration: none;
+      font-weight: bold;
+      margin-top: 20px;
+      cursor: pointer;
+      transition: all var(--transition-speed) ease;
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+      animation: fadeIn 1.5s ease-out 0.6s forwards;
+      opacity: 0;
+    }
+
+    .cta-button::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0; bottom: 0; left: 0;
+      background: var(--secondary-color);
+      z-index: -1;
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform var(--transition-speed) ease;
+    }
+
+    .cta-button:hover {
+      color: var(--dark-bg);
+    }
+
+    .cta-button:hover::before {
+      transform: scaleX(1);
+    }
+
+    /* --- General Section Styling --- */
+    section {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border-radius: 18px;
+      padding: 30px;
+      margin-bottom: 40px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+
+    section.animate {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    h2 {
+      font-size: 2rem;
+      margin-bottom: 25px;
+      color: var(--secondary-color);
+      display: flex;
+      align-items: center;
+    }
+
+    h2 i {
+      margin-right: 15px;
+      background: rgba(255, 214, 0, 0.15);
+      padding: 12px;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    h2 i:hover {
+        transform: rotate(15deg);
+        transition: transform 0.3s ease;
+    }
+
+    p {
+        margin-bottom: 15px;
+    }
+
+    ul {
+      list-style: none;
+    }
+
+    /* --- About Me Section --- */
+    .about-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+    }
+
+    @media (max-width: 768px) {
+        .about-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .strengths-list li {
+        margin-bottom: 15px;
+        display: flex;
+        align-items: flex-start;
+    }
+
+    .strengths-list li i {
+        color: var(--secondary-color);
+        margin-right: 12px;
+        min-width: 22px;
+        margin-top: 5px;
+    }
+
+    /* --- Experience & Education Sections --- */
+    .timeline-item {
+        margin-bottom: 30px;
+        padding-left: 30px;
+        border-left: 2px solid rgba(255, 214, 0, 0.3);
+        position: relative;
+    }
+
+    .timeline-item:last-child {
+         margin-bottom: 0;
+    }
+
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--secondary-color);
+        left: -9px;
+        top: 5px;
+        box-shadow: 0 0 0 4px rgba(13, 71, 161, 0.5);
+    }
+
+    .timeline-date {
+        font-size: 0.9rem;
+        color: var(--secondary-color);
+        margin-bottom: 5px;
+        display: block;
+    }
+
+    .timeline-title {
+        font-size: 1.3rem;
+        margin-bottom: 8px;
+        color: var(--accent-color);
+    }
+
+    .timeline-subtitle {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+        color: #bbdefb;
+    }
+
+    .timeline-desc {
+        font-size: 1rem;
+    }
+
+    /* --- Skills Section --- */
+    .skills-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+    }
+
+    .skill-category h3 {
+        margin-bottom: 15px;
+        color: var(--accent-color);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 5px;
+    }
+
+    .skill-bar {
+        margin-bottom: 20px;
+    }
+
+    .skill-info {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+        font-size: 0.95rem;
+    }
+
+    .bar-container {
+        height: 12px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .bar-fill {
+        height: 100%;
+        background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+        border-radius: 10px;
+        width: 0; /* 初始宽度为0，用于动画 */
+        transition: width 2s ease-in-out;
+    }
+
+    .skills-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    .skill-tag {
+      background: rgba(255, 214, 0, 0.15);
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.95rem;
+      color: var(--secondary-color);
+      border: 1px solid rgba(255, 214, 0, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .skill-tag:hover {
+        background: var(--secondary-color);
+        color: var(--dark-bg);
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    /* --- Contact Section --- */
+    .contact-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 25px;
+    }
+
+    .contact-item {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+
+    .contact-item i {
+        font-size: 1.5rem;
+        color: var(--secondary-color);
+        margin-right: 15px;
+        min-width: 30px;
+        margin-top: 5px;
+    }
+
+    .contact-info a {
+      color: var(--text-light);
+      text-decoration: none;
+      transition: color var(--transition-speed) ease;
+    }
+
+    .contact-info a:hover {
+      color: var(--secondary-color);
+      text-shadow: 0 0 8px rgba(255, 214, 0, 0.5);
+    }
+
+    /* --- Footer --- */
+    footer {
+      text-align: center;
+      margin-top: 60px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 1rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    /* --- Animations --- */
+    @keyframes slideInDown {
+      from { opacity: 0; transform: translateY(-50px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideInUp {
+      from { opacity: 0; transform: translateY(50px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* --- Responsive Design --- */
+    @media (max-width: 768px) {
+      h1 { font-size: 2.5rem; }
+      h2 { font-size: 1.7rem; }
+      .tagline { font-size: 1.1rem; }
+      .container { padding: 25px 15px; }
+      .skills-grid { grid-template-columns: 1fr; }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Hero Section -->
+    <header>
+      <div class="hero-content">
+        <div class="profile-pic" title="Zoe Chen"></div>
+        <h1>Zoe Chen</h1>
+        <p class="tagline">财务战略家 | 数据洞察专家 | CPA & ACCA持证人</p>
+        <a href="#contact" class="cta-button">联系我</a>
+      </div>
+    </header>
+
+    <!-- About Me Section -->
+    <section id="about">
+      <h2><i class="fas fa-user-astronaut"></i> 关于我</h2>
+      <div class="about-grid">
+        <div class="about-text">
+          <p>
+            我是 Zoe Chen，一位拥有超过十年经验的资深财务专业人士。我的职业生涯始于全球顶尖的四大会计师事务所，在那里我磨练了扎实的审计、税务和咨询能力。
+            此后，我在一家快速发展的科技公司担任高级财务经理，成功领导了财务数字化转型，并建立了高效的财务分析体系。
+          </p>
+          <p>
+            我热衷于利用数据驱动业务决策，擅长从复杂的财务信息中提炼关键洞察，为企业战略规划、风险管理和价值创造提供坚实支撑。
+            我相信严谨的专业精神与创新思维同等重要。
+          </p>
+        </div>
+        <div class="about-strengths">
+          <h3 style="margin-bottom: 15px;">核心优势</h3>
+           <ul class="strengths-list">
+             <li><i class="fas fa-chart-line"></i> 深度财务分析与预测建模</li>
+             <li><i class="fas fa-file-invoice-dollar"></i> 复杂税务筹划与合规管理</li>
+             <li><i class="fas fa-cogs"></i> ERP系统实施与优化 (SAP, Oracle)</li>
+             <li><i class="fas fa-shield-alt"></i> 内部控制与风险管理体系建设</li>
+             <li><i class="fas fa-users"></i> 高效团队领导与跨部门协作</li>
+             <li><i class="fas fa-lightbulb"></i> 商业智能 (BI) 解决方案应用</li>
+           </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Experience Section -->
+    <section id="experience">
+      <h2><i class="fas fa-briefcase"></i> 工作经历</h2>
+      <div class="timeline-item">
+        <span class="timeline-date">2021年6月 - 至今</span>
+        <h3 class="timeline-title">星辰科技有限公司</h3>
+        <h4 class="timeline-subtitle">财务总监 (Head of Finance)</h4>
+        <p class="timeline-desc">
+          全面负责集团财务战略制定与执行。主导完成了公司财务共享服务中心的搭建，将月结周期缩短了40%。
+          建立并推行全面预算管理体系，有效支持业务扩张。深度参与多轮融资及上市筹备工作，完成财务尽调与规范化治理。
+        </p>
+      </div>
+      <div class="timeline-item">
+        <span class="timeline-date">2017年3月 - 2021年5月</span>
+        <h3 class="timeline-title">普华永道会计师事务所 (PwC)</h3>
+        <h4 class="timeline-subtitle">高级经理 (Senior Manager)</h4>
+        <p class="timeline-desc">
+          作为核心成员为多家跨国企业和国内龙头企业提供年度审计、IPO辅导、内部控制咨询及税务优化服务。
+          成功带领团队完成多个复杂项目的交付，获得客户高度评价。专注于TMT及新经济行业的财务洞察研究。
+        </p>
+      </div>
+      <div class="timeline-item">
+        <span class="timeline-date">2014年8月 - 2017年2月</span>
+        <h3 class="timeline-title">蓝海制造集团</h3>
+        <h4 class="timeline-subtitle">财务主管 (Finance Supervisor)</h4>
+        <p class="timeline-desc">
+          负责集团下属三家子公司的日常财务核算、税务申报及资金管理工作。
+          参与实施 SAP ERP 系统，负责FI/CO模块配置与用户培训，显著提升了财务数据准确性与时效性。
+        </p>
+      </div>
+    </section>
+
+     <!-- Projects Section -->
+    <section id="projects">
+      <h2><i class="fas fa-project-diagram"></i> 核心项目</h2>
+      <div class="timeline-item">
+        <span class="timeline-date">2022年 - 2023年</span>
+        <h3 class="timeline-title">财务数字化转型项目</h3>
+        <h4 class="timeline-subtitle">项目经理</h4>
+        <p class="timeline-desc">
+          主导从传统财务管理模式向自动化、智能化平台的迁移。引入 Power BI 和 Tableau 进行可视化分析，
+          并集成到现有 ERP 系统中。项目完成后，财务报告效率提升60%，管理层决策支持能力显著增强。
+        </p>
+      </div>
+      <div class="timeline-item">
+        <span class="timeline-date">2019年</span>
+        <h3 class="timeline-title">跨境并购税务架构优化</h3>
+        <h4 class="timeline-subtitle">核心顾问</h4>
+        <p class="timeline-desc">
+          为公司一项重大海外收购交易设计税务架构。通过深入研究目标国家税法及双边税收协定，
+          成功节约潜在税负约15%，并规避了多项税务风险。
+        </p>
+      </div>
+    </section>
+
+    <!-- Education & Certifications Section -->
+    <section id="education">
+      <h2><i class="fas fa-graduation-cap"></i> 教育与资质</h2>
+      <div style="display: flex; flex-wrap: wrap; gap: 40px;">
+        <div style="flex: 1; min-width: 300px;">
+          <h3 style="color: var(--accent-color); margin-bottom: 20px;">教育背景</h3>
+          <div class="timeline-item">
+            <span class="timeline-date">2012年 - 2014年</span>
+            <h3 class="timeline-title">伦敦政治经济学院 (LSE)</h3>
+            <h4 class="timeline-subtitle">金融与会计硕士 (MSc Accounting and Finance)</h4>
+          </div>
+          <div class="timeline-item">
+            <span class="timeline-date">2008年 - 2012年</span>
+            <h3 class="timeline-title">复旦大学</h3>
+            <h4 class="timeline-subtitle">会计学学士 (Bachelor of Management)</h4>
+          </div>
+        </div>
+        <div style="flex: 1; min-width: 300px;">
+          <h3 style="color: var(--accent-color); margin-bottom: 20px;">专业资质</h3>
+          <ul style="list-style: inside disc; padding-left: 20px;">
+            <li style="margin-bottom: 15px;"><strong>中国注册会计师 (CPA)</strong> - 2016年获得</li>
+            <li style="margin-bottom: 15px;"><strong>特许公认会计师 (ACCA)</strong> - 2015年全科通过</li>
+            <li style="margin-bottom: 15px;"><strong>CFA Institute Investment Foundations</strong> - 2018年</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Skills Section -->
+    <section id="skills">
+      <h2><i class="fas fa-laptop-code"></i> 专业技能</h2>
+      
+      <div class="skills-grid">
+        <div class="skill-category">
+          <h3>财务与会计</h3>
+          <div class="skill-bar">
+            <div class="skill-info"><span>财务分析</span> <span>Expert</span></div>
+            <div class="bar-container"><div class="bar-fill" data-width="95%"></div></div>
+          </div>
+          <div class="skill-bar">
+            <div class="skill-info"><span>预算与预测</span> <span>Expert</span></div>
+            <div class="bar-container"><div class="bar-fill" data-width="92%"></div></div>
+          </div>
+          <div class="skill-bar">
+            <div class="skill-info"><span>国际会计准则</span> <span>Advanced</span></div>
+            <div class="bar-container"><div class="bar-fill" data-width="90%"></div></div>
+          </div>
+        </div>
+
+        <div class="skill-category">
+          <h3>技术工具</h3>
+          <div class="skill-bar">
+            <div class="skill-info"><span>SAP S/4HANA</span> <span>Advanced</span></div>
+            <div class="bar-container"><div class="bar-fill" data-width="85%"></div></div>
+          </div>
+          <div class="skill-bar">
+            <div class="skill-info"><span>Oracle EBS</span> <span>Intermediate</span></div>
+            <div class="bar-container"><div class="bar-fill" data-width="75%"></div></div>
+          </div>
+          <div class="skill-bar">
+            <div class="skill-info"><span>Power BI / Tableau</span> <span>Advanced</span></div>
+            <div class="bar-container"><div class="bar-fill" data-width="88%"></div></div>
+          </div>
+        </div>
+
+        <div class="skill-category">
+          <h3>软实力</h3>
+          <div class="skill-bar">
+            <div class="skill-info"><span>团队领导</span> <span>Expert</span></div>
+            <div class="bar-container"><div class="bar-fill" data-width="90%"></div></div>
+          </div>
+          <div class="skill-bar">
+            <div class="skill-info"><span>沟通协调</span> <span>Expert</span></div>
+            <div class="bar-container"><div class="bar-fill" data-width="93%"></div></div>
+          </div>
+          <div class="skill-bar">
+            <div class="skill-info"><span>项目管理</span> <span>Advanced</span></div>
+            <div class="bar-container"><div class="bar-fill" data-width="85%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="skills-tags">
+        <span class="skill-tag">风险管理</span>
+        <span class="skill-tag">税务筹划</span>
+        <span class="skill-tag">IFRS 15 & 16</span>
+        <span class="skill-tag">商业智能</span>
+        <span class="skill-tag">融资尽调</span>
+        <span class="skill-tag">英语流利</span>
+        <span class="skill-tag">Excel VBA</span>
+        <span class="skill-tag">财务建模</span>
+      </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact">
+      <h2><i class="fas fa-paper-plane"></i> 联系方式</h2>
+      <div class="contact-grid">
+        <div class="contact-item">
+          <i class="fas fa-envelope"></i>
+          <div class="contact-info">
+            <h3>邮箱</h3>
+            <a href="mailto:zoe.chen.pro@email.com">zoe.chen.pro@email.com</a>
+          </div>
+        </div>
+        <div class="contact-item">
+          <i class="fas fa-phone-alt"></i>
+          <div class="contact-info">
+            <h3>电话</h3>
+            <a href="tel:+8613800138000">+86 138 0013 8000</a>
+          </div>
+        </div>
+        <div class="contact-item">
+          <i class="fab fa-linkedin"></i>
+          <div class="contact-info">
+            <h3>领英</h3>
+            <a href="https://www.linkedin.com/in/zoechenfinance" target="_blank" rel="noopener noreferrer">linkedin.com/in/zoechenfinance</a>
+          </div>
+        </div>
+        <div class="contact-item">
+          <i class="fas fa-map-marker-alt"></i>
+          <div class="contact-info">
+            <h3>地址</h3>
+            <p>上海市浦东新区陆家嘴金融中心</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <p>&copy; 2025 Zoe Chen. 打造财务价值，驱动商业未来.</p>
+    </footer>
+  </div>
+
+  <script>
+    // --- Scroll Animation for Sections ---
+    document.addEventListener('DOMContentLoaded', function() {
+        const sections = document.querySelectorAll('section');
+
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+
+        const observerCallback = (entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate');
+                    // 如果是技能部分，则触发条形图动画
+                    if (entry.target.id === 'skills') {
+                        animateSkillBars();
+                    }
+                    // 观察一次后停止观察该元素，避免重复动画
+                    observer.unobserve(entry.target);
+                }
+            });
+        };
+
+        const sectionObserver = new IntersectionObserver(observerCallback, observerOptions);
+
+        sections.forEach(section => {
+            sectionObserver.observe(section);
+        });
+
+        // --- Skill Bar Animation Function ---
+        function animateSkillBars() {
+            const bars = document.querySelectorAll('.bar-fill');
+            bars.forEach(bar => {
+                const width = bar.getAttribute('data-width');
+                // 添加一个小延迟，让入场动画先完成
+                setTimeout(() => {
+                     bar.style.width = width;
+                }, 300);
+            });
+        }
+
+        // --- Optional: Add subtle hover effect to icons in headings ---
+        const headingIcons = document.querySelectorAll('h2 i');
+        headingIcons.forEach(icon => {
+            icon.addEventListener('mouseenter', () => {
+                 icon.style.transform = 'rotate(15deg)';
+                 icon.style.transition = 'transform 0.3s ease';
+            });
+            icon.addEventListener('mouseleave', () => {
+                 icon.style.transform = 'rotate(0deg)';
+            });
+        });
+
+    });
+  </script>
+</body>
+</html>

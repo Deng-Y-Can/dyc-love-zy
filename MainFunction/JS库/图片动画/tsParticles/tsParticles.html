@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>超炫 tsParticles</title>
+    <style>
+        /* --- 页面基础样式 --- */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, "Microsoft YaHei", "SimHei";
+            background: linear-gradient(270deg, #0f0c29, #302b63, #24243e);
+            background-size: 600% 600%;
+            animation: gradientShift 15s ease infinite;
+            color: white;
+        }
+
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* --- tsparticles 容器 --- */
+        #tsparticles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        /* --- 顶部标题 --- */
+        #header {
+            position: absolute;
+            top: 10px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        h1 {
+            font-size: 2.2em;
+            margin: 0;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
+            animation: titleGlow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes titleGlow {
+            from {
+                text-shadow: 0 0 8px #fff, 0 0 15px #fff, 0 0 25px #4dabf7, 0 0 35px #4dabf7;
+            }
+
+            to {
+                text-shadow: 0 0 12px #fff, 0 0 25px #fff, 0 0 40px #3b5bdb, 0 0 50px #3b5bdb;
+            }
+        }
+
+        /* --- 控制面板 --- */
+        #controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.6);
+            padding: 15px;
+            border-radius: 10px;
+            z-index: 10;
+            pointer-events: auto;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+            max-width: 300px;
+            width: calc(100% - 40px);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+            #controls.collapsed {
+                max-width: 40px;
+                padding: 5px;
+                overflow: visible;
+            }
+
+                #controls.collapsed > div:not(#toggle-panel-btn) {
+                    display: none;
+                }
+
+        #toggle-panel-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2em;
+            padding: 5px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+            .control-group h3 {
+                margin-top: 0;
+                margin-bottom: 10px;
+                font-size: 1.1em;
+                color: #4dabf7;
+                border-bottom: 1px solid #4dabf7;
+                padding-bottom: 3px;
+            }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="range"] {
+            width: 100%;
+        }
+
+        input[type="color"], select {
+            width: 100%;
+            padding: 5px;
+            border-radius: 4px;
+            border: 1px solid #555;
+            background: #222;
+            color: white;
+        }
+
+        button {
+            width: 100%;
+            padding: 8px;
+            border: none;
+            border-radius: 4px;
+            background: linear-gradient(to right, #4dabf7, #3b5bdb);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+            button:hover {
+                background: linear-gradient(to right, #3b5bdb, #4dabf7);
+            }
+
+        .value-display {
+            display: inline-block;
+            width: 50px;
+            text-align: right;
+            margin-left: 10px;
+        }
+
+        .effect-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+            .effect-buttons button {
+                flex: 1;
+            }
+    </style>
+</head>
+<body>
+    <!-- 标题 -->
+    <div id="header">
+        <h1>tsParticles 超炫体验</h1>
+    </div>
+
+    <!-- 控制面板 -->
+    <div id="controls">
+        <button id="toggle-panel-btn">☰</button>
+
+        <div class="control-group">
+            <h3>主要粒子</h3>
+            <label for="particle-count">数量: <span id="particle-count-value" class="value-display">100</span></label>
+            <input type="range" id="particle-count" min="10" max="500" value="100">
+
+            <label for="particle-speed">速度: <span id="particle-speed-value" class="value-display">2</span></label>
+            <input type="range" id="particle-speed" min="0.1" max="10" step="0.1" value="2">
+
+            <label for="particle-size">大小: <span id="particle-size-value" class="value-display">3</span></label>
+            <input type="range" id="particle-size" min="1" max="20" step="0.5" value="3">
+
+            <label for="particle-color">颜色:</label>
+            <input type="color" id="particle-color" value="#4dabf7">
+
+            <label for="particle-shape">形状:</label>
+            <select id="particle-shape">
+                <option value="circle">圆形</option>
+                <option value="edge">边框</option>
+                <option value="triangle">三角形</option>
+                <option value="polygon">多边形</option>
+                <option value="star">星星</option>
+                <option value="image">图片 (Logo)</option>
+                <option value="char">字符 (*)</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <h3>视觉效果</h3>
+            <label><input type="checkbox" id="toggle-links" checked> 启用连线</label>
+            <label><input type="checkbox" id="toggle-twinkle" checked> 启用闪烁</label>
+            <label><input type="checkbox" id="toggle-trail"> 启用轨迹</label>
+            <label><input type="checkbox" id="toggle-background-particles" checked> 启用背景层</label>
+        </div>
+
+        <div class="control-group">
+            <h3>特殊效果</h3>
+            <div class="effect-buttons">
+                <button id="trigger-beat">模拟节拍</button>
+                <button id="trigger-explosion">爆炸！</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主粒子容器 -->
+    <div id="tsparticles"></div>
+    <!-- 背景粒子容器 -->
+    <div id="background-particles-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;"></div>
+
+    <!-- 引入 tsParticles 核心库及插件 -->
+    <!-- 使用 bundle 版本，它应该包含了 emitters 和 absorbers 插件 -->
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.12.0/tsparticles.bundle.min.js"></script>
+    <!-- 引入路径插件 -->
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles-path-curves@2.12.0/tsparticles.path.curves.min.js"></script>
+    <!-- 引入移动插件 (用于路径动画) -->
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles-move-path@2.12.0/tsparticles.move.path.min.js"></script>
+
+    <script>
+        // --- 解析 URL 查询参数 ---
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            const result = {};
+            for (const [key, value] of params.entries()) {
+                result[key] = isNaN(Number(value)) ? value : Number(value);
+            }
+            return result;
+        }
+        const urlParams = getUrlParams();
+        console.log("URL 参数:", urlParams);
+
+        // --- 获取默认或URL参数 ---
+        const initialParticleCount = urlParams.particleCount || 100;
+        const initialSpeed = urlParams.speed || 2;
+        const initialSize = urlParams.size || 3;
+        const initialColor = urlParams.color || "#4dabf7";
+        const initialShape = urlParams.shape || "circle";
+
+        // --- 高级且丰富的配置 ---
+        const ultraRichOptions = {
+            fpsLimit: 120,
+            particles: {
+                number: { value: initialParticleCount, density: { enable: true, area: 800 } },
+                color: { value: initialColor },
+                shape: {
+                    type: initialShape,
+                    stroke: { width: 0, color: "#000000" },
+                    polygon: { nb_sides: 5 },
+                    star: { nb_points: 5 },
+                    image: [{
+                        src: "https://particles.js.org/images/icon_tsParticles.png",
+                        width: 32,
+                        height: 32
+                    }],
+                    character: { value: ["*"], font: "Verdana", style: "", weight: "400", fill: true }
+                },
+                opacity: {
+                    value: { min: 0.1, max: 0.5 },
+                    random: true,
+                    anim: { enable: true, speed: 1, opacity_min: 0.1, sync: false }
+                },
+                size: {
+                    value: { min: initialSize * 0.5, max: initialSize * 1.5 },
+                    random: true,
+                    anim: { enable: true, speed: 4, size_min: 0.3, sync: false }
+                },
+                links: {
+                    enable: true,
+                    distance: 150,
+                    color: "#ffffff",
+                    opacity: 0.4,
+                    width: 1
+                },
+                move: {
+                    enable: true,
+                    speed: initialSpeed,
+                    direction: "none",
+                    random: true,
+                    straight: false,
+                    outModes: { default: "out" },
+                    attract: { enable: false, rotateX: 600, rotateY: 1200 },
+                    // Trail is configured under move
+                    trail: { enable: false, length: 10, fillColor: { value: "#000000" } }
+                },
+                life: { count: 0, delay: { value: { min: 1, max: 5 } }, duration: { value: { min: 10, max: 30 } } },
+                destroy: { mode: "none", split: { count: 1, factor: { value: 3 }, rate: { value: { min: 4, max: 9 } }, sizeOffset: true, particles: {} } },
+                rotate: { value: { min: 0, max: 360 }, direction: "random", animation: { enable: true, speed: 5, sync: false } },
+                wobble: { distance: 30, enable: true, speed: { min: -7, max: 7 } },
+                tilt: { value: { min: 0, max: 360 }, direction: "random", enable: true, animation: { enable: true, speed: 15, sync: false } },
+                roll: { darken: { enable: true, value: 25 }, enable: true, speed: { min: 15, max: 25 } },
+                collisions: { enable: true, mode: "bounce" },
+                twinkle: { lines: { enable: true, frequency: 0.005, opacity: 1 }, particles: { enable: true, frequency: 0.05, opacity: 1 } }
+            },
+
+            interactivity: {
+                events: {
+                    onHover: { enable: true, mode: ["grab", "bubble"] },
+                    onClick: { enable: true, mode: ["push", "repulse", "connect", "attract"] },
+                    resize: true
+                },
+                modes: {
+                    grab: { distance: 140, links: { opacity: 1 } },
+                    push: { quantity: 4 },
+                    repulse: { distance: 100, duration: 0.4, factor: 100 },
+                    bubble: { distance: 200, size: 10, duration: 2, opacity: 0.8, color: "#ffeb3b" },
+                    connect: { distance: 80, links: { opacity: 0.5 }, radius: 60 },
+                    slow: { factor: 3, radius: 200 },
+                    attract: { distance: 200, duration: 0.4, easing: "ease-out-quad", factor: 1, maxSpeed: 50, speed: 1 }
+                }
+            },
+
+            plugins: [
+                // Explicitly list plugins to ensure they are loaded by the bundle
+                "emitters", // Emitter plugin ID
+                "absorbers" // Absorber plugin ID
+            ],
+            background: {},
+            detectRetina: true
+        };
+
+
+        // --- 背景粒子配置 ---
+        const backgroundParticlesOptions = {
+            fullScreen: { enable: false, zIndex: -1 },
+            particles: {
+                number: { value: 30, density: { enable: true, area: 800 } },
+                color: { value: "#ffffff" },
+                shape: { type: "circle" },
+                opacity: { value: 0.05, random: false },
+                size: { value: { min: 20, max: 50 }, random: true },
+                links: { enable: false },
+                move: {
+                    enable: true,
+                    speed: 0.2,
+                    direction: "random",
+                    random: true,
+                    straight: false,
+                    outModes: { default: "out" }
+                },
+                life: { count: 0, delay: { value: { min: 1, max: 5 } }, duration: { value: { min: 100, max: 200 } } }
+            },
+            interactivity: { events: {}, modes: {} },
+            detectRetina: true
+        };
+
+        // --- 全局变量 ---
+        let mainContainer, backgroundContainer;
+
+        // --- 加载粒子系统 ---
+        document.addEventListener("DOMContentLoaded", async () => {
+            try {
+                console.log("正在加载 tsParticles 配置...");
+
+                // 1. Load Main Particles with Plugins listed in options.plugins
+                // The bundle should handle loading these plugins automatically
+                mainContainer = await tsParticles.load({
+                    id: "tsparticles",
+                    options: ultraRichOptions
+                });
+
+                if (!mainContainer) {
+                    throw new Error("创建主粒子容器失败。");
+                }
+
+                console.log("主粒子容器加载成功。");
+
+
+                // 3. Load Background Particles into its own container
+                backgroundContainer = await tsParticles.load({
+                    id: "background-particles-container",
+                    options: backgroundParticlesOptions
+                });
+
+                if (!backgroundContainer) {
+                    console.warn("创建背景粒子容器失败。");
+                } else {
+                    console.log("背景粒子加载成功。");
+                }
+
+                console.log("✅ tsParticles 成功加载！", mainContainer);
+
+                // --- 设置控制面板交互 ---
+                setupControls();
+
+                // --- 设置特殊效果按钮 ---
+                setupSpecialEffects();
+
+                // --- 设置面板折叠 ---
+                setupPanelToggle();
+
+            } catch (error) {
+                console.error("❌ 加载 tsParticles 失败:", error);
+                alert(`加载粒子时出错: ${error.message}`);
+            }
+        });
+
+
+        // --- 设置控制面板交互函数 ---
+        function setupControls() {
+            const countSlider = document.getElementById('particle-count');
+            const countValueDisplay = document.getElementById('particle-count-value');
+            const speedSlider = document.getElementById('particle-speed');
+            const speedValueDisplay = document.getElementById('particle-speed-value');
+            const sizeSlider = document.getElementById('particle-size');
+            const sizeValueDisplay = document.getElementById('particle-size-value');
+            const colorPicker = document.getElementById('particle-color');
+            const shapeSelector = document.getElementById('particle-shape');
+            const toggleLinksCheckbox = document.getElementById('toggle-links');
+            const toggleTwinkleCheckbox = document.getElementById('toggle-twinkle');
+            const toggleTrailCheckbox = document.getElementById('toggle-trail');
+            const toggleBgParticlesCheckbox = document.getElementById('toggle-background-particles');
+
+            // Initialize controls
+            countSlider.value = initialParticleCount;
+            countValueDisplay.textContent = initialParticleCount;
+            speedSlider.value = initialSpeed.toFixed(1);
+            speedValueDisplay.textContent = initialSpeed.toFixed(1);
+            sizeSlider.value = initialSize;
+            sizeValueDisplay.textContent = initialSize;
+            colorPicker.value = initialColor;
+            shapeSelector.value = initialShape;
+
+            // --- Update Functions ---
+            function updateMainParticles(option, value) {
+                if (mainContainer) {
+                    const options = mainContainer.options;
+                    try {
+                        switch (option) {
+                            case 'count':
+                                // Use the correct API to change particle count
+                                options.particles.number.value = value;
+                                mainContainer.refresh(); // Refresh is needed after changing number.value
+                                break;
+                            case 'speed':
+                                options.particles.move.speed = value;
+                                break;
+                            case 'size':
+                                options.particles.size.value.min = value * 0.5;
+                                options.particles.size.value.max = value * 1.5;
+                                break;
+                            case 'color':
+                                options.particles.color.value = value;
+                                break;
+                            case 'shape':
+                                // Ensure it's an array if needed by the library
+                                options.particles.shape.type = Array.isArray(value) ? value : [value];
+                                break;
+                            case 'links':
+                                options.particles.links.enable = value;
+                                break;
+                            case 'twinkle':
+                                options.particles.twinkle.lines.enable = value;
+                                options.particles.twinkle.particles.enable = value;
+                                break;
+                            case 'trail':
+                                // Correct path for trail
+                                options.particles.move.trail.enable = value;
+                                break;
+                        }
+                        // For most other changes, refresh is handled internally or not strictly needed
+                        // But we call it anyway to be safe for some options
+                        if (option !== 'count') { // Already refreshed for count
+                            mainContainer.refresh();
+                        }
+                    } catch (err) {
+                        console.error(`更新粒子选项 '${option}' 时出错:`, err);
+                    }
+                }
+            }
+
+            // --- Event Listeners ---
+            countSlider.addEventListener('input', (e) => {
+                const val = parseInt(e.target.value);
+                countValueDisplay.textContent = val;
+                updateMainParticles('count', val);
+            });
+
+            speedSlider.addEventListener('input', (e) => {
+                const val = parseFloat(e.target.value);
+                speedValueDisplay.textContent = val.toFixed(1);
+                updateMainParticles('speed', val);
+            });
+
+            sizeSlider.addEventListener('input', (e) => {
+                const val = parseFloat(e.target.value);
+                sizeValueDisplay.textContent = val;
+                updateMainParticles('size', val);
+            });
+
+            colorPicker.addEventListener('input', (e) => {
+                updateMainParticles('color', e.target.value);
+            });
+
+            shapeSelector.addEventListener('change', (e) => {
+                updateMainParticles('shape', e.target.value);
+            });
+
+            toggleLinksCheckbox.addEventListener('change', (e) => {
+                updateMainParticles('links', e.target.checked);
+            });
+
+            toggleTwinkleCheckbox.addEventListener('change', (e) => {
+                updateMainParticles('twinkle', e.target.checked);
+            });
+
+            toggleTrailCheckbox.addEventListener('change', (e) => {
+                updateMainParticles('trail', e.target.checked);
+            });
+
+            toggleBgParticlesCheckbox.addEventListener('change', (e) => {
+                if (backgroundContainer) {
+                    if (e.target.checked) {
+                        backgroundContainer.play();
+                    } else {
+                        backgroundContainer.pause();
+                    }
+                }
+            });
+        }
+
+        // --- 设置特殊效果按钮 ---
+        function setupSpecialEffects() {
+            const beatButton = document.getElementById('trigger-beat');
+            const explosionButton = document.getElementById('trigger-explosion');
+
+            beatButton.addEventListener('click', () => {
+                if (mainContainer) {
+                    // Access particles array correctly
+                    const particlesArray = mainContainer.particles.array || [];
+                    particlesArray.forEach(p => {
+                        if (p.originalSize) return;
+                        p.originalSize = p.size.value;
+                        p.size.value *= 2;
+                        // Use a timeout to reset size, tied to the particle itself
+                        setTimeout(() => {
+                            if (p.size) { // Check if particle still exists
+                                p.size.value = p.originalSize;
+                                delete p.originalSize;
+                            }
+                        }, 100);
+                    });
+                }
+            });
+
+            explosionButton.addEventListener('click', (e) => {
+                if (mainContainer) {
+                    const rect = mainContainer.canvas.element.getBoundingClientRect();
+                    const clientX = e.clientX;
+                    const clientY = e.clientY;
+                    const posX = clientX - rect.left;
+                    const posY = clientY - rect.top;
+
+                    // 1. Generate explosion particles
+                    for (let i = 0; i < 100; i++) {
+                        // Add particles at the click location with random velocity
+                        mainContainer.particles.addParticle(
+                            posX, // Use pixel coordinates relative to canvas
+                            posY,
+                            null, // Default options
+                            { // Override move options for explosion effect
+                                speed: Math.random() * 15 + 5,
+                                direction: Math.random() * 360
+                            }
+                        );
+                    }
+
+                    // 2. Note: Adding temporary absorbers dynamically requires direct plugin access
+                    // which we couldn't reliably get before. This part is commented out or simplified.
+                    // For now, just the particle explosion happens.
+                    console.log("触发了爆炸效果 (仅粒子扩散)");
+                }
+            });
+        }
+
+        // --- 设置面板折叠 ---
+        function setupPanelToggle() {
+            const panel = document.getElementById('controls');
+            const toggleBtn = document.getElementById('toggle-panel-btn');
+
+            toggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                panel.classList.toggle('collapsed');
+                toggleBtn.textContent = panel.classList.contains('collapsed') ? '☰' : '✕';
+            });
+
+            document.addEventListener('click', (e) => {
+                if (panel.classList.contains('collapsed') && !panel.contains(e.target)) {
+                    panel.classList.remove('collapsed');
+                    toggleBtn.textContent = '✕';
+                }
+            });
+        }
+
+    </script>
+</body>
+</html>

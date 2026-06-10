@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>增强版协作编辑器</title>
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            max-width: 1400px;
+            margin: 0 auto;
+            gap: 20px;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .main-content {
+            display: flex;
+            gap: 20px;
+        }
+
+        @media (max-width: 1100px) {
+            .main-content {
+                flex-direction: column;
+            }
+        }
+
+        .editor-section {
+            flex: 3;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .sidebar {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            min-width: 300px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .panel-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eaeaea;
+            color: #4a6fa5;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-title i {
+            color: #6c8bc7;
+        }
+
+        h1 {
+            color: #4a6fa5;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 5px;
+            flex: 1;
+            min-width: 250px;
+        }
+
+        input, select, button {
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            font-size: 0.95rem;
+        }
+
+        input, select {
+            flex: 1;
+            background: #f9f9f9;
+        }
+
+        button {
+            background: #4a6fa5;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+
+        button:hover {
+            background: #3a5a8c;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        button.secondary {
+            background: #6c8bc7;
+        }
+
+        button.success {
+            background: #4CAF50;
+        }
+
+        button.warning {
+            background: #ff9800;
+        }
+
+        button.danger {
+            background: #f44336;
+        }
+
+        button.small {
+            padding: 6px 10px;
+            font-size: 0.85rem;
+        }
+
+        #editor {
+            width: 100%;
+            height: 400px;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+            line-height: 1.5;
+            resize: vertical;
+            background: #fdfdfd;
+            font-family: 'Courier New', monospace;
+        }
+
+        .connections {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .connection-card {
+            background: #f0f7ff;
+            border-radius: 6px;
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-left: 4px solid #4a6fa5;
+        }
+
+        .connection-card.updated {
+            animation: highlight 0.5s ease;
+        }
+
+        @keyframes highlight {
+            0% { background: #fff9c4; }
+            100% { background: #f0f7ff; }
+        }
+
+        .connection-id {
+            font-weight: 500;
+            color: #3a5a8c;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .status.online::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            background: #4CAF50;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 300px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .message {
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            max-width: 80%;
+            word-break: break-word;
+        }
+
+        .message.self {
+            background: #e3f2fd;
+            margin-left: auto;
+        }
+
+        .message.remote {
+            background: #f1f1f1;
+            margin-right: auto;
+        }
+
+        .message.system {
+            background: #fff8e1;
+            font-style: italic;
+            text-align: center;
+            font-size: 0.9rem;
+            max-width: 100%;
+        }
+
+        .message-sender {
+            font-weight: bold;
+            font-size: 0.85rem;
+            color: #4a6fa5;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 5px;
+        }
+
+        .files-container {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .file-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            border-left: 4px solid #6c8bc7;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .file-icon {
+            font-size: 1.2rem;
+            color: #4a6fa5;
+        }
+
+        .file-name {
+            font-weight: 500;
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .history-container {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 8px 10px;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-time {
+            color: #888;
+            font-size: 0.8rem;
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .notification.warning {
+            background: #ff9800;
+        }
+
+        .notification.error {
+            background: #f44336;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-users"></i> 增强版协作编辑器</h1>
+            <p>实时协作编辑文档、共享文件、聊天交流</p>
+            
+            <div class="controls">
+                <div class="input-group">
+                    <input id="peerId" placeholder="输入对方Peer ID进行连接">
+                    <button onclick="connectToPeer()" class="secondary">
+                        <i class="fas fa-plug"></i> 连接
+                    </button>
+                </div>
+                
+                <button onclick="copyMyId()">
+                    <i class="fas fa-copy"></i> 复制我的ID
+                </button>
+                
+                <button onclick="disconnectAll()" class="danger">
+                    <i class="fas fa-sign-out-alt"></i> 断开所有连接
+                </button>
+                
+                <button onclick="exportContent()" class="success">
+                    <i class="fas fa-download"></i> 导出文档
+                </button>
+                
+                <select id="themeSelect" onchange="changeTheme()">
+                    <option value="light">浅色主题</option>
+                    <option value="dark">深色主题</option>
+                    <option value="sepia">护眼主题</option>
+                </select>
+            </div>
+            
+            <div class="status">
+                <span id="myId" class="connection-id"></span>
+                <span class="online">在线</span>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="editor-section">
+                <div class="panel">
+                    <div class="panel-title">
+                        <i class="fas fa-edit"></i> 协作编辑器
+                    </div>
+                    <textarea id="editor" placeholder="开始编辑内容... 所有更改将实时同步给其他用户" oninput="sync()"></textarea>
+                    
+                    <div class="controls">
+                        <button onclick="clearEditor()" class="warning small">
+                            <i class="fas fa-trash"></i> 清空编辑器
+                        </button>
+                        <button onclick="saveLocally()" class="secondary small">
+                            <i class="fas fa-save"></i> 保存到本地
+                        </button>
+                        <div style="flex: 1"></div>
+                        <span id="charCount">字符数: 0</span>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <div class="panel-title">
+                        <i class="fas fa-network-wired"></i> 连接状态
+                    </div>
+                    <div id="connections" class="connections">
+                        <!-- 连接卡片将在这里动态添加 -->
+                    </div>
+                    <div class="status" id="connectionStatus">当前没有活跃连接</div>
+                </div>
+            </div>
+            
+            <div class="sidebar">
+                <div class="panel">
+                    <div class="panel-title">
+                        <i class="fas fa-comments"></i> 协作聊天
+                    </div>
+                    <div class="chat-container">
+                        <div id="chatMessages" class="chat-messages">
+                            <div class="message system">欢迎使用协作编辑器！您可以在这里与其他协作者聊天</div>
+                        </div>
+                        <div class="chat-input">
+                            <input id="chatInput" placeholder="输入消息..." onkeypress="handleChatKeyPress(event)">
+                            <button onclick="sendChatMessage()">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <div class="panel-title">
+                        <i class="fas fa-file-import"></i> 文件共享
+                        <button onclick="document.getElementById('fileInput').click()" class="small" style="margin-left: auto;">
+                            <i class="fas fa-plus"></i> 添加文件
+                        </button>
+                    </div>
+                    <div class="files-container">
+                        <div id="fileList" class="file-list">
+                            <div class="file-item">
+                                <div class="file-info">
+                                    <i class="fas fa-file-alt file-icon"></i>
+                                    <div>
+                                        <div class="file-name">示例文档.txt</div>
+                                        <div class="file-size">1.2 KB</div>
+                                    </div>
+                                </div>
+                                <div class="file-actions">
+                                    <button class="small" title="下载">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="file" id="fileInput" class="hidden" multiple onchange="handleFileSelect(event)">
+                </div>
+                
+                <div class="panel">
+                    <div class="panel-title">
+                        <i class="fas fa-history"></i> 编辑历史
+                    </div>
+                    <div id="historyList" class="history-container">
+                        <div class="history-item">
+                            <span>文档已加载</span>
+                            <span class="history-time">刚刚</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="notification" class="notification">
+        <i class="fas fa-check-circle"></i>
+        <span id="notificationText">操作成功！</span>
+    </div>
+
+    <script>
+        // 生成唯一ID
+        const myId = 'user_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString().slice(-4);
+        document.getElementById('myId').textContent = myId;
+
+        // 创建Peer
+        const peer = new Peer(myId, {
+            host: '0.peerjs.com',
+            port: 443,
+            path: '/',
+            debug: 2
+        });
+
+        let connections = {};
+        let lastContent = '';
+        let fileTransfers = {};
+        let editHistory = [];
+        let theme = 'light';
+
+        // 监听连接
+        peer.on('connection', (conn) => {
+            showNotification(`${conn.peer} 正在连接...`, 'warning');
+            setupConnection(conn);
+        });
+
+        peer.on('open', (id) => {
+            console.log('PeerJS连接成功，ID:', id);
+            addHistory('系统', 'PeerJS连接已建立');
+        });
+
+        peer.on('error', (err) => {
+            console.error('PeerJS错误:', err);
+            showNotification(`连接错误: ${err.type}`, 'error');
+        });
+
+        // 连接到其他Peer
+        function connectToPeer() {
+            const remoteId = document.getElementById('peerId').value.trim();
+            if (!remoteId) {
+                showNotification('请输入Peer ID', 'warning');
+                return;
+            }
+            
+            if (connections[remoteId]) {
+                showNotification('已连接到该用户', 'warning');
+                return;
+            }
+            
+            showNotification(`正在连接 ${remoteId}...`, 'warning');
+            const conn = peer.connect(remoteId, { reliable: true });
+            setupConnection(conn);
+        }
+
+        function setupConnection(conn) {
+            connections[conn.peer] = conn;
+
+            conn.on('open', () => {
+                showNotification(`已连接到 ${conn.peer}`, 'success');
+                addHistory('系统', `已连接到 ${conn.peer}`);
+                
+                // 发送当前内容给新连接
+                const content = document.getElementById('editor').value;
+                conn.send({ type: 'sync', content, sender: myId, timestamp: Date.now() });
+                
+                // 发送当前文件列表
+                sendFileList(conn);
+                
+                // 添加连接卡片
+                addConnectionCard(conn.peer);
+                updateConnectionStatus();
+                
+                // 发送欢迎消息
+                sendChatMessageToPeer(conn.peer, `${myId} 已加入协作`, true);
+            });
+
+            conn.on('data', (data) => {
+                handleData(data, conn.peer);
+            });
+
+            conn.on('close', () => {
+                showNotification(`连接已断开: ${conn.peer}`, 'error');
+                addHistory('系统', `连接断开: ${conn.peer}`);
+                removeConnectionCard(conn.peer);
+                delete connections[conn.peer];
+                updateConnectionStatus();
+            });
+
+            conn.on('error', (err) => {
+                console.error('连接错误:', err);
+                showNotification(`连接错误: ${conn.peer}`, 'error');
+            });
+        }
+
+        function handleData(data, from) {
+            console.log('收到数据:', data);
+            
+            switch(data.type) {
+                case 'edit':
+                    updateContent(data.content, data.position, from);
+                    break;
+                case 'sync':
+                    document.getElementById('editor').value = data.content;
+                    updateCharCount();
+                    showNotification(`${from} 同步了文档内容`, 'warning');
+                    break;
+                case 'chat':
+                    addChatMessage(data.sender, data.message, false);
+                    break;
+                case 'file-list':
+                    updateFileList(data.files, from);
+                    break;
+                case 'file-request':
+                    sendFile(data.fileId, from);
+                    break;
+                case 'file-chunk':
+                    receiveFileChunk(data, from);
+                    break;
+                case 'file-complete':
+                    completeFileTransfer(data.fileId, from);
+                    break;
+            }
+        }
+
+        // 同步编辑器内容
+        function sync() {
+            const content = document.getElementById('editor').value;
+            const position = document.getElementById('editor').selectionStart;
+            
+            // 更新字符计数
+            updateCharCount();
+            
+            // 保存到编辑历史
+            if (content !== lastContent) {
+                addEditHistory(content);
+                lastContent = content;
+            }
+
+            // 广播给所有连接
+            Object.values(connections).forEach(conn => {
+                if (conn.open) {
+                    conn.send({
+                        type: 'edit',
+                        content: content,
+                        position: position,
+                        sender: myId,
+                        timestamp: Date.now()
+                    });
+                }
+            });
+
+            // 保存到本地存储
+            localStorage.setItem('collab_doc', content);
+        }
+
+        function updateContent(content, position, from) {
+            const editor = document.getElementById('editor');
+            editor.value = content;
+            
+            // 更新字符计数
+            updateCharCount();
+            
+            // 标记更新来源
+            const card = document.querySelector(`.connection-card[data-peer="${from}"]`);
+            if (card) {
+                card.classList.add('updated');
+                setTimeout(() => {
+                    card.classList.remove('updated');
+                }, 500);
+            }
+            
+            // 保存到本地存储
+            localStorage.setItem('collab_doc', content);
+        }
+
+        function addConnectionCard(peerId) {
+            const connectionsDiv = document.getElementById('connections');
+            
+            // 检查是否已存在
+            if (document.querySelector(`.connection-card[data-peer="${peerId}"]`)) {
+                return;
+            }
+            
+            const card = document.createElement('div');
+            card.className = 'connection-card';
+            card.dataset.peer = peerId;
+            card.innerHTML = `
+                <i class="fas fa-user-circle"></i>
+                <div>
+                    <div class="connection-id">${peerId}</div>
+                    <div class="status online">在线</div>
+                </div>
+                <button onclick="disconnectPeer('${peerId}')" class="small danger" style="margin-left: auto;">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            connectionsDiv.appendChild(card);
+        }
+
+        function removeConnectionCard(peerId) {
+            const card = document.querySelector(`.connection-card[data-peer="${peerId}"]`);
+            if (card) {
+                card.remove();
+            }
+        }
+
+        function updateConnectionStatus() {
+            const count = Object.keys(connections).length;
+            const statusDiv = document.getElementById('connectionStatus');
+            statusDiv.textContent = count === 0 
+                ? '当前没有活跃连接' 
+                : `已连接 ${count} 个用户`;
+        }
+
+        // 聊天功能
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendChatMessage();
+            }
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // 添加到自己的聊天窗口
+            addChatMessage(myId, message, true);
+            
+            // 发送给所有连接
+            Object.values(connections).forEach(conn => {
+                if (conn.open) {
+                    conn.send({
+                        type: 'chat',
+                        message: message,
+                        sender: myId,
+                        timestamp: Date.now()
+                    });
+                }
+            });
+            
+            input.value = '';
+            input.focus();
+        }
+
+        function sendChatMessageToPeer(peerId, message, isSystem = false) {
+            const conn = connections[peerId];
+            if (conn && conn.open) {
+                conn.send({
+                    type: 'chat',
+                    message: message,
+                    sender: isSystem ? '系统' : myId,
+                    timestamp: Date.now(),
+                    isSystem: isSystem
+                });
+            }
+        }
+
+        function addChatMessage(sender, message, isSelf) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isSelf ? 'self' : 'remote'}`;
+            
+            const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            messageDiv.innerHTML = `
+                <div class="message-sender">${sender}</div>
+                <div>${escapeHtml(message)}</div>
+                <div style="font-size: 0.8rem; color: #888; text-align: right;">${time}</div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // 系统消息特殊处理
+            if (sender === '系统') {
+                messageDiv.className = 'message system';
+            }
+        }
+
+        // 文件共享功能
+        function handleFileSelect(event) {
+            const files = event.target.files;
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                addFileToList(file);
+                shareFile(file);
+            }
+            
+            // 重置文件输入
+            event.target.value = '';
+        }
+
+        function addFileToList(file, from = null) {
+            const fileList = document.getElementById('fileList');
+            
+            // 检查是否已存在
+            if (document.querySelector(`.file-item[data-file="${file.name}"]`)) {
+                showNotification(`文件 "${file.name}" 已存在`, 'warning');
+                return;
+            }
+            
+            const fileId = `file_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item';
+            fileItem.dataset.file = file.name;
+            fileItem.dataset.fileId = fileId;
+            
+            const fileIcon = getFileIcon(file.name);
+            const fileSize = formatFileSize(file.size);
+            
+            fileItem.innerHTML = `
+                <div class="file-info">
+                    <i class="fas ${fileIcon} file-icon"></i>
+                    <div>
+                        <div class="file-name" title="${file.name}">${file.name}</div>
+                        <div class="file-size">${fileSize} ${from ? `(来自 ${from})` : ''}</div>
+                    </div>
+                </div>
+                <div class="file-actions">
+                    <button onclick="downloadFile('${fileId}')" class="small" title="下载">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    ${from ? '' : `<button onclick="removeFile('${fileId}')" class="small danger" title="删除">
+                        <i class="fas fa-trash"></i>
+                    </button>`}
+                </div>
+            `;
+            
+            fileList.appendChild(fileItem);
+            
+            // 存储文件数据
+            fileTransfers[fileId] = {
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                data: file,
+                from: from
+            };
+            
+            if (!from) {
+                showNotification(`已添加文件: ${file.name}`, 'success');
+                addHistory('文件', `添加了文件: ${file.name}`);
+            }
+        }
+
+        function shareFile(file) {
+            const fileId = Object.keys(fileTransfers).find(key => 
+                fileTransfers[key].name === file.name && !fileTransfers[key].from
+            );
+            
+            if (!fileId) return;
+            
+            // 发送文件信息给所有连接
+            Object.values(connections).forEach(conn => {
+                if (conn.open) {
+                    conn.send({
+                        type: 'file-list',
+                        files: [{
+                            id: fileId,
+                            name: file.name,
+                            size: file.size,
+                            type: file.type
+                        }],
+                        sender: myId,
+                        timestamp: Date.now()
+                    });
+                }
+            });
+        }
+
+        function sendFileList(conn) {
+            const files = Object.keys(fileTransfers)
+                .filter(key => !fileTransfers[key].from) // 只发送自己上传的文件
+                .map(key => ({
+                    id: key,
+                    name: fileTransfers[key].name,
+                    size: fileTransfers[key].size,
+                    type: fileTransfers[key].type
+                }));
+            
+            if (files.length > 0) {
+                conn.send({
+                    type: 'file-list',
+                    files: files,
+                    sender: myId,
+                    timestamp: Date.now()
+                });
+            }
+        }
+
+        function updateFileList(files, from) {
+            files.forEach(fileInfo => {
+                // 检查是否已存在
+                if (!document.querySelector(`.file-item[data-file="${fileInfo.name}"]`)) {
+                    const file = new File([], fileInfo.name, {
+                        type: fileInfo.type,
+                        lastModified: Date.now()
+                    });
+                    
+                    // 模拟文件对象
+                    file.size = fileInfo.size;
+                    
+                    addFileToList(file, from);
+                    addHistory('文件', `收到文件: ${fileInfo.name} (来自 ${from})`);
+                    
+                    // 请求文件数据
+                    const conn = connections[from];
+                    if (conn && conn.open) {
+                        conn.send({
+                            type: 'file-request',
+                            fileId: fileInfo.id,
+                            sender: myId,
+                            timestamp: Date.now()
+                        });
+                    }
+                }
+            });
+        }
+
+        function downloadFile(fileId) {
+            const fileData = fileTransfers[fileId];
+            if (!fileData) return;
+            
+            // 如果是远程文件且没有数据，请求下载
+            if (fileData.from && !fileData.data) {
+                const conn = connections[fileData.from];
+                if (conn && conn.open) {
+                    conn.send({
+                        type: 'file-request',
+                        fileId: fileId,
+                        sender: myId,
+                        timestamp: Date.now()
+                    });
+                    showNotification(`正在请求文件: ${fileData.name}`, 'warning');
+                }
+                return;
+            }
+            
+            // 创建下载链接
+            const url = URL.createObjectURL(fileData.data);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileData.name;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showNotification(`已下载: ${fileData.name}`, 'success');
+        }
+
+        // 历史记录功能
+        function addEditHistory(content) {
+            const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+            editHistory.push({
+                content: content,
+                time: time,
+                timestamp: Date.now()
+            });
+            
+            // 只保留最近20条历史记录
+            if (editHistory.length > 20) {
+                editHistory.shift();
+            }
+            
+            // 更新历史列表显示
+            updateHistoryDisplay();
+        }
+
+        function updateHistoryDisplay() {
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = '';
+            
+            // 只显示最近5条
+            const recentHistory = editHistory.slice(-5).reverse();
+            
+            recentHistory.forEach(record => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                historyItem.innerHTML = `
+                    <span>编辑了文档 (${record.content.length} 字符)</span>
+                    <span class="history-time">${record.time}</span>
+                `;
+                historyList.appendChild(historyItem);
+            });
+            
+            // 添加初始记录
+            if (recentHistory.length === 0) {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                historyItem.innerHTML = `
+                    <span>文档已加载</span>
+                    <span class="history-time">刚刚</span>
+                `;
+                historyList.appendChild(historyItem);
+            }
+        }
+
+        function addHistory(type, action) {
+            const historyList = document.getElementById('historyList');
+            const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            const historyItem = document.createElement('div');
+            historyItem.className = 'history-item';
+            historyItem.innerHTML = `
+                <span>${type}: ${action}</span>
+                <span class="history-time">${time}</span>
+            `;
+            
+            historyList.insertBefore(historyItem, historyList.firstChild);
+            
+            // 限制历史记录数量
+            if (historyList.children.length > 10) {
+                historyList.removeChild(historyList.lastChild);
+            }
+        }
+
+        // 工具函数
+        function updateCharCount() {
+            const content = document.getElementById('editor').value;
+            document.getElementById('charCount').textContent = `字符数: ${content.length}`;
+        }
+
+        function copyMyId() {
+            navigator.clipboard.writeText(myId)
+                .then(() => {
+                    showNotification('ID已复制到剪贴板', 'success');
+                })
+                .catch(err => {
+                    console.error('复制失败:', err);
+                    showNotification('复制失败，请手动复制', 'error');
+                });
+        }
+
+        function disconnectPeer(peerId) {
+            const conn = connections[peerId];
+            if (conn) {
+                conn.close();
+                delete connections[peerId];
+                removeConnectionCard(peerId);
+                updateConnectionStatus();
+                showNotification(`已断开与 ${peerId} 的连接`, 'warning');
+                addHistory('系统', `断开连接: ${peerId}`);
+            }
+        }
+
+        function disconnectAll() {
+            Object.keys(connections).forEach(peerId => {
+                disconnectPeer(peerId);
+            });
+        }
+
+        function clearEditor() {
+            if (confirm('确定要清空编辑器内容吗？')) {
+                document.getElementById('editor').value = '';
+                sync();
+                showNotification('编辑器已清空', 'warning');
+            }
+        }
+
+        function saveLocally() {
+            const content = document.getElementById('editor').value;
+            localStorage.setItem('collab_doc_backup_' + Date.now(), content);
+            showNotification('文档已保存到本地', 'success');
+        }
+
+        function exportContent() {
+            const content = document.getElementById('editor').value;
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `协作文档_${new Date().toISOString().slice(0, 10)}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showNotification('文档已导出', 'success');
+        }
+
+        function changeTheme() {
+            const themeSelect = document.getElementById('themeSelect');
+            theme = themeSelect.value;
+            
+            document.body.className = '';
+            if (theme === 'dark') {
+                document.body.classList.add('dark-theme');
+            } else if (theme === 'sepia') {
+                document.body.classList.add('sepia-theme');
+            }
+            
+            localStorage.setItem('editor_theme', theme);
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const text = document.getElementById('notificationText');
+            
+            text.textContent = message;
+            notification.className = 'notification';
+            notification.classList.add(type);
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const icons = {
+                'txt': 'fa-file-alt',
+                'pdf': 'fa-file-pdf',
+                'doc': 'fa-file-word',
+                'docx': 'fa-file-word',
+                'xls': 'fa-file-excel',
+                'xlsx': 'fa-file-excel',
+                'ppt': 'fa-file-powerpoint',
+                'pptx': 'fa-file-powerpoint',
+                'jpg': 'fa-file-image',
+                'jpeg': 'fa-file-image',
+                'png': 'fa-file-image',
+                'gif': 'fa-file-image',
+                'zip': 'fa-file-archive',
+                'rar': 'fa-file-archive',
+                'mp3': 'fa-file-audio',
+                'mp4': 'fa-file-video',
+                'html': 'fa-file-code',
+                'css': 'fa-file-code',
+                'js': 'fa-file-code',
+                'json': 'fa-file-code'
+            };
+            
+            return icons[ext] || 'fa-file';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 页面加载初始化
+        window.onload = () => {
+            // 从本地存储加载文档
+            const saved = localStorage.getItem('collab_doc');
+            if (saved) {
+                document.getElementById('editor').value = saved;
+                lastContent = saved;
+            }
+            
+            // 更新字符计数
+            updateCharCount();
+            
+            // 加载主题
+            const savedTheme = localStorage.getItem('editor_theme');
+            if (savedTheme) {
+                document.getElementById('themeSelect').value = savedTheme;
+                changeTheme();
+            }
+            
+            // 添加初始历史记录
+            addHistory('系统', '应用已加载');
+            
+            // 显示欢迎消息
+            setTimeout(() => {
+                showNotification('协作编辑器已就绪！复制您的ID与他人连接', 'success');
+            }, 1000);
+        };
+        
+        // 添加额外的CSS主题
+        const style = document.createElement('style');
+        style.textContent = `
+            .dark-theme {
+                background: linear-gradient(135deg, #2c3e50 0%, #1a1a2e 100%);
+                color: #e0e0e0;
+            }
+            
+            .dark-theme .panel {
+                background: #2d3748;
+                color: #e0e0e0;
+            }
+            
+            .dark-theme .panel-title {
+                color: #90cdf4;
+                border-bottom-color: #4a5568;
+            }
+            
+            .dark-theme input, .dark-theme select, .dark-theme #editor {
+                background: #4a5568;
+                color: #e0e0e0;
+                border-color: #718096;
+            }
+            
+            .sepia-theme {
+                background: #fbf0d9;
+                color: #5f4b32;
+            }
+            
+            .sepia-theme .panel {
+                background: #f4e5c9;
+            }
+            
+            .sepia-theme .panel-title {
+                color: #8b7355;
+                border-bottom-color: #e0c9a6;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

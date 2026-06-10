@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>旧版导航 - Page (原始版本)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 50%, #2c3e50 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+            color: white;
+            padding: 50px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.3em;
+            opacity: 0.95;
+        }
+
+        .mode-info {
+            background: rgba(255,255,255,0.2);
+            padding: 12px 25px;
+            border-radius: 30px;
+            margin-top: 20px;
+            display: inline-block;
+            font-size: 0.95em;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            background: rgba(255,255,255,0.15);
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-size: 1.1em;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .search-box {
+            margin: 35px 30px;
+            text-align: center;
+        }
+
+        #searchInput {
+            width: 85%;
+            max-width: 700px;
+            padding: 18px 30px;
+            font-size: 16px;
+            border: 3px solid transparent;
+            border-radius: 50px;
+            outline: none;
+            transition: all 0.4s ease;
+            background: linear-gradient(#f8f9fa, #fff);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        #searchInput:focus {
+            border-color: #95a5a6;
+            box-shadow: 0 0 30px rgba(149, 165, 166, 0.3);
+            transform: scale(1.02);
+        }
+
+        .quick-filters {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            font-size: 0.95em;
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(149, 165, 166, 0.4);
+        }
+
+        .files-container {
+            padding: 30px;
+        }
+
+        .folder-group {
+            margin-bottom: 30px;
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            border: 1px solid #e8e8e8;
+        }
+
+        .folder-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
+            color: white;
+            padding: 22px 25px;
+            font-size: 1.25em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .folder-header:hover {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+        }
+
+        .folder-header span:first-child {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .folder-count {
+            background: rgba(255,255,255,0.2);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+
+        .file-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 20px;
+            padding: 25px;
+            background: #f8f9fa;
+        }
+
+        .file-item {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #e8e8e8;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.05);
+        }
+
+        .file-item:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            border-color: #95a5a6;
+        }
+
+        .file-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+            transition: all 0.3s ease;
+        }
+
+        .file-item:hover::before {
+            width: 8px;
+        }
+
+        .file-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .file-name i {
+            color: #95a5a6;
+            font-size: 1.4em;
+        }
+
+        .file-path {
+            color: #666;
+            font-size: 0.95em;
+            margin-bottom: 15px;
+            word-break: break-all;
+            line-height: 1.5;
+            background: #f4f6f9;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #95a5a6;
+            font-family: 'Consolas', monospace;
+        }
+
+        .file-meta {
+            display: flex;
+            justify-content: space-between;
+            color: #888;
+            font-size: 0.9em;
+            margin: 15px 0;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .open-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 25px;
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            font-size: 1em;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .open-btn:hover {
+            background: linear-gradient(135deg, #7f8c8d, #95a5a6);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(149, 165, 166, 0.4);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+            border-top: 1px solid #eee;
+            background: #f8f9fa;
+            font-size: 0.95em;
+        }
+
+        .toggle-icon {
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+
+        .notice {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+            padding: 15px 30px;
+            text-align: center;
+            font-size: 1.1em;
+        }
+
+        .notice i {
+            margin-right: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .file-list {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                flex-direction: column;
+                gap: 12px;
+                align-items: center;
+            }
+
+            .stat-item {
+                width: 80%;
+                text-align: center;
+            }
+
+            .header h1 {
+                font-size: 2.2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="notice">
+            <i class="fas fa-exclamation-triangle"></i>
+            这是旧版文件导航，文件仍使用原始命名（index.html等）
+        </div>
+
+        <div class="header">
+            <h1><i class="fas fa-archive"></i> 旧版文件导航</h1>
+            <p>Page - 原始版本（未重命名）</p>
+            <div class="mode-info"><i class="fas fa-history"></i> 旧版导航</div>
+            <div class="stats">
+                <div class="stat-item"><i class="fas fa-file-code"></i> 文件总数: 38</div>
+                <div class="stat-item"><i class="fas fa-folder"></i> 文件夹数: 20</div>
+                <div class="stat-item"><i class="fas fa-file-alt"></i> 原始命名</div>
+            </div>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="🔍 输入文件名或路径进行搜索...">
+            <div class="quick-filters">
+                <button class="filter-btn" onclick="filterFiles('recent')"><i class="fas fa-clock"></i> 最近修改</button>
+                <button class="filter-btn" onclick="filterFiles('large')"><i class="fas fa-hdd"></i> 文件较大</button>
+                <button class="filter-btn" onclick="filterFiles('clear')"><i class="fas fa-undo"></i> 显示全部</button>
+                <button class="filter-btn" onclick="toggleAllFolders()"><i class="fas fa-folder-tree"></i> 展开/折叠</button>
+            </div>
+        </div>
+
+        <div class="files-container" id="filesContainer">
+            <!-- Js库/opencv -->
+            <div class="folder-group">
+                <div class="folder-header" onclick="toggleFolder(this)">
+                    <span><i class="fas fa-folder"></i> Js库/opencv <span class="toggle-icon">📂</span></span>
+                    <span class="folder-count">(2 个文件)</span>
+                </div>
+                <div class="file-list">
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index.html</div>
+                        <div class="file-path">./Js库/opencv/index.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 38.2 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-12-06</span>
+                        </div>
+                        <a href="./Js库/opencv/index.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index2.html</div>
+                        <div class="file-path">./Js库/opencv/index2.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 52.7 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-12-06</span>
+                        </div>
+                        <a href="./Js库/opencv/index2.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Js库/p2p/Gun.js -->
+            <div class="folder-group">
+                <div class="folder-header" onclick="toggleFolder(this)">
+                    <span><i class="fas fa-folder"></i> Js库/p2p/Gun.js <span class="toggle-icon">📂</span></span>
+                    <span class="folder-count">(1 个文件)</span>
+                </div>
+                <div class="file-list">
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index.html</div>
+                        <div class="file-path">./Js库/p2p/Gun.js/index.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 54.9 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-12-06</span>
+                        </div>
+                        <a href="./Js库/p2p/Gun.js/index.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Js库/p2p/PeerJS -->
+            <div class="folder-group">
+                <div class="folder-header" onclick="toggleFolder(this)">
+                    <span><i class="fas fa-folder"></i> Js库/p2p/PeerJS <span class="toggle-icon">📂</span></span>
+                    <span class="folder-count">(3 个文件)</span>
+                </div>
+                <div class="file-list">
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index.html</div>
+                        <div class="file-path">./Js库/p2p/PeerJS/index.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 3.7 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-12-06</span>
+                        </div>
+                        <a href="./Js库/p2p/PeerJS/index.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index2.html</div>
+                        <div class="file-path">./Js库/p2p/PeerJS/index2.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 41.2 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-12-06</span>
+                        </div>
+                        <a href="./Js库/p2p/PeerJS/index2.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index3.html</div>
+                        <div class="file-path">./Js库/p2p/PeerJS/index3.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 76.4 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-12-06</span>
+                        </div>
+                        <a href="./Js库/p2p/PeerJS/index3.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Js库/webgis/Leaflet -->
+            <div class="folder-group">
+                <div class="folder-header" onclick="toggleFolder(this)">
+                    <span><i class="fas fa-folder"></i> Js库/webgis/Leaflet <span class="toggle-icon">📂</span></span>
+                    <span class="folder-count">(2 个文件)</span>
+                </div>
+                <div class="file-list">
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index.html</div>
+                        <div class="file-path">./Js库/webgis/Leaflet/index.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 16.2 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-12-06</span>
+                        </div>
+                        <a href="./Js库/webgis/Leaflet/index.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index2.html</div>
+                        <div class="file-path">./Js库/webgis/Leaflet/index2.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 42.3 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-12-06</span>
+                        </div>
+                        <a href="./Js库/webgis/Leaflet/index2.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Js库/webgis/openlayer -->
+            <div class="folder-group">
+                <div class="folder-header" onclick="toggleFolder(this)">
+                    <span><i class="fas fa-folder"></i> Js库/webgis/openlayer <span class="toggle-icon">📂</span></span>
+                    <span class="folder-count">(1 个文件)</span>
+                </div>
+                <div class="file-list">
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index.html</div>
+                        <div class="file-path">./Js库/webgis/openlayer/index.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 86.2 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-12-06</span>
+                        </div>
+                        <a href="./Js库/webgis/openlayer/index.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Js库/三维空间/Cannon -->
+            <div class="folder-group">
+                <div class="folder-header" onclick="toggleFolder(this)">
+                    <span><i class="fas fa-folder"></i> Js库/三维空间/Cannon <span class="toggle-icon">📂</span></span>
+                    <span class="folder-count">(2 个文件)</span>
+                </div>
+                <div class="file-list">
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index.html</div>
+                        <div class="file-path">./Js库/三维空间/Cannon/index.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 72.0 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-12-06</span>
+                        </div>
+                        <a href="./Js库/三维空间/Cannon/index.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index2.html</div>
+                        <div class="file-path">./Js库/三维空间/Cannon/index2.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 35.8 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-12-06</span>
+                        </div>
+                        <a href="./Js库/三维空间/Cannon/index2.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Js库/三维空间/Matter -->
+            <div class="folder-group">
+                <div class="folder-header" onclick="toggleFolder(this)">
+                    <span><i class="fas fa-folder"></i> Js库/三维空间/Matter <span class="toggle-icon">📂</span></span>
+                    <span class="folder-count">(2 个文件)</span>
+                </div>
+                <div class="file-list">
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index.html</div>
+                        <div class="file-path">./Js库/三维空间/Matter/index.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 13.7 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-12-06</span>
+                        </div>
+                        <a href="./Js库/三维空间/Matter/index.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index2.html</div>
+                        <div class="file-path">./Js库/三维空间/Matter/index2.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 79.4 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-12-06</span>
+                        </div>
+                        <a href="./Js库/三维空间/Matter/index2.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Js库/三维空间/Three.js -->
+            <div class="folder-group">
+                <div class="folder-header" onclick="toggleFolder(this)">
+                    <span><i class="fas fa-folder"></i> Js库/三维空间/Three.js <span class="toggle-icon">📂</span></span>
+                    <span class="folder-count">(1 个文件)</span>
+                </div>
+                <div class="file-list">
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index.html</div>
+                        <div class="file-path">./Js库/三维空间/Three.js/index.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 45.0 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-12-06</span>
+                        </div>
+                        <a href="./Js库/三维空间/Three.js/index.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Js库/图片/Anime -->
+            <div class="folder-group">
+                <div class="folder-header" onclick="toggleFolder(this)">
+                    <span><i class="fas fa-folder"></i> Js库/图片/Anime <span class="toggle-icon">📂</span></span>
+                    <span class="folder-count">(2 个文件)</span>
+                </div>
+                <div class="file-list">
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index.html</div>
+                        <div class="file-path">./Js库/图片/Anime/index.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 36.9 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-12-06</span>
+                        </div>
+                        <a href="./Js库/图片/Anime/index.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index2.html</div>
+                        <div class="file-path">./Js库/图片/Anime/index2.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 74.0 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-12-06</span>
+                        </div>
+                        <a href="./Js库/图片/Anime/index2.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Js库/图片/GSAP -->
+            <div class="folder-group">
+                <div class="folder-header" onclick="toggleFolder(this)">
+                    <span><i class="fas fa-folder"></i> Js库/图片/GSAP <span class="toggle-icon">📂</span></span>
+                    <span class="folder-count">(2 个文件)</span>
+                </div>
+                <div class="file-list">
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index.html</div>
+                        <div class="file-path">./Js库/图片/GSAP/index.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 66.8 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-12-06</span>
+                        </div>
+                        <a href="./Js库/图片/GSAP/index.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index2.html</div>
+                        <div class="file-path">./Js库/图片/GSAP/index2.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 78.5 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-12-06</span>
+                        </div>
+                        <a href="./Js库/图片/GSAP/index2.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Js库/图片/Particles -->
+            <div class="folder-group">
+                <div class="folder-header" onclick="toggleFolder(this)">
+                    <span><i class="fas fa-folder"></i> Js库/图片/Particles <span class="toggle-icon">📂</span></span>
+                    <span class="folder-count">(2 个文件)</span>
+                </div>
+                <div class="file-list">
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index.html</div>
+                        <div class="file-path">./Js库/图片/Particles/index.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 31.3 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-12-06</span>
+                        </div>
+                        <a href="./Js库/图片/Particles/index.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index2.html</div>
+                        <div class="file-path">./Js库/图片/Particles/index2.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 94.5 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-12-06</span>
+                        </div>
+                        <a href="./Js库/图片/Particles/index2.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Js库/图片/Pixi -->
+            <div class="folder-group">
+                <div class="folder-header" onclick="toggleFolder(this)">
+                    <span><i class="fas fa-folder"></i> Js库/图片/Pixi <span class="toggle-icon">📂</span></span>
+                    <span class="folder-count">(1 个文件)</span>
+                </div>
+                <div class="file-list">
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index.html</div>
+                        <div class="file-path">./Js库/图片/Pixi/index.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 72.3 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-12-06</span>
+                        </div>
+                        <a href="./Js库/图片/Pixi/index.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Js库/图片/tsParticles -->
+            <div class="folder-group">
+                <div class="folder-header" onclick="toggleFolder(this)">
+                    <span><i class="fas fa-folder"></i> Js库/图片/tsParticles <span class="toggle-icon">📂</span></span>
+                    <span class="folder-count">(1 个文件)</span>
+                </div>
+                <div class="file-list">
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index.html</div>
+                        <div class="file-path">./Js库/图片/tsParticles/index.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 24.8 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-12-06</span>
+                        </div>
+                        <a href="./Js库/图片/tsParticles/index.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Js库/工作流/tldraw -->
+            <div class="folder-group">
+                <div class="folder-header" onclick="toggleFolder(this)">
+                    <span><i class="fas fa-folder"></i> Js库/工作流/tldraw <span class="toggle-icon">📂</span></span>
+                    <span class="folder-count">(1 个文件)</span>
+                </div>
+                <div class="file-list">
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index.html</div>
+                        <div class="file-path">./Js库/工作流/tldraw/index.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 112.0 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-12-06</span>
+                        </div>
+                        <a href="./Js库/工作流/tldraw/index.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Js库/音乐/Tone -->
+            <div class="folder-group">
+                <div class="folder-header" onclick="toggleFolder(this)">
+                    <span><i class="fas fa-folder"></i> Js库/音乐/Tone <span class="toggle-icon">📂</span></span>
+                    <span class="folder-count">(2 个文件)</span>
+                </div>
+                <div class="file-list">
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index.html</div>
+                        <div class="file-path">./Js库/音乐/Tone/index.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 30.1 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-12-06</span>
+                        </div>
+                        <a href="./Js库/音乐/Tone/index.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index2.html</div>
+                        <div class="file-path">./Js库/音乐/Tone/index2.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 56.1 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-12-06</span>
+                        </div>
+                        <a href="./Js库/音乐/Tone/index2.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PoetryAndYou -->
+            <div class="folder-group">
+                <div class="folder-header" onclick="toggleFolder(this)">
+                    <span><i class="fas fa-folder"></i> PoetryAndYou <span class="toggle-icon">📂</span></span>
+                    <span class="folder-count">(1 个文件)</span>
+                </div>
+                <div class="file-list">
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index.html</div>
+                        <div class="file-path">./PoetryAndYou/index.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 8.9 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-07-13</span>
+                        </div>
+                        <a href="./PoetryAndYou/index.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wedding -->
+            <div class="folder-group">
+                <div class="folder-header" onclick="toggleFolder(this)">
+                    <span><i class="fas fa-folder"></i> Wedding <span class="toggle-icon">📂</span></span>
+                    <span class="folder-count">(1 个文件)</span>
+                </div>
+                <div class="file-list">
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index.html</div>
+                        <div class="file-path">./Wedding/index.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 20.9 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-07-13</span>
+                        </div>
+                        <a href="./Wedding/index.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 在线简历 -->
+            <div class="folder-group">
+                <div class="folder-header" onclick="toggleFolder(this)">
+                    <span><i class="fas fa-folder"></i> 在线简历 <span class="toggle-icon">📂</span></span>
+                    <span class="folder-count">(8 个文件)</span>
+                </div>
+                <div class="file-list">
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index.html</div>
+                        <div class="file-path">./在线简历/index.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 65.3 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-08-30</span>
+                        </div>
+                        <a href="./在线简历/index.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index2.html</div>
+                        <div class="file-path">./在线简历/index2.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 59.9 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-08-30</span>
+                        </div>
+                        <a href="./在线简历/index2.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index3.html</div>
+                        <div class="file-path">./在线简历/index3.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 136.5 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-08-30</span>
+                        </div>
+                        <a href="./在线简历/index3.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> zoe1.html</div>
+                        <div class="file-path">./在线简历/zoe1.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 6.3 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-11-29</span>
+                        </div>
+                        <a href="./在线简历/zoe1.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> zoe2.html</div>
+                        <div class="file-path">./在线简历/zoe2.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 22.7 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-11-29</span>
+                        </div>
+                        <a href="./在线简历/zoe2.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> zoe3.html</div>
+                        <div class="file-path">./在线简历/zoe3.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 14.4 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-11-29</span>
+                        </div>
+                        <a href="./在线简历/zoe3.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> zoe4.html</div>
+                        <div class="file-path">./在线简历/zoe4.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 17.2 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-11-29</span>
+                        </div>
+                        <a href="./在线简历/zoe4.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> zoe5.html</div>
+                        <div class="file-path">./在线简历/zoe5.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 30.2 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-11-29</span>
+                        </div>
+                        <a href="./在线简历/zoe5.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page根目录 -->
+            <div class="folder-group">
+                <div class="folder-header" onclick="toggleFolder(this)">
+                    <span><i class="fas fa-folder"></i> Page根目录 <span class="toggle-icon">📂</span></span>
+                    <span class="folder-count">(2 个文件)</span>
+                </div>
+                <div class="file-list">
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-heart"></i> 小爱心.html</div>
+                        <div class="file-path">./小爱心.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 957 B</span>
+                            <span><i class="fas fa-calendar"></i> 2025-07-13</span>
+                        </div>
+                        <a href="./小爱心.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-heart"></i> 浪漫背景.html</div>
+                        <div class="file-path">./浪漫背景.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 2.2 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-07-13</span>
+                        </div>
+                        <a href="./浪漫背景.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 视频播放器 -->
+            <div class="folder-group">
+                <div class="folder-header" onclick="toggleFolder(this)">
+                    <span><i class="fas fa-folder"></i> 视频播放器 <span class="toggle-icon">📂</span></span>
+                    <span class="folder-count">(1 个文件)</span>
+                </div>
+                <div class="file-list">
+                    <div class="file-item">
+                        <div class="file-name"><i class="fas fa-file-code"></i> index.html</div>
+                        <div class="file-path">./视频播放器/index.html</div>
+                        <div class="file-meta">
+                            <span><i class="fas fa-database"></i> 14.0 KB</span>
+                            <span><i class="fas fa-calendar"></i> 2025-07-13</span>
+                        </div>
+                        <a href="./视频播放器/index.html" class="open-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> 打开文件
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><i class="fas fa-archive"></i> Page - 原始版本导航</p>
+            <p style="margin-top: 10px; color: #888;">
+                共收录 38 个HTML文件 • 点击"打开文件"按钮可直接在浏览器中查看
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // 搜索功能
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function(e) {
+                const searchTerm = e.target.value.toLowerCase().trim();
+                const fileItems = document.querySelectorAll('.file-item');
+                let visibleCount = 0;
+
+                fileItems.forEach(item => {
+                    const fileName = item.querySelector('.file-name').textContent.toLowerCase();
+                    const filePath = item.querySelector('.file-path').textContent.toLowerCase();
+
+                    if (!searchTerm || fileName.includes(searchTerm) || filePath.includes(searchTerm)) {
+                        item.style.display = 'block';
+                        visibleCount++;
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+
+                document.querySelectorAll('.folder-group').forEach(folder => {
+                    const folderItems = folder.querySelectorAll('.file-item');
+                    const visibleItems = Array.from(folderItems).filter(item => 
+                        item.style.display !== 'none'
+                    ).length;
+
+                    const countSpan = folder.querySelector('.folder-count');
+                    if (countSpan) {
+                        countSpan.textContent = '(' + visibleItems + ' 个文件)';
+                    }
+
+                    if (visibleItems === 0) {
+                        folder.style.display = 'none';
+                    } else {
+                        folder.style.display = 'block';
+                    }
+                });
+            });
+        }
+
+        function filterFiles(type) {
+            const fileLists = document.querySelectorAll('.file-list');
+
+            fileLists.forEach(fileList => {
+                const items = Array.from(fileList.querySelectorAll('.file-item'));
+
+                items.sort((a, b) => {
+                    switch(type) {
+                        case 'recent':
+                            const aDateText = a.querySelector('.file-meta span:last-child').textContent;
+                            const bDateText = b.querySelector('.file-meta span:last-child').textContent;
+                            const aDate = new Date(aDateText.replace('📅 ', ''));
+                            const bDate = new Date(bDateText.replace('📅 ', ''));
+                            return bDate - aDate;
+
+                        case 'large':
+                            const aSizeText = a.querySelector('.file-meta span:first-child').textContent;
+                            const bSizeText = b.querySelector('.file-meta span:first-child').textContent;
+                            const aSize = parseFloat(aSizeText);
+                            const bSize = parseFloat(bSizeText);
+                            return bSize - aSize;
+
+                        default:
+                            return 0;
+                    }
+                });
+
+                items.forEach(item => fileList.appendChild(item));
+            });
+        }
+
+        function toggleAllFolders() {
+            const folderHeaders = document.querySelectorAll('.folder-header');
+            const allExpanded = Array.from(folderHeaders).every(header => {
+                const content = header.nextElementSibling;
+                return content.style.display !== 'none';
+            });
+
+            folderHeaders.forEach(header => {
+                const content = header.nextElementSibling;
+                const icon = header.querySelector('.toggle-icon');
+
+                if (allExpanded) {
+                    content.style.display = 'none';
+                    if (icon) icon.textContent = '📁';
+                } else {
+                    content.style.display = 'grid';
+                    if (icon) icon.textContent = '📂';
+                }
+            });
+        }
+
+        function toggleFolder(header) {
+            const content = header.nextElementSibling;
+            const icon = header.querySelector('.toggle-icon');
+            if (content.style.display === 'none') {
+                content.style.display = 'grid';
+                if (icon) icon.textContent = '📂';
+            } else {
+                content.style.display = 'none';
+                if (icon) icon.textContent = '📁';
+            }
+        }
+
+        document.querySelectorAll('.folder-header').forEach(header => {
+            const content = header.nextElementSibling;
+            const icon = header.querySelector('.toggle-icon');
+            content.style.display = 'grid';
+            if (icon) icon.textContent = '📂';
+        });
+    </script>
+</body>
+</html>

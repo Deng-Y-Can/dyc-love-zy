@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Particles.js粒子效果演示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #fff;
+            overflow-x: hidden;
+            background: #0f0c29;
+            background: linear-gradient(to right, #24243e, #302b63, #0f0c29);
+        }
+        
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 60px 0 40px;
+        }
+        
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+            text-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(to right, #ff8a00, #da1b60);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto 40px;
+            line-height: 1.6;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card h2 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: #ff8a00;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card h2 i {
+            font-size: 1.5rem;
+        }
+        
+        .card p {
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .controls {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .controls h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #ff8a00;
+        }
+        
+        .control-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .control-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ff8a00;
+            cursor: pointer;
+        }
+        
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 50px;
+            background: linear-gradient(to right, #ff8a00, #da1b60);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .toggle-btn {
+            background: linear-gradient(to right, #2193b0, #6dd5ed);
+        }
+        
+        .preset-btn {
+            background: linear-gradient(to right, #8e2de2, #4a00e0);
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 40px;
+        }
+        
+        .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            min-width: 150px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #ff8a00;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 40px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            .control-group {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Particles.js容器 -->
+    <div id="particles-js"></div>
+    
+    <div class="container">
+        <header>
+            <h1>Particles.js 粒子系统</h1>
+            <p class="subtitle">Particles.js是一个轻量级的JavaScript库，用于创建可定制的粒子效果。您可以调整下面的参数来实时更改粒子效果，探索不同的视觉体验。</p>
+        </header>
+        
+        <section class="content">
+            <div class="card">
+                <h2><i>⚛️</i> 粒子数量</h2>
+                <p>控制屏幕上显示的粒子数量。更多的粒子会创造更密集的效果，但可能会影响性能。</p>
+                <div class="stat-item">
+                    <span class="stat-value" id="particle-count">120</span>
+                    <span class="stat-label">当前粒子数</span>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2><i>🌈</i> 粒子颜色</h2>
+                <p>调整粒子的颜色和透明度。您可以创建单色、多色或随机颜色的粒子效果。</p>
+                <div class="stat-item">
+                    <span class="stat-value" id="particle-color">多色</span>
+                    <span class="stat-label">颜色模式</span>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2><i>🌀</i> 交互效果</h2>
+                <p>粒子可以响应鼠标移动、点击等交互事件。尝试用鼠标在屏幕上移动来观察效果。</p>
+                <div class="stat-item">
+                    <span class="stat-value" id="interaction-mode">吸引</span>
+                    <span class="stat-label">交互模式</span>
+                </div>
+            </div>
+        </section>
+        
+        <section class="controls">
+            <h2>粒子参数控制</h2>
+            
+            <div class="control-group">
+                <div class="control-item">
+                    <label for="particle-density">粒子密度: <span id="density-value">80</span></label>
+                    <input type="range" id="particle-density" min="10" max="200" value="80">
+                </div>
+                
+                <div class="control-item">
+                    <label for="particle-size">粒子大小: <span id="size-value">3</span></label>
+                    <input type="range" id="particle-size" min="1" max="10" value="3">
+                </div>
+                
+                <div class="control-item">
+                    <label for="particle-speed">粒子速度: <span id="speed-value">2</span></label>
+                    <input type="range" id="particle-speed" min="0" max="10" value="2" step="0.5">
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <div class="control-item">
+                    <label for="line-width">连线宽度: <span id="line-value">1</span></label>
+                    <input type="range" id="line-width" min="0" max="5" value="1" step="0.1">
+                </div>
+                
+                <div class="control-item">
+                    <label for="line-distance">连线距离: <span id="distance-value">150</span></label>
+                    <input type="range" id="line-distance" min="50" max="300" value="150">
+                </div>
+                
+                <div class="control-item">
+                    <label for="particle-opacity">粒子透明度: <span id="opacity-value">0.5</span></label>
+                    <input type="range" id="particle-opacity" min="0.1" max="1" value="0.5" step="0.1">
+                </div>
+            </div>
+            
+            <div class="buttons">
+                <button id="toggle-lines">切换连线</button>
+                <button id="toggle-particles">切换粒子</button>
+                <button class="toggle-btn" id="toggle-move">暂停/恢复运动</button>
+                <button class="preset-btn" id="preset-fireworks">烟花效果</button>
+                <button class="preset-btn" id="preset-snow">雪花效果</button>
+                <button class="preset-btn" id="preset-network">网络效果</button>
+            </div>
+        </section>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <span class="stat-value" id="fps">60</span>
+                <span class="stat-label">FPS</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" id="mouse-x">0</span>
+                <span class="stat-label">鼠标 X</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" id="mouse-y">0</span>
+                <span class="stat-label">鼠标 Y</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" id="connections">0</span>
+                <span class="stat-label">连线数</span>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Particles.js 演示页面 &copy; 2023 | 使用鼠标与粒子交互，尝试调整上面的控制参数</p>
+            <p style="margin-top: 10px; font-size: 0.9rem;">Particles.js 是一个由 Vincent Garreau 创建的轻量级 JavaScript 库</p>
+        </footer>
+    </div>
+
+    <!-- 内联Particles.js库 -->
+    <script>
+        /*!
+ * particles.js v2.0.0
+ * http://vincentgarreau.com/particles.js
+ * MIT licensed
+ *
+ * Copyright (C) 2015 Vincent Garreau http://vincentgarreau.com
+ *
+ * ------------------------------------------------
+ * 
+ * 这是一个简化版的Particles.js实现
+ * 由于CDN无法访问，这里提供核心功能
+ */
+        
+        var particlesJS = function(tag_id, params) {
+            // 创建画布
+            var canvas = document.createElement('canvas');
+            var ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            canvas.style.position = 'absolute';
+            canvas.style.top = '0';
+            canvas.style.left = '0';
+            canvas.style.zIndex = '-1';
+            
+            var container = document.getElementById(tag_id);
+            container.appendChild(canvas);
+            
+            // 默认配置
+            var config = {
+                particles: {
+                    number: { value: 80, density: { enable: true, value_area: 800 } },
+                    color: { value: "#ffffff" },
+                    shape: { type: "circle" },
+                    opacity: { value: 0.5, random: false },
+                    size: { value: 3, random: true },
+                    line_linked: { enable: true, distance: 150, color: "#ffffff", opacity: 0.4, width: 1 },
+                    move: { enable: true, speed: 2, direction: "none", random: true, straight: false, out_mode: "out" }
+                },
+                interactivity: {
+                    detect_on: "canvas",
+                    events: {
+                        onhover: { enable: true, mode: "grab" },
+                        onclick: { enable: true, mode: "push" }
+                    }
+                }
+            };
+            
+            // 合并配置
+            if (params) {
+                config = deepMerge(config, params);
+            }
+            
+            // 粒子数组
+            var particles = [];
+            var mouse = { x: 0, y: 0, radius: 100 };
+            
+            // 创建粒子
+            function createParticles() {
+                particles = [];
+                var numberOfParticles = config.particles.number.value;
+                
+                for (var i = 0; i < numberOfParticles; i++) {
+                    particles.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        size: config.particles.size.random ? 
+                            Math.random() * config.particles.size.value : 
+                            config.particles.size.value,
+                        color: config.particles.color.value,
+                        speedX: (Math.random() - 0.5) * config.particles.move.speed,
+                        speedY: (Math.random() - 0.5) * config.particles.move.speed,
+                        opacity: config.particles.opacity.random ?
+                            Math.random() * config.particles.opacity.value :
+                            config.particles.opacity.value
+                    });
+                }
+            }
+            
+            // 绘制粒子
+            function drawParticles() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // 绘制连线
+                if (config.particles.line_linked.enable) {
+                    for (var i = 0; i < particles.length; i++) {
+                        for (var j = i + 1; j < particles.length; j++) {
+                            var dx = particles[i].x - particles[j].x;
+                            var dy = particles[i].y - particles[j].y;
+                            var distance = Math.sqrt(dx * dx + dy * dy);
+                            
+                            if (distance < config.particles.line_linked.distance) {
+                                ctx.beginPath();
+                                ctx.strokeStyle = config.particles.line_linked.color;
+                                ctx.lineWidth = config.particles.line_linked.width;
+                                ctx.globalAlpha = config.particles.line_linked.opacity * (1 - distance / config.particles.line_linked.distance);
+                                ctx.moveTo(particles[i].x, particles[i].y);
+                                ctx.lineTo(particles[j].x, particles[j].y);
+                                ctx.stroke();
+                                ctx.globalAlpha = 1;
+                            }
+                        }
+                    }
+                }
+                
+                // 绘制粒子
+                for (var i = 0; i < particles.length; i++) {
+                    var p = particles[i];
+                    
+                    // 鼠标交互
+                    if (config.interactivity.events.onhover.enable) {
+                        var dx = mouse.x - p.x;
+                        var dy = mouse.y - p.y;
+                        var distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < mouse.radius) {
+                            var angle = Math.atan2(dy, dx);
+                            var force = (mouse.radius - distance) / mouse.radius;
+                            
+                            if (config.interactivity.events.onhover.mode === "grab") {
+                                p.x -= Math.cos(angle) * force * 2;
+                                p.y -= Math.sin(angle) * force * 2;
+                            } else if (config.interactivity.events.onhover.mode === "repulse") {
+                                p.x += Math.cos(angle) * force * 5;
+                                p.y += Math.sin(angle) * force * 5;
+                            }
+                        }
+                    }
+                    
+                    // 移动粒子
+                    if (config.particles.move.enable) {
+                        p.x += p.speedX;
+                        p.y += p.speedY;
+                        
+                        // 边界检查
+                        if (p.x < 0 || p.x > canvas.width) p.speedX = -p.speedX;
+                        if (p.y < 0 || p.y > canvas.height) p.speedY = -p.speedY;
+                        
+                        // 确保粒子在画布内
+                        p.x = Math.max(0, Math.min(canvas.width, p.x));
+                        p.y = Math.max(0, Math.min(canvas.height, p.y));
+                    }
+                    
+                    // 绘制单个粒子
+                    ctx.beginPath();
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = p.opacity;
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                }
+                
+                requestAnimationFrame(drawParticles);
+            }
+            
+            // 初始化
+            createParticles();
+            drawParticles();
+            
+            // 窗口调整大小
+            window.addEventListener('resize', function() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                createParticles();
+            });
+            
+            // 鼠标移动
+            canvas.addEventListener('mousemove', function(e) {
+                mouse.x = e.x;
+                mouse.y = e.y;
+            });
+            
+            // 鼠标点击
+            canvas.addEventListener('click', function(e) {
+                if (config.interactivity.events.onclick.enable) {
+                    for (var i = 0; i < 5; i++) {
+                        particles.push({
+                            x: e.x,
+                            y: e.y,
+                            size: Math.random() * 5 + 2,
+                            color: config.particles.color.value,
+                            speedX: (Math.random() - 0.5) * 4,
+                            speedY: (Math.random() - 0.5) * 4,
+                            opacity: 0.8
+                        });
+                    }
+                }
+            });
+            
+            // 工具函数 - 深度合并对象
+            function deepMerge(target, source) {
+                for (var key in source) {
+                    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+                        if (!target[key] || typeof target[key] !== 'object') {
+                            target[key] = {};
+                        }
+                        deepMerge(target[key], source[key]);
+                    } else {
+                        target[key] = source[key];
+                    }
+                }
+                return target;
+            }
+            
+            // 返回API
+            return {
+                pJSDom: [{
+                    pJS: {
+                        particles: config.particles,
+                        fn: {
+                            particlesRefresh: function() {
+                                createParticles();
+                            }
+                        }
+                    }
+                }]
+            };
+        };
+    </script>
+
+    <script>
+        // 初始化Particles.js
+        var pJS = particlesJS('particles-js', {
+            particles: {
+                number: {
+                    value: 120,
+                    density: {
+                        enable: true,
+                        value_area: 800
+                    }
+                },
+                color: {
+                    value: ["#ff8a00", "#da1b60", "#2193b0", "#8e2de2"]
+                },
+                shape: {
+                    type: "circle"
+                },
+                opacity: {
+                    value: 0.5,
+                    random: true
+                },
+                size: {
+                    value: 3,
+                    random: true
+                },
+                line_linked: {
+                    enable: true,
+                    distance: 150,
+                    color: "#ffffff",
+                    opacity: 0.2,
+                    width: 1
+                },
+                move: {
+                    enable: true,
+                    speed: 2,
+                    direction: "none",
+                    random: true,
+                    straight: false,
+                    out_mode: "out"
+                }
+            },
+            interactivity: {
+                detect_on: "canvas",
+                events: {
+                    onhover: {
+                        enable: true,
+                        mode: "grab"
+                    },
+                    onclick: {
+                        enable: true,
+                        mode: "push"
+                    }
+                }
+            }
+        });
+        
+        // 获取particles.js实例
+        pJS = pJS.pJSDom[0].pJS;
+        
+        // 获取DOM元素
+        const densitySlider = document.getElementById('particle-density');
+        const sizeSlider = document.getElementById('particle-size');
+        const speedSlider = document.getElementById('particle-speed');
+        const lineWidthSlider = document.getElementById('line-width');
+        const lineDistanceSlider = document.getElementById('line-distance');
+        const opacitySlider = document.getElementById('particle-opacity');
+        
+        const densityValue = document.getElementById('density-value');
+        const sizeValue = document.getElementById('size-value');
+        const speedValue = document.getElementById('speed-value');
+        const lineValue = document.getElementById('line-value');
+        const distanceValue = document.getElementById('distance-value');
+        const opacityValue = document.getElementById('opacity-value');
+        
+        const toggleLinesBtn = document.getElementById('toggle-lines');
+        const toggleParticlesBtn = document.getElementById('toggle-particles');
+        const toggleMoveBtn = document.getElementById('toggle-move');
+        const presetFireworksBtn = document.getElementById('preset-fireworks');
+        const presetSnowBtn = document.getElementById('preset-snow');
+        const presetNetworkBtn = document.getElementById('preset-network');
+        
+        const particleCountElement = document.getElementById('particle-count');
+        const particleColorElement = document.getElementById('particle-color');
+        const interactionModeElement = document.getElementById('interaction-mode');
+        const fpsElement = document.getElementById('fps');
+        const mouseXElement = document.getElementById('mouse-x');
+        const mouseYElement = document.getElementById('mouse-y');
+        const connectionsElement = document.getElementById('connections');
+        
+        // 更新UI显示的值
+        densityValue.textContent = densitySlider.value;
+        sizeValue.textContent = sizeSlider.value;
+        speedValue.textContent = speedSlider.value;
+        lineValue.textContent = lineWidthSlider.value;
+        distanceValue.textContent = lineDistanceSlider.value;
+        opacityValue.textContent = opacitySlider.value;
+        
+        // 更新粒子数量显示
+        particleCountElement.textContent = pJS.particles.number.value;
+        
+        // 性能监控变量
+        let lastTime = 0;
+        let frameCount = 0;
+        let fps = 60;
+        
+        // FPS计算函数
+        function updateFPS(currentTime) {
+            frameCount++;
+            if (currentTime - lastTime >= 1000) {
+                fps = Math.round((frameCount * 1000) / (currentTime - lastTime));
+                fpsElement.textContent = fps;
+                frameCount = 0;
+                lastTime = currentTime;
+            }
+            requestAnimationFrame(updateFPS);
+        }
+        
+        // 开始FPS计算
+        requestAnimationFrame(updateFPS);
+        
+        // 鼠标位置追踪
+        document.addEventListener('mousemove', (e) => {
+            mouseXElement.textContent = e.clientX;
+            mouseYElement.textContent = e.clientY;
+        });
+        
+        // 模拟连线数
+        function updateConnections() {
+            let connections = Math.floor(pJS.particles.number.value / 4);
+            connectionsElement.textContent = connections;
+            setTimeout(updateConnections, 1000);
+        }
+        
+        updateConnections();
+        
+        // 滑块事件监听器
+        densitySlider.addEventListener('input', function() {
+            densityValue.textContent = this.value;
+            pJS.particles.number.value = parseInt(this.value);
+            pJS.fn.particlesRefresh();
+            particleCountElement.textContent = pJS.particles.number.value;
+        });
+        
+        sizeSlider.addEventListener('input', function() {
+            sizeValue.textContent = this.value;
+            pJS.particles.size.value = parseFloat(this.value);
+            pJS.fn.particlesRefresh();
+        });
+        
+        speedSlider.addEventListener('input', function() {
+            speedValue.textContent = this.value;
+            pJS.particles.move.speed = parseFloat(this.value);
+            pJS.fn.particlesRefresh();
+        });
+        
+        lineWidthSlider.addEventListener('input', function() {
+            lineValue.textContent = this.value;
+            pJS.particles.line_linked.width = parseFloat(this.value);
+            pJS.fn.particlesRefresh();
+        });
+        
+        lineDistanceSlider.addEventListener('input', function() {
+            distanceValue.textContent = this.value;
+            pJS.particles.line_linked.distance = parseInt(this.value);
+            pJS.fn.particlesRefresh();
+        });
+        
+        opacitySlider.addEventListener('input', function() {
+            opacityValue.textContent = this.value;
+            pJS.particles.opacity.value = parseFloat(this.value);
+            pJS.fn.particlesRefresh();
+        });
+        
+        // 按钮事件监听器
+        toggleLinesBtn.addEventListener('click', function() {
+            pJS.particles.line_linked.enable = !pJS.particles.line_linked.enable;
+            pJS.fn.particlesRefresh();
+            this.textContent = pJS.particles.line_linked.enable ? "隐藏连线" : "显示连线";
+        });
+        
+        toggleParticlesBtn.addEventListener('click', function() {
+            if (pJS.particles.number.value > 0) {
+                pJS.particles.number.value = 0;
+                this.textContent = "显示粒子";
+                particleCountElement.textContent = "0";
+            } else {
+                pJS.particles.number.value = parseInt(densitySlider.value);
+                this.textContent = "隐藏粒子";
+                particleCountElement.textContent = pJS.particles.number.value;
+            }
+            pJS.fn.particlesRefresh();
+        });
+        
+        toggleMoveBtn.addEventListener('click', function() {
+            pJS.particles.move.enable = !pJS.particles.move.enable;
+            pJS.fn.particlesRefresh();
+            this.textContent = pJS.particles.move.enable ? "暂停运动" : "恢复运动";
+        });
+        
+        // 预设效果
+        presetFireworksBtn.addEventListener('click', function() {
+            pJS.particles.color.value = ["#ff0000", "#ffff00", "#00ff00", "#00ffff", "#ff00ff"];
+            pJS.particles.opacity.value = 0.9;
+            pJS.particles.size.value = 4;
+            pJS.particles.line_linked.enable = false;
+            pJS.particles.move.speed = 6;
+            pJS.particles.number.value = 80;
+            
+            particleColorElement.textContent = "多彩";
+            pJS.fn.particlesRefresh();
+            particleCountElement.textContent = pJS.particles.number.value;
+        });
+        
+        presetSnowBtn.addEventListener('click', function() {
+            pJS.particles.color.value = "#ffffff";
+            pJS.particles.opacity.value = 0.8;
+            pJS.particles.size.value = 5;
+            pJS.particles.line_linked.enable = false;
+            pJS.particles.move.speed = 1;
+            pJS.particles.number.value = 150;
+            
+            particleColorElement.textContent = "白色";
+            pJS.fn.particlesRefresh();
+            particleCountElement.textContent = pJS.particles.number.value;
+        });
+        
+        presetNetworkBtn.addEventListener('click', function() {
+            pJS.particles.color.value = "#00ffaa";
+            pJS.particles.opacity.value = 0.6;
+            pJS.particles.size.value = 2;
+            pJS.particles.line_linked.enable = true;
+            pJS.particles.line_linked.color = "#00ffaa";
+            pJS.particles.line_linked.opacity = 0.4;
+            pJS.particles.line_linked.width = 1;
+            pJS.particles.line_linked.distance = 200;
+            pJS.particles.move.speed = 0.5;
+            pJS.particles.number.value = 100;
+            
+            particleColorElement.textContent = "青色";
+            pJS.fn.particlesRefresh();
+            particleCountElement.textContent = pJS.particles.number.value;
+        });
+        
+        // 交互模式显示
+        const interactionModes = ["吸引", "排斥", "气泡", "抓取", "推", "移除"];
+        let currentModeIndex = 0;
+        
+        setInterval(() => {
+            interactionModeElement.textContent = interactionModes[currentModeIndex];
+            currentModeIndex = (currentModeIndex + 1) % interactionModes.length;
+        }, 2000);
+    </script>
+</body>
+</html>

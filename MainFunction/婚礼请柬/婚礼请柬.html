@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>婚礼请柬</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            position: relative;
+            overflow: auto;
+        }
+
+       .invitation {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 800px;
+            opacity: 0;
+            animation: fadeInUp 1s ease-in-out forwards;
+            position: relative;
+            z-index: 1;
+            margin: 40px auto;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-size: 48px;
+            color: #ff69b4;
+            margin-bottom: 20px;
+            animation: scaleIn 1s ease-in-out 0.5s forwards;
+            opacity: 0;
+            font-family: 'Pacifico', cursive;
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        p {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            animation: slideInLeft 1s ease-in-out forwards;
+            opacity: 0;
+            color: #333;
+        }
+
+        p:nth-child(2) {
+            animation-delay: 0.7s;
+        }
+
+        p:nth-child(3) {
+            animation-delay: 0.9s;
+        }
+
+        p:nth-child(4) {
+            animation-delay: 1.1s;
+        }
+
+        p:nth-child(5) {
+            animation-delay: 1.3s;
+        }
+
+        p:nth-child(6) {
+            animation-delay: 1.5s;
+        }
+
+        p:nth-child(7) {
+            animation-delay: 1.7s;
+        }
+
+        p:nth-child(8) {
+            animation-delay: 1.9s;
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+       .date {
+            font-weight: bold;
+            color: #ff69b4;
+        }
+
+       .location {
+            font-weight: bold;
+            color: #ff69b4;
+        }
+
+       .confetti {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+       .confetti-piece {
+            position: absolute;
+            width: 10px;
+            height: 20px;
+            background-color: #ff69b4;
+            top: 0;
+            opacity: 0;
+            animation: confettiFall 3s linear infinite;
+        }
+
+        @keyframes confettiFall {
+            0% {
+                top: 0;
+                opacity: 1;
+            }
+            100% {
+                top: 100vh;
+                opacity: 0;
+            }
+        }
+
+        audio {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            opacity: 0.7;
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+       .background-buttons {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 2;
+        }
+
+       .background-buttons button {
+            padding: 10px 20px;
+            border: none;
+            background-color: rgba(255, 255, 255, 0.8);
+            cursor: pointer;
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+       .background-buttons button:hover {
+            background-color: rgba(255, 255, 255, 1);
+            transform: translateY(-3px);
+        }
+
+        #countdown {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff69b4;
+            margin-top: 20px;
+            animation: fadeIn 1s ease-in-out 2s forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+       .media-container {
+            margin-top: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+       .media-item {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+       .media-item img {
+            max-width: 50%;
+            height: auto;
+            border-radius: 10px;
+        }
+
+       .media-item .description {
+            flex: 1;
+            text-align: left;
+        }
+
+       .draggable {
+            cursor: move;
+            user-select: none;
+            transition: opacity 0.2s;
+        }
+
+       .dragging {
+            opacity: 0.7;
+        }
+
+       .control-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 15px;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+       .control-panel input,
+       .control-panel button {
+            padding: 10px;
+            border: none;
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+       .control-panel input {
+            padding-left: 20px;
+        }
+
+       .control-panel button:hover {
+            background-color: #ff69b4;
+            color: white;
+            transform: translateY(-3px);
+        }
+
+       .danmu-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+       .danmu {
+            position: absolute;
+            white-space: nowrap;
+            animation: danmuMove 10s linear infinite;
+            color: white;
+            font-size: 18px;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes danmuMove {
+            from {
+                transform: translateX(100%);
+            }
+            to {
+                transform: translateX(-100%);
+            }
+        }
+
+       .add-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            z-index: 3;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+       .add-modal input,
+       .add-modal button {
+            padding: 10px;
+            border: none;
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+       .add-modal input {
+            padding-left: 20px;
+        }
+
+       .add-modal button:hover {
+            background-color: #ff69b4;
+            color: white;
+            transform: translateY(-3px);
+        }
+
+       .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="confetti">
+        <!-- 这里可以通过 JavaScript 动态添加更多的 confetti-piece -->
+    </div>
+    <div class="invitation">
+        <h1>婚礼请柬</h1>
+        <p>在时光长河中，我们的故事缓缓展开。初次相遇，阳光洒在街角，你的笑容如同春日的花朵，瞬间点亮了我的世界。</p>
+        <p>一起漫步在海边，听着海浪的声音，感受着彼此的心跳，那一刻，我知道，你就是我一直在寻找的那个人。</p>
+        <p>那些一起度过的日子，有欢笑，有泪水，每一个瞬间都成为了我们最珍贵的回忆。</p>
+        <p>如今，我们即将步入婚姻的殿堂，心中满是喜悦与期待。亲爱的朋友，我们诚挚地邀请您来参加我们的婚礼。</p>
+        <p>新郎：candy 新娘：zoe</p>
+        <p class="date">日期：2025.10.5 12:00</p>
+        <p class="location">地点：[详细地址]</p>
+        <p>您的到来，将使我们的婚礼更加完美。期待与您一同见证这幸福的时刻！</p>
+        <div id="countdown"></div>
+        <div class="media-container">
+            <!-- 示例图片 1 -->
+            <div class="media-item draggable">
+                <img src="https://dummyimage.com/300x200/ffd1dc/ffffff&text=Wedding+Photo+1" alt="婚礼照片 1">
+                <div class="description">我们的初次约会</div>
+            </div>
+            <!-- 示例图片 2 -->
+            <div class="media-item draggable">
+                <div class="description">浪漫的海边漫步</div>
+                <img src="https://dummyimage.com/300x200/ffb6c1/ffffff&text=Wedding+Photo+2" alt="婚礼照片 2">
+            </div>
+        </div>
+        <div class="danmu-container"></div>
+    </div>
+    <audio controls autoplay loop>
+        <source src="https://file-examples.com/storage/fed2d8999dc9f7c2c66c12d/2017/11/file_example_MP3_700KB.mp3" type="audio/mpeg">
+        您的浏览器不支持音频播放。
+    </audio>
+    <div class="background-buttons">
+        <button onclick="changeBackground(0)">背景1</button>
+        <button onclick="changeBackground(1)">背景2</button>
+        <button onclick="changeBackground(2)">背景3</button>
+        <button onclick="changeBackground(3)">背景4</button>
+    </div>
+    <div class="control-panel">
+        <button onclick="openAddModal()">添加图片与描述</button>
+        <button onclick="openAddImageModal()">单独添加图片</button>
+        <button onclick="openAddTextModal()">单独添加文字</button>
+        <input type="text" id="danmu-input" placeholder="输入弹幕文字">
+        <button onclick="sendDanmu()">发送弹幕</button>
+    </div>
+    <div class="add-modal" id="add-modal">
+        <input type="text" id="image-url" placeholder="图片链接">
+        <input type="text" id="image-description" placeholder="图片描述">
+        <button onclick="addMediaItem()">确认添加</button>
+        <button onclick="closeAddModal()">取消</button>
+    </div>
+    <div class="add-modal" id="add-image-modal">
+        <input type="text" id="single-image-url" placeholder="图片链接">
+        <button onclick="addSingleImage()">确认添加</button>
+        <button onclick="closeAddImageModal()">取消</button>
+    </div>
+    <div class="add-modal" id="add-text-modal">
+        <input type="text" id="single-text" placeholder="文字内容">
+        <button onclick="addSingleText()">确认添加</button>
+        <button onclick="closeAddTextModal()">取消</button>
+    </div>
+    <div class="overlay" id="overlay"></div>
+    <script>
+        const backgrounds = [
+            'linear-gradient(45deg, #FFE4F8, #FFB6C1, #FF69B4, #DB7093)',
+            'linear-gradient(45deg, #E0FFFF, #ADD8E6, #00BFFF, #1E90FF)',
+            'linear-gradient(45deg, #FFFFE0, #FFFACD, #FFD700, #DAA520)',
+            'linear-gradient(45deg, #F0FFF0, #98FB98, #32CD32, #228B22)'
+        ];
+
+        function createConfetti() {
+            const confetti = document.querySelector('.confetti');
+            for (let i = 0; i < 50; i++) {
+                const piece = document.createElement('div');
+                piece.classList.add('confetti-piece');
+                piece.style.left = Math.random() * 100 + '%';
+                piece.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                piece.style.backgroundColor = getRandomColor();
+                confetti.appendChild(piece);
+            }
+        }
+
+        function getRandomColor() {
+            const colors = ['#d9534f', '#5bc0de', '#f0ad4e', '#5cb85c'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        function changeBackground(index) {
+            document.body.style.background = backgrounds[index];
+        }
+
+        function updateCountdown() {
+            const weddingDate = new Date('2025-10-05 12:00:00');
+            const now = new Date();
+            const distance = weddingDate - now;
+
+            if (distance < 0) {
+                document.getElementById('countdown').innerHTML = '婚礼已举行！';
+                return;
+            }
+
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            document.getElementById('countdown').innerHTML = `距离婚礼还有：${days} 天 ${hours} 时 ${minutes} 分 ${seconds} 秒`;
+        }
+
+        function setupDraggableElements() {
+            const draggableElements = document.querySelectorAll('.draggable');
+            draggableElements.forEach((element) => {
+                let isDragging = false;
+                let offsetX, offsetY;
+
+                element.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    offsetX = e.clientX - element.offsetLeft;
+                    offsetY = e.clientY - element.offsetTop;
+                    element.classList.add('dragging');
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (isDragging) {
+                        element.style.left = (e.clientX - offsetX) + 'px';
+                        element.style.top = (e.clientY - offsetY) + 'px';
+                    }
+                });
+
+                document.addEventListener('mouseup', () => {
+                    isDragging = false;
+                    element.classList.remove('dragging');
+                });
+            });
+        }
+
+        function openAddModal() {
+            const addModal = document.getElementById('add-modal');
+            const overlay = document.getElementById('overlay');
+            addModal.style.display = 'flex';
+            overlay.style.display = 'block';
+        }
+
+        function closeAddModal() {
+            const addModal = document.getElementById('add-modal');
+            const overlay = document.getElementById('overlay');
+            addModal.style.display = 'none';
+            overlay.style.display = 'none';
+        }
+
+        function openAddImageModal() {
+            const addImageModal = document.getElementById('add-image-modal');
+            const overlay = document.getElementById('overlay');
+            addImageModal.style.display = 'flex';
+            overlay.style.display = 'block';
+        }
+
+        function closeAddImageModal() {
+            const addImageModal = document.getElementById('add-image-modal');
+            const overlay = document.getElementById('overlay');
+            addImageModal.style.display = 'none';
+            overlay.style.display = 'none';
+        }
+
+        function openAddTextModal() {
+            const addTextModal = document.getElementById('add-text-modal');
+            const overlay = document.getElementById('overlay');
+            addTextModal.style.display = 'flex';
+            overlay.style.display = 'block';
+        }
+
+        function closeAddTextModal() {
+            const addTextModal = document.getElementById('add-text-modal');
+            const overlay = document.getElementById('overlay');
+            addTextModal.style.display = 'none';
+            overlay.style.display = 'none';
+        }
+
+        function addMediaItem() {
+            const imageUrl = document.getElementById('image-url').value;
+            const description = document.getElementById('image-description').value;
+            const mediaContainer = document.querySelector('.media-container');
+
+            const mediaItem = document.createElement('div');
+            mediaItem.classList.add('media-item', 'draggable');
+
+            if (Math.random() > 0.5) {
+                const img = document.createElement('img');
+                img.src = imageUrl || 'https://dummyimage.com/300x200/ffd1dc/ffffff&text=New+Wedding+Photo';
+                img.alt = '新婚礼照片';
+                mediaItem.appendChild(img);
+
+                const desc = document.createElement('div');
+                desc.classList.add('description');
+                desc.textContent = description || '新照片描述';
+                mediaItem.appendChild(desc);
+            } else {
+                const desc = document.createElement('div');
+                desc.classList.add('description');
+                desc.textContent = description || '新照片描述';
+                mediaItem.appendChild(desc);
+
+                const img = document.createElement('img');
+                img.src = imageUrl || 'https://dummyimage.com/300x200/ffd1dc/ffffff&text=New+Wedding+Photo';
+                img.alt = '新婚礼照片';
+                mediaItem.appendChild(img);
+            }
+
+            mediaContainer.appendChild(mediaItem);
+            setupDraggableElements();
+            closeAddModal();
+        }
+
+        function addSingleImage() {
+            const imageUrl = document.getElementById('single-image-url').value;
+            const mediaContainer = document.querySelector('.media-container');
+
+            const mediaItem = document.createElement('div');
+            mediaItem.classList.add('media-item', 'draggable');
+
+            const img = document.createElement('img');
+            img.src = imageUrl || 'https://dummyimage.com/300x200/ffd1dc/ffffff&text=New+Wedding+Photo';
+            img.alt = '新婚礼照片';
+            mediaItem.appendChild(img);
+
+            mediaContainer.appendChild(mediaItem);
+            setupDraggableElements();
+            closeAddImageModal();
+        }
+
+        function addSingleText() {
+            const text = document.getElementById('single-text').value;
+            const mediaContainer = document.querySelector('.media-container');
+
+            const mediaItem = document.createElement('div');
+            mediaItem.classList.add('media-item', 'draggable');
+
+            const desc = document.createElement('div');
+            desc.classList.add('description');
+            desc.textContent = text || '新文字内容';
+            mediaItem.appendChild(desc);
+
+            mediaContainer.appendChild(mediaItem);
+            setupDraggableElements();
+            closeAddTextModal();
+        }
+
+        function sendDanmu() {
+            const input = document.getElementById('danmu-input');
+            const text = input.value.trim();
+            if (text) {
+                const danmuContainer = document.querySelector('.danmu-container');
+                const danmu = document.createElement('div');
+                danmu.classList.add('danmu');
+                danmu.textContent = text;
+                danmu.style.top = Math.random() * (danmuContainer.offsetHeight - 20) + 'px';
+                danmuContainer.appendChild(danmu);
+                input.value = '';
+                danmu.addEventListener('animationend', () => {
+                    danmu.remove();
+                });
+            }
+        }
+
+        window.onload = () => {
+            createConfetti();
+            changeBackground(0);
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+            setupDraggableElements();
+        };
+    </script>
+</body>
+
+</html>    

@@ -1,0 +1,1870 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixi.js增强版多功能交互式网页</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/6.5.8/browser/pixi.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0c2461, #1e3799, #4a69bd);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(to right, #ff9a9e, #fad0c4, #a1c4fd);
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+            background: linear-gradient(to right, #ff9a9e, #fad0c4, #fad0c4, #a1c4fd);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            letter-spacing: 1px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 900px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .canvas-section {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .controls-section {
+            width: 380px;
+        }
+        
+        @media (max-width: 1200px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .canvas-section,
+            .controls-section {
+                width: 100%;
+            }
+        }
+        
+        .canvas-container {
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            height: 700px;
+        }
+        
+        #pixi-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        .controls-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            height: 100%;
+        }
+        
+        .control-section {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 20px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            flex: 1;
+        }
+        
+        .section-title {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            color: #4a9eff;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+        
+        .value-display {
+            color: #4a9eff;
+            font-weight: bold;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #4a9eff;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(74, 158, 255, 0.7);
+        }
+        
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 12px;
+        }
+        
+        button {
+            background: linear-gradient(to right, #4a9eff, #6a5af9);
+            color: white;
+            border: none;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            box-shadow: 0 4px 12px rgba(74, 158, 255, 0.3);
+            font-size: 0.9rem;
+            min-height: 40px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(74, 158, 255, 0.5);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button.secondary {
+            background: linear-gradient(to right, #ff6b6b, #ff8e8e);
+        }
+        
+        button.tertiary {
+            background: linear-gradient(to right, #1dd1a1, #10ac84);
+        }
+        
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+        
+        .toggle-label {
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 46px;
+            height: 24px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.2);
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: #4a9eff;
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(22px);
+        }
+        
+        .status-display {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            font-size: 0.9rem;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .stat-value {
+            color: #4a9eff;
+            font-weight: bold;
+        }
+        
+        .feature-showcase {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 25px;
+            margin-top: 20px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 18px;
+            border-radius: 15px;
+            border-left: 5px solid;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+        
+        .feature-card.blue {
+            border-color: #4a9eff;
+        }
+        
+        .feature-card.red {
+            border-color: #ff6b6b;
+        }
+        
+        .feature-card.green {
+            border-color: #1dd1a1;
+        }
+        
+        .feature-card.purple {
+            border-color: #a29bfe;
+        }
+        
+        .feature-card h3 {
+            color: #fff;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .feature-card p {
+            opacity: 0.8;
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+        
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 12px 18px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.5s ease;
+            z-index: 1000;
+            max-width: 280px;
+            font-size: 0.95rem;
+        }
+        
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .key-hint {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            z-index: 1000;
+        }
+        
+        .control-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .control-row button {
+            flex: 1;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .canvas-container {
+                height: 500px;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .control-section {
+                padding: 15px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .main-content {
+                gap: 15px;
+            }
+            
+            .canvas-container {
+                height: 400px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .section-title {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Pixi.js增强版交互演示</h1>
+            <p class="subtitle">这是一个功能丰富的Pixi.js演示，包含物理引擎、视差背景、滤镜效果、3D透视、声音交互和高级粒子系统。探索所有功能并创建您自己的交互式场景！</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="canvas-section">
+                <div class="canvas-container">
+                    <canvas id="pixi-canvas"></canvas>
+                </div>
+            </div>
+            
+            <div class="controls-section">
+                <div class="controls-panel">
+                    <div class="control-section">
+                        <h2 class="section-title">⚙️ 粒子与物理</h2>
+                        
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>粒子数量</span>
+                                <span class="value-display" id="particle-count-value">200</span>
+                            </div>
+                            <input type="range" id="particle-count" min="10" max="1000" value="200">
+                        </div>
+                        
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>物理重力</span>
+                                <span class="value-display" id="gravity-value">0.5</span>
+                            </div>
+                            <input type="range" id="gravity-control" min="0" max="2" step="0.1" value="0.5">
+                        </div>
+                        
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>粒子寿命</span>
+                                <span class="value-display" id="lifetime-value">3.0</span>
+                            </div>
+                            <input type="range" id="lifetime-control" min="0.5" max="10" step="0.1" value="3.0">
+                        </div>
+                        
+                        <div class="toggle-container">
+                            <span class="toggle-label">启用物理碰撞</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="physics-toggle" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="button-grid">
+                            <button id="fireworks-btn">🎆 烟花效果</button>
+                            <button id="rain-btn">🌧️ 下雨效果</button>
+                            <button id="magnetic-btn" class="secondary">🧲 磁力模式</button>
+                            <button id="reset-physics-btn">🔄 重置物理</button>
+                        </div>
+                    </div>
+                    
+                    <div class="control-section">
+                        <h2 class="section-title">🎨 视觉效果</h2>
+                        
+                        <div class="toggle-container">
+                            <span class="toggle-label">视差背景</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="parallax-toggle" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="toggle-container">
+                            <span class="toggle-label">3D透视</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="perspective-toggle">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>模糊强度</span>
+                                <span class="value-display" id="blur-value">2</span>
+                            </div>
+                            <input type="range" id="blur-control" min="0" max="10" step="0.5" value="2">
+                        </div>
+                        
+                        <div class="control-group">
+                            <div class="control-label">
+                                <span>色彩饱和度</span>
+                                <span class="value-display" id="saturation-value">1.0</span>
+                            </div>
+                            <input type="range" id="saturation-control" min="0" max="3" step="0.1" value="1.0">
+                        </div>
+                        
+                        <div class="button-grid">
+                            <button id="glitch-btn">🌀 故障效果</button>
+                            <button id="bloom-btn">✨ 发光效果</button>
+                            <button id="sepia-btn" class="secondary">🟫 怀旧滤镜</button>
+                            <button id="reset-filters-btn">🗑️ 清除滤镜</button>
+                        </div>
+                    </div>
+                    
+                    <div class="control-section">
+                        <h2 class="section-title">🎮 交互与游戏</h2>
+                        
+                        <div class="control-row">
+                            <button id="add-vehicle-btn">🚗 添加载具</button>
+                            <button id="add-building-btn">🏢 添加建筑</button>
+                        </div>
+                        
+                        <div class="control-row">
+                            <button id="spawn-enemy-btn" class="secondary">👾 生成敌人</button>
+                            <button id="clear-all-btn">💥 清空场景</button>
+                        </div>
+                        
+                        <div class="toggle-container">
+                            <span class="toggle-label">启用声音</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="sound-toggle" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="toggle-container">
+                            <span class="toggle-label">昼夜循环</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="daynight-toggle">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="status-display">
+                            <div class="stat-row">
+                                <span>场景对象:</span>
+                                <span class="stat-value" id="object-count">0</span>
+                            </div>
+                            <div class="stat-row">
+                                <span>FPS:</span>
+                                <span class="stat-value" id="fps-counter">60</span>
+                            </div>
+                            <div class="stat-row">
+                                <span>内存使用:</span>
+                                <span class="stat-value" id="memory-usage">0 MB</span>
+                            </div>
+                            <div class="stat-row">
+                                <span>交互模式:</span>
+                                <span class="stat-value" id="interaction-mode">自由模式</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="feature-showcase">
+            <h2 class="section-title">✨ 功能亮点</h2>
+            <div class="feature-grid">
+                <div class="feature-card blue">
+                    <h3>⚛️ 物理引擎</h3>
+                    <p>完整的物理模拟系统，支持重力、碰撞、弹力和摩擦力。物体之间会有真实的物理互动。</p>
+                </div>
+                <div class="feature-card red">
+                    <h3>🌌 视差背景</h3>
+                    <p>多层视差滚动背景，营造深度感。不同图层以不同速度移动，增强3D视觉效果。</p>
+                </div>
+                <div class="feature-card green">
+                    <h3>🎛️ 实时滤镜</h3>
+                    <p>多种实时后处理滤镜：模糊、发光、怀旧、故障等。可叠加使用创造独特视觉效果。</p>
+                </div>
+                <div class="feature-card purple">
+                    <h3>🎵 音频交互</h3>
+                    <p>声音效果与可视化反馈。粒子会随音频节奏变化，交互动作伴有音效反馈。</p>
+                </div>
+                <div class="feature-card blue">
+                    <h3>🧩 3D透视</h3>
+                    <p>仿3D透视效果，物体具有深度感和远近大小变化。鼠标移动可改变视角。</p>
+                </div>
+                <div class="feature-card red">
+                    <h3>🔥 高级粒子</h3>
+                    <p>多种粒子系统：烟花、雨雪、磁力、爆炸等。每个粒子都有独立的生命周期和物理属性。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification">
+        功能已激活！请查看画布效果。
+    </div>
+    
+    <div class="key-hint" id="key-hint">
+        快捷键: SPACE(烟花) | R(雨) | G(重力) | C(清除) | F(全屏)
+    </div>
+
+    <script>
+        // 初始化Pixi应用
+        const app = new PIXI.Application({
+            view: document.getElementById('pixi-canvas'),
+            width: document.querySelector('.canvas-container').clientWidth,
+            height: document.querySelector('.canvas-container').clientHeight,
+            backgroundColor: 0x0a1931,
+            antialias: true,
+            resolution: window.devicePixelRatio || 1,
+            autoDensity: true
+        });
+
+        // 创建通知系统
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // 创建简单的音效系统
+        class SoundSystem {
+            constructor() {
+                this.enabled = true;
+                this.audioContext = null;
+                this.audioInitialized = false;
+                this.initAudio();
+            }
+            
+            initAudio() {
+                try {
+                    if (window.AudioContext || window.webkitAudioContext) {
+                        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                        // 设置音频上下文为暂停状态，等待用户交互
+                        if (this.audioContext.state === 'running') {
+                            this.audioContext.suspend();
+                        }
+                    }
+                } catch (e) {
+                    console.log("音频上下文创建失败:", e);
+                }
+            }
+            
+            async ensureAudioStarted() {
+                if (!this.audioContext || this.audioInitialized) return true;
+                
+                try {
+                    if (this.audioContext.state === 'suspended') {
+                        await this.audioContext.resume();
+                    }
+                    this.audioInitialized = true;
+                    return true;
+                } catch (e) {
+                    console.log("启动音频失败:", e);
+                    return false;
+                }
+            }
+            
+            async playBeep(frequency = 440, duration = 0.1, type = 'sine') {
+                if (!this.enabled) return;
+                
+                const audioStarted = await this.ensureAudioStarted();
+                if (!audioStarted) return;
+                
+                try {
+                    const oscillator = this.audioContext.createOscillator();
+                    const gainNode = this.audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(this.audioContext.destination);
+                    
+                    oscillator.frequency.value = frequency;
+                    oscillator.type = type;
+                    
+                    gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+                    
+                    oscillator.start(this.audioContext.currentTime);
+                    oscillator.stop(this.audioContext.currentTime + duration);
+                } catch (e) {
+                    console.log("播放音效失败:", e);
+                }
+            }
+            
+            async playClick() {
+                await this.playBeep(800, 0.05, 'square');
+            }
+            
+            async playExplosion() {
+                const audioStarted = await this.ensureAudioStarted();
+                if (!audioStarted) return;
+                
+                // 爆炸音效 - 多个频率叠加
+                for (let i = 0; i < 5; i++) {
+                    setTimeout(async () => {
+                        await this.playBeep(100 + Math.random() * 200, 0.3, 'sawtooth');
+                    }, i * 30);
+                }
+            }
+            
+            async playSparkle() {
+                const audioStarted = await this.ensureAudioStarted();
+                if (!audioStarted) return;
+                
+                // 闪烁音效 - 高频短音
+                for (let i = 0; i < 3; i++) {
+                    setTimeout(async () => {
+                        await this.playBeep(1200 + Math.random() * 800, 0.05, 'sine');
+                    }, i * 50);
+                }
+            }
+            
+            toggle(enabled) {
+                this.enabled = enabled;
+            }
+        }
+
+        // 创建优化的发光滤镜
+        class OptimizedGlowFilter extends PIXI.Filter {
+            constructor(options = {}) {
+                const fragmentSrc = `
+                    precision mediump float;
+                    varying vec2 vTextureCoord;
+                    uniform sampler2D uSampler;
+                    uniform float uStrength;
+                    uniform vec4 uColor;
+                    
+                    void main(void) {
+                        vec4 original = texture2D(uSampler, vTextureCoord);
+                        
+                        // 简单的发光效果：增强亮度和颜色
+                        float glow = original.a * uStrength;
+                        vec4 glowColor = uColor * glow;
+                        
+                        // 混合原始颜色和发光颜色
+                        gl_FragColor = original + glowColor;
+                        gl_FragColor.a = original.a;
+                    }
+                `;
+                
+                super(null, fragmentSrc, {
+                    uStrength: { value: options.strength || 0.5 },
+                    uColor: { value: options.color || [0.3, 0.6, 1.0, 1.0] } // 淡蓝色
+                });
+            }
+            
+            set strength(value) {
+                this.uniforms.uStrength = value;
+            }
+            
+            set color(value) {
+                const color = PIXI.utils.hex2rgb(value);
+                this.uniforms.uColor = [color[0], color[1], color[2], 1.0];
+            }
+        }
+
+        // 创建优化的视差背景系统
+        class OptimizedParallaxBackground {
+            constructor() {
+                this.layers = [];
+                this.container = new PIXI.Container();
+                app.stage.addChildAt(this.container, 0);
+                this.enabled = true;
+                this.createLayers();
+            }
+            
+            createLayers() {
+                // 创建3个视差层
+                for (let i = 0; i < 3; i++) {
+                    const layer = new PIXI.Container();
+                    const speed = 0.1 + i * 0.15; // 每层速度递增
+                    
+                    // 添加星星
+                    for (let j = 0; j < 20; j++) {
+                        const star = new PIXI.Graphics();
+                        const size = 1 + Math.random() * 2;
+                        const alpha = 0.3 + Math.random() * 0.7;
+                        
+                        star.beginFill(0xffffff, alpha);
+                        star.drawCircle(0, 0, size);
+                        star.endFill();
+                        
+                        star.x = Math.random() * app.screen.width;
+                        star.y = Math.random() * app.screen.height;
+                        
+                        layer.addChild(star);
+                    }
+                    
+                    // 添加远处的行星
+                    if (i > 1) {
+                        const planet = new PIXI.Graphics();
+                        const radius = 15 + Math.random() * 35;
+                        const color = [0xff6b6b, 0x4a9eff, 0x1dd1a1, 0xa29bfe][Math.floor(Math.random() * 4)];
+                        
+                        planet.beginFill(color, 0.3);
+                        planet.drawCircle(0, 0, radius);
+                        planet.endFill();
+                        
+                        // 添加行星光环
+                        planet.beginFill(color, 0.1);
+                        planet.drawCircle(0, 0, radius * 1.5);
+                        planet.endFill();
+                        
+                        planet.x = Math.random() * app.screen.width;
+                        planet.y = Math.random() * app.screen.height;
+                        
+                        layer.addChild(planet);
+                    }
+                    
+                    this.layers.push({ container: layer, speed: speed });
+                    this.container.addChild(layer);
+                }
+            }
+            
+            update(mouseX) {
+                if (!this.enabled) return;
+                
+                const centerX = app.screen.width / 2;
+                const offset = (mouseX - centerX) / centerX;
+                
+                this.layers.forEach((layer, i) => {
+                    layer.container.x = offset * 80 * layer.speed;
+                    // 添加轻微的垂直移动
+                    layer.container.y = Math.sin(Date.now() / 5000 + i) * 5;
+                });
+            }
+            
+            toggle(enabled) {
+                this.enabled = enabled;
+                this.container.visible = enabled;
+            }
+        }
+
+        // 创建优化的粒子系统
+        class OptimizedParticleSystem {
+            constructor() {
+                this.particles = [];
+                this.container = new PIXI.Container();
+                app.stage.addChild(this.container);
+                
+                this.gravity = 0.5;
+                this.particleLifetime = 3.0;
+                this.physicsEnabled = true;
+                this.magneticMode = false;
+                
+                this.mousePosition = { x: app.screen.width / 2, y: app.screen.height / 2 };
+                
+                app.stage.interactive = true;
+                app.stage.hitArea = new PIXI.Rectangle(0, 0, app.screen.width, app.screen.height);
+                app.stage.on('mousemove', (event) => {
+                    this.mousePosition = event.data.global;
+                });
+                
+                // 创建初始粒子
+                this.createParticles(150);
+                
+                // 动画循环
+                app.ticker.add(() => this.update());
+            }
+            
+            createParticles(count) {
+                for (let i = 0; i < count; i++) {
+                    this.addParticle(
+                        Math.random() * app.screen.width,
+                        Math.random() * app.screen.height
+                    );
+                }
+            }
+            
+            addParticle(x, y, options = {}) {
+                const particle = new PIXI.Graphics();
+                const size = options.size || 2 + Math.random() * 5;
+                const color = options.color || Math.random() * 0xffffff;
+                const life = options.life || this.particleLifetime;
+                
+                // 创建更漂亮的粒子
+                particle.beginFill(color);
+                
+                // 随机选择粒子形状
+                const shapeType = Math.floor(Math.random() * 3);
+                switch(shapeType) {
+                    case 0: // 圆形
+                        particle.drawCircle(0, 0, size);
+                        break;
+                    case 1: // 方形
+                        particle.drawRoundedRect(-size/2, -size/2, size, size, size/4);
+                        break;
+                    case 2: // 三角形
+                        particle.drawPolygon([
+                            -size/2, size/2,
+                            size/2, size/2,
+                            0, -size/2
+                        ]);
+                        break;
+                }
+                particle.endFill();
+                
+                // 添加外发光效果
+                particle.lineStyle(1, 0xffffff, 0.3);
+                particle.drawCircle(0, 0, size * 1.2);
+                
+                particle.x = x;
+                particle.y = y;
+                particle.vx = options.vx || (Math.random() - 0.5) * 3;
+                particle.vy = options.vy || (Math.random() - 0.5) * 3;
+                particle.life = life;
+                particle.maxLife = life;
+                particle.size = size;
+                particle.rotationSpeed = (Math.random() - 0.5) * 0.1;
+                
+                this.container.addChild(particle);
+                this.particles.push(particle);
+                
+                return particle;
+            }
+            
+            update() {
+                const mouseX = this.mousePosition.x;
+                const mouseY = this.mousePosition.y;
+                
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const p = this.particles[i];
+                    
+                    // 更新生命周期
+                    p.life -= app.ticker.deltaMS / 1000;
+                    if (p.life <= 0) {
+                        this.container.removeChild(p);
+                        p.destroy();
+                        this.particles.splice(i, 1);
+                        continue;
+                    }
+                    
+                    // 应用重力
+                    if (this.physicsEnabled) {
+                        p.vy += this.gravity * 0.05;
+                    }
+                    
+                    // 磁力模式
+                    if (this.magneticMode) {
+                        const dx = mouseX - p.x;
+                        const dy = mouseY - p.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < 150) {
+                            const force = (150 - distance) / 150;
+                            p.vx += (dx / distance) * force * 0.3;
+                            p.vy += (dy / distance) * force * 0.3;
+                        }
+                    }
+                    
+                    // 添加随机运动
+                    p.vx += (Math.random() - 0.5) * 0.05;
+                    p.vy += (Math.random() - 0.5) * 0.05;
+                    
+                    // 限制速度
+                    const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+                    if (speed > 5) {
+                        p.vx = (p.vx / speed) * 5;
+                        p.vy = (p.vy / speed) * 5;
+                    }
+                    
+                    // 更新位置
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    
+                    // 旋转粒子
+                    p.rotation += p.rotationSpeed;
+                    
+                    // 边界处理
+                    if (this.physicsEnabled) {
+                        if (p.x < p.size) { p.x = p.size; p.vx *= -0.9; }
+                        if (p.x > app.screen.width - p.size) { p.x = app.screen.width - p.size; p.vx *= -0.9; }
+                        if (p.y < p.size) { p.y = p.size; p.vy *= -0.9; }
+                        if (p.y > app.screen.height - p.size) { p.y = app.screen.height - p.size; p.vy *= -0.9; }
+                    } else {
+                        // 边界环绕
+                        if (p.x < -p.size) p.x = app.screen.width + p.size;
+                        if (p.x > app.screen.width + p.size) p.x = -p.size;
+                        if (p.y < -p.size) p.y = app.screen.height + p.size;
+                        if (p.y > app.screen.height + p.size) p.y = -p.size;
+                    }
+                    
+                    // 更新透明度和大小
+                    p.alpha = p.life / p.maxLife * 0.8 + 0.2;
+                    p.scale.set(0.5 + p.life / p.maxLife * 0.5);
+                }
+                
+                // 更新对象计数
+                document.getElementById('object-count').textContent = this.particles.length;
+            }
+            
+            async createFireworks(x, y) {
+                await soundSystem.playExplosion();
+                
+                const explosionX = x || Math.random() * app.screen.width;
+                const explosionY = y || Math.random() * app.screen.height * 0.5;
+                
+                // 中心爆炸效果
+                for (let i = 0; i < 30; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 1 + Math.random() * 3;
+                    const color = [0xff6b6b, 0x4a9eff, 0x1dd1a1, 0xffd166, 0xff9ff3][Math.floor(Math.random() * 5)];
+                    
+                    this.addParticle(
+                        explosionX,
+                        explosionY,
+                        {
+                            vx: Math.cos(angle) * speed,
+                            vy: Math.sin(angle) * speed - 1,
+                            color: color,
+                            size: 4 + Math.random() * 6,
+                            life: 1.5 + Math.random() * 1.5
+                        }
+                    );
+                }
+                
+                // 次级爆炸效果
+                setTimeout(() => {
+                    for (let j = 0; j < 5; j++) {
+                        const offsetX = (Math.random() - 0.5) * 100;
+                        const offsetY = (Math.random() - 0.5) * 100;
+                        
+                        for (let i = 0; i < 15; i++) {
+                            const angle = Math.random() * Math.PI * 2;
+                            const speed = 0.5 + Math.random() * 2;
+                            const color = [0xff6b6b, 0x4a9eff, 0x1dd1a1][Math.floor(Math.random() * 3)];
+                            
+                            this.addParticle(
+                                explosionX + offsetX,
+                                explosionY + offsetY,
+                                {
+                                    vx: Math.cos(angle) * speed,
+                                    vy: Math.sin(angle) * speed,
+                                    color: color,
+                                    size: 2 + Math.random() * 4,
+                                    life: 1 + Math.random() * 1
+                                }
+                            );
+                        }
+                    }
+                }, 300);
+            }
+            
+            async createRain() {
+                for (let i = 0; i < 30; i++) {
+                    this.addParticle(
+                        Math.random() * app.screen.width,
+                        -10,
+                        {
+                            vx: (Math.random() - 0.5) * 1,
+                            vy: 3 + Math.random() * 8,
+                            color: 0x4a9eff,
+                            size: 1 + Math.random() * 2,
+                            life: 3
+                        }
+                    );
+                }
+            }
+            
+            setMagneticMode(enabled) {
+                this.magneticMode = enabled;
+                document.getElementById('interaction-mode').textContent = 
+                    enabled ? '磁力模式' : '自由模式';
+            }
+            
+            clear() {
+                this.particles.forEach(p => {
+                    this.container.removeChild(p);
+                    p.destroy();
+                });
+                this.particles = [];
+            }
+        }
+
+        // 创建优化的3D透视系统
+        class OptimizedPerspectiveSystem {
+            constructor() {
+                this.container = new PIXI.Container();
+                app.stage.addChild(this.container);
+                this.objects = [];
+                this.enabled = false;
+                
+                // 创建初始3D物体
+                this.create3DObjects();
+            }
+            
+            create3DObjects() {
+                // 创建立方体
+                for (let i = 0; i < 3; i++) {
+                    const cube = this.createCube(
+                        150 + i * 200,
+                        app.screen.height / 2,
+                        40 + Math.random() * 60
+                    );
+                    cube.vx = (Math.random() - 0.5) * 1.5;
+                    this.objects.push(cube);
+                }
+            }
+            
+            createCube(x, y, size) {
+                const cube = new PIXI.Graphics();
+                const half = size / 2;
+                const color = Math.random() * 0xffffff;
+                
+                // 绘制立方体的前面
+                cube.beginFill(color, 0.9);
+                cube.drawRect(-half, -half, size, size);
+                cube.endFill();
+                
+                // 绘制侧面（模拟3D）
+                cube.beginFill(color, 0.7);
+                cube.drawPolygon([
+                    half, -half,
+                    half + 15, -half - 8,
+                    half + 15, half - 8,
+                    half, half
+                ]);
+                cube.endFill();
+                
+                cube.beginFill(color, 0.5);
+                cube.drawPolygon([
+                    -half, half,
+                    -half + 15, half - 8,
+                    half + 15, half - 8,
+                    half, half
+                ]);
+                cube.endFill();
+                
+                // 添加边框
+                cube.lineStyle(2, 0xffffff, 0.3);
+                cube.drawRect(-half, -half, size, size);
+                
+                cube.x = x;
+                cube.y = y;
+                cube.rotation = Math.random() * Math.PI * 2;
+                cube.rotationSpeed = (Math.random() - 0.5) * 0.015;
+                
+                this.container.addChild(cube);
+                return cube;
+            }
+            
+            update(mouseX, mouseY) {
+                if (!this.enabled) return;
+                
+                const centerX = app.screen.width / 2;
+                const centerY = app.screen.height / 2;
+                
+                this.objects.forEach(obj => {
+                    // 根据鼠标位置更新3D效果
+                    const dx = mouseX - centerX;
+                    const dy = mouseY - centerY;
+                    
+                    // 模拟透视：物体离中心越远，大小和透明度变化
+                    const objDx = obj.x - centerX;
+                    const objDy = obj.y - centerY;
+                    const distanceFromCenter = Math.sqrt(objDx * objDx + objDy * objDy);
+                    const maxDistance = Math.sqrt(centerX * centerX + centerY * centerY);
+                    
+                    // 距离越远，物体越小
+                    const scale = 0.6 + 0.4 * (1 - distanceFromCenter / maxDistance);
+                    obj.scale.set(scale);
+                    
+                    // 距离越远，透明度越低
+                    obj.alpha = 0.4 + 0.6 * (1 - distanceFromCenter / maxDistance);
+                    
+                    // 根据鼠标位置轻微旋转
+                    obj.rotation += obj.rotationSpeed + dx * 0.00005;
+                    
+                    // 移动物体
+                    obj.x += obj.vx;
+                    if (obj.x < -100) obj.x = app.screen.width + 100;
+                    if (obj.x > app.screen.width + 100) obj.x = -100;
+                    
+                    // 添加浮动效果
+                    obj.y += Math.sin(Date.now() / 2000 + obj.x * 0.01) * 0.2;
+                });
+            }
+            
+            toggle(enabled) {
+                this.enabled = enabled;
+                this.container.visible = enabled;
+            }
+            
+            addObject(x, y) {
+                const cube = this.createCube(
+                    x || Math.random() * app.screen.width,
+                    y || Math.random() * app.screen.height,
+                    30 + Math.random() * 50
+                );
+                cube.vx = (Math.random() - 0.5) * 2;
+                this.objects.push(cube);
+            }
+        }
+
+        // 创建优化的滤镜系统
+        class OptimizedFilterSystem {
+            constructor() {
+                this.filters = [];
+                
+                // 创建各种滤镜
+                this.blurFilter = new PIXI.filters.BlurFilter();
+                this.blurFilter.blur = 2;
+                
+                this.colorFilter = new PIXI.filters.ColorMatrixFilter();
+                this.colorFilter.saturate(1.0);
+                
+                // 使用优化的发光滤镜
+                this.glowFilter = new OptimizedGlowFilter({
+                    strength: 0.6,
+                    color: 0x4a9eff
+                });
+                
+                this.sepiaFilter = new PIXI.filters.ColorMatrixFilter();
+                this.sepiaFilter.sepia(true);
+                
+                // 初始只应用颜色滤镜
+                this.filters.push(this.colorFilter);
+                app.stage.filters = this.filters;
+            }
+            
+            updateBlur(value) {
+                this.blurFilter.blur = value;
+            }
+            
+            updateSaturation(value) {
+                this.colorFilter.saturate(value, false);
+            }
+            
+            toggleGlow(enabled) {
+                if (enabled) {
+                    if (!this.filters.includes(this.glowFilter)) {
+                        this.filters.push(this.glowFilter);
+                    }
+                } else {
+                    const index = this.filters.indexOf(this.glowFilter);
+                    if (index > -1) {
+                        this.filters.splice(index, 1);
+                    }
+                }
+                app.stage.filters = this.filters;
+            }
+            
+            toggleSepia(enabled) {
+                if (enabled) {
+                    if (!this.filters.includes(this.sepiaFilter)) {
+                        this.filters.push(this.sepiaFilter);
+                    }
+                } else {
+                    const index = this.filters.indexOf(this.sepiaFilter);
+                    if (index > -1) {
+                        this.filters.splice(index, 1);
+                    }
+                }
+                app.stage.filters = this.filters;
+            }
+            
+            applyBlur(enabled) {
+                if (enabled) {
+                    if (!this.filters.includes(this.blurFilter)) {
+                        this.filters.push(this.blurFilter);
+                    }
+                } else {
+                    const index = this.filters.indexOf(this.blurFilter);
+                    if (index > -1) {
+                        this.filters.splice(index, 1);
+                    }
+                }
+                app.stage.filters = this.filters;
+            }
+            
+            async applyGlitch() {
+                await soundSystem.playSparkle();
+                
+                // 创建临时故障效果（使用噪波滤镜和颜色偏移）
+                const noiseFilter = new PIXI.filters.NoiseFilter();
+                noiseFilter.noise = 0.3;
+                
+                const rgbFilter = new PIXI.filters.ColorMatrixFilter();
+                rgbFilter.matrix = [
+                    1, 0, 0, 0, 0.1,
+                    0, 1, 0, 0, -0.1,
+                    0, 0, 1, 0, 0.1,
+                    0, 0, 0, 1, 0
+                ];
+                
+                this.filters.push(noiseFilter, rgbFilter);
+                app.stage.filters = this.filters;
+                
+                // 2秒后移除故障效果
+                setTimeout(() => {
+                    const noiseIndex = this.filters.indexOf(noiseFilter);
+                    const rgbIndex = this.filters.indexOf(rgbFilter);
+                    
+                    if (noiseIndex > -1) this.filters.splice(noiseIndex, 1);
+                    if (rgbIndex > -1) this.filters.splice(rgbIndex, 1);
+                    
+                    app.stage.filters = this.filters;
+                }, 2000);
+            }
+            
+            reset() {
+                this.filters = [this.colorFilter];
+                app.stage.filters = this.filters;
+                this.blurFilter.blur = 2;
+                this.colorFilter.saturate(1.0, false);
+            }
+        }
+
+        // 创建优化的交互对象系统
+        class OptimizedInteractiveObjects {
+            constructor() {
+                this.container = new PIXI.Container();
+                app.stage.addChild(this.container);
+                this.objects = [];
+                this.vehicles = [];
+                this.buildings = [];
+                this.enemies = [];
+            }
+            
+            async addVehicle(x, y) {
+                await soundSystem.playClick();
+                
+                const vehicle = new PIXI.Graphics();
+                const color = [0xff6b6b, 0x4a9eff, 0x1dd1a1][Math.floor(Math.random() * 3)];
+                
+                // 绘制小车车身
+                vehicle.beginFill(color, 0.9);
+                vehicle.drawRoundedRect(-30, -20, 60, 40, 8);
+                vehicle.endFill();
+                
+                // 车窗
+                vehicle.beginFill(0x87CEEB, 0.6);
+                vehicle.drawRoundedRect(-20, -15, 40, 25, 4);
+                vehicle.endFill();
+                
+                // 车轮
+                vehicle.beginFill(0x333333);
+                vehicle.drawCircle(-20, 25, 12);
+                vehicle.drawCircle(20, 25, 12);
+                vehicle.endFill();
+                
+                // 车轮边缘
+                vehicle.beginFill(0x666666);
+                vehicle.drawCircle(-20, 25, 8);
+                vehicle.drawCircle(20, 25, 8);
+                vehicle.endFill();
+                
+                vehicle.x = x || Math.random() * app.screen.width;
+                vehicle.y = y || app.screen.height - 60;
+                vehicle.vx = (Math.random() - 0.5) * 4;
+                vehicle.interactive = true;
+                vehicle.buttonMode = true;
+                
+                vehicle.on('pointerdown', async () => {
+                    vehicle.vx *= -1.5;
+                    // 点击时改变颜色
+                    vehicle.tint = Math.random() * 0xffffff;
+                    await soundSystem.playClick();
+                });
+                
+                this.container.addChild(vehicle);
+                this.vehicles.push(vehicle);
+                this.objects.push(vehicle);
+                
+                return vehicle;
+            }
+            
+            async addBuilding(x, y) {
+                const building = new PIXI.Graphics();
+                const width = 50 + Math.random() * 70;
+                const height = 120 + Math.random() * 180;
+                const color = 0x2c3e50;
+                const windowColor = 0xf1c40f;
+                
+                // 建筑主体
+                building.beginFill(color, 0.9);
+                building.drawRect(-width/2, -height, width, height);
+                building.endFill();
+                
+                // 建筑细节
+                building.lineStyle(2, 0x34495e, 0.8);
+                building.moveTo(-width/2, -height);
+                building.lineTo(width/2, -height);
+                
+                // 窗户
+                const windowRows = Math.floor(height / 45);
+                const windowCols = Math.floor(width / 35);
+                
+                building.beginFill(windowColor, 0.7);
+                for (let row = 0; row < windowRows; row++) {
+                    for (let col = 0; col < windowCols; col++) {
+                        if (Math.random() > 0.3) { // 随机点亮窗户
+                            building.drawRect(
+                                -width/2 + 12 + col * 30,
+                                -height + 20 + row * 40,
+                                20, 30
+                            );
+                        }
+                    }
+                }
+                building.endFill();
+                
+                building.x = x || Math.random() * app.screen.width;
+                building.y = y || app.screen.height;
+                building.interactive = true;
+                building.buttonMode = true;
+                
+                building.on('pointerdown', async () => {
+                    // 点击建筑时随机改变窗户颜色
+                    building.tint = Math.random() * 0xffffff;
+                    await soundSystem.playClick();
+                });
+                
+                this.container.addChild(building);
+                this.buildings.push(building);
+                this.objects.push(building);
+                
+                return building;
+            }
+            
+            async addEnemy(x, y) {
+                const enemy = new PIXI.Graphics();
+                const size = 25 + Math.random() * 25;
+                
+                // 绘制敌人主体
+                enemy.beginFill(0xff6b6b, 0.9);
+                enemy.drawCircle(0, 0, size);
+                enemy.endFill();
+                
+                // 眼睛
+                enemy.beginFill(0xffffff);
+                enemy.drawCircle(-size/3, -size/5, size/4);
+                enemy.drawCircle(size/3, -size/5, size/4);
+                enemy.endFill();
+                
+                enemy.beginFill(0x000000);
+                enemy.drawCircle(-size/3, -size/5, size/8);
+                enemy.drawCircle(size/3, -size/5, size/8);
+                enemy.endFill();
+                
+                // 嘴巴
+                enemy.beginFill(0x000000, 0.5);
+                enemy.arc(0, size/5, size/3, 0, Math.PI);
+                enemy.endFill();
+                
+                // 触角
+                enemy.beginFill(0xff6b6b);
+                enemy.drawCircle(-size/2, -size/2, size/6);
+                enemy.drawCircle(size/2, -size/2, size/6);
+                enemy.endFill();
+                
+                enemy.x = x || Math.random() * app.screen.width;
+                enemy.y = y || Math.random() * app.screen.height * 0.6;
+                enemy.vx = (Math.random() - 0.5) * 2.5;
+                enemy.vy = (Math.random() - 0.5) * 2.5;
+                enemy.interactive = true;
+                enemy.buttonMode = true;
+                
+                enemy.on('pointerdown', async () => {
+                    // 点击敌人时爆炸
+                    await particleSystem.createFireworks(enemy.x, enemy.y);
+                    this.container.removeChild(enemy);
+                    const index = this.enemies.indexOf(enemy);
+                    if (index > -1) this.enemies.splice(index, 1);
+                    await soundSystem.playExplosion();
+                });
+                
+                this.container.addChild(enemy);
+                this.enemies.push(enemy);
+                this.objects.push(enemy);
+                
+                return enemy;
+            }
+            
+            update() {
+                // 更新载具
+                this.vehicles.forEach(vehicle => {
+                    vehicle.x += vehicle.vx;
+                    vehicle.rotation = Math.sin(Date.now() / 400) * 0.05;
+                    
+                    // 车轮旋转
+                    vehicle.children.forEach((child, index) => {
+                        if (child instanceof PIXI.Graphics && index > 0) {
+                            child.rotation += vehicle.vx * 0.05;
+                        }
+                    });
+                    
+                    if (vehicle.x < -80) vehicle.x = app.screen.width + 80;
+                    if (vehicle.x > app.screen.width + 80) vehicle.x = -80;
+                });
+                
+                // 更新敌人
+                this.enemies.forEach(enemy => {
+                    enemy.x += enemy.vx;
+                    enemy.y += enemy.vy;
+                    
+                    if (enemy.x < enemy.width/2) { enemy.x = enemy.width/2; enemy.vx *= -1; }
+                    if (enemy.x > app.screen.width - enemy.width/2) { enemy.x = app.screen.width - enemy.width/2; enemy.vx *= -1; }
+                    if (enemy.y < enemy.height/2) { enemy.y = enemy.height/2; enemy.vy *= -1; }
+                    if (enemy.y > app.screen.height - enemy.height/2) { enemy.y = app.screen.height - enemy.height/2; enemy.vy *= -1; }
+                    
+                    // 敌人脉动效果
+                    const pulse = Math.sin(Date.now() / 250) * 0.1;
+                    enemy.scale.set(1 + pulse);
+                    
+                    // 敌人旋转
+                    enemy.rotation += 0.01;
+                });
+            }
+            
+            clear() {
+                this.objects.forEach(obj => {
+                    this.container.removeChild(obj);
+                    obj.destroy();
+                });
+                
+                this.objects = [];
+                this.vehicles = [];
+                this.buildings = [];
+                this.enemies = [];
+            }
+        }
+
+        // 初始化所有系统（使用优化版本）
+        const soundSystem = new SoundSystem();
+        const parallaxBackground = new OptimizedParallaxBackground();
+        const particleSystem = new OptimizedParticleSystem();
+        const perspectiveSystem = new OptimizedPerspectiveSystem();
+        const filterSystem = new OptimizedFilterSystem();
+        const interactiveObjects = new OptimizedInteractiveObjects();
+
+        // 添加一些初始对象
+        setTimeout(() => {
+            interactiveObjects.addVehicle(200, app.screen.height - 60);
+            interactiveObjects.addVehicle(500, app.screen.height - 60);
+            interactiveObjects.addBuilding(100, app.screen.height);
+            interactiveObjects.addBuilding(400, app.screen.height);
+            interactiveObjects.addBuilding(700, app.screen.height);
+        }, 500);
+
+        // 主动画循环
+        let lastTime = 0;
+        app.ticker.add(() => {
+            const now = Date.now();
+            const mousePosition = particleSystem.mousePosition;
+            
+            // 更新视差背景
+            parallaxBackground.update(mousePosition.x);
+            
+            // 更新3D透视系统
+            perspectiveSystem.update(mousePosition.x, mousePosition.y);
+            
+            // 更新交互对象
+            interactiveObjects.update();
+            
+            // 更新FPS显示
+            if (now - lastTime > 500) {
+                const fps = Math.round(app.ticker.FPS);
+                document.getElementById('fps-counter').textContent = fps;
+                
+                // 模拟内存使用
+                const memory = Math.round(particleSystem.particles.length * 0.05 + 
+                                         interactiveObjects.objects.length * 0.3);
+                document.getElementById('memory-usage').textContent = memory + ' MB';
+                
+                lastTime = now;
+            }
+        });
+
+        // 响应窗口大小变化
+        window.addEventListener('resize', () => {
+            const canvasContainer = document.querySelector('.canvas-container');
+            app.renderer.resize(canvasContainer.clientWidth, canvasContainer.clientHeight);
+        });
+
+        // 控制面板事件监听
+        document.getElementById('particle-count').addEventListener('input', function() {
+            const value = this.value;
+            document.getElementById('particle-count-value').textContent = value;
+            particleSystem.clear();
+            particleSystem.createParticles(parseInt(value));
+        });
+
+        document.getElementById('gravity-control').addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            document.getElementById('gravity-value').textContent = value;
+            particleSystem.gravity = value;
+        });
+
+        document.getElementById('lifetime-control').addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            document.getElementById('lifetime-value').textContent = value;
+            particleSystem.particleLifetime = value;
+        });
+
+        document.getElementById('blur-control').addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            document.getElementById('blur-value').textContent = value;
+            filterSystem.updateBlur(value);
+            filterSystem.applyBlur(value > 0);
+        });
+
+        document.getElementById('saturation-control').addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            document.getElementById('saturation-value').textContent = value;
+            filterSystem.updateSaturation(value);
+        });
+
+        document.getElementById('physics-toggle').addEventListener('change', function() {
+            particleSystem.physicsEnabled = this.checked;
+            showNotification(this.checked ? '物理碰撞已启用' : '物理碰撞已禁用');
+        });
+
+        document.getElementById('parallax-toggle').addEventListener('change', function() {
+            parallaxBackground.toggle(this.checked);
+            showNotification(this.checked ? '视差背景已启用' : '视差背景已禁用');
+        });
+
+        document.getElementById('perspective-toggle').addEventListener('change', function() {
+            perspectiveSystem.toggle(this.checked);
+            showNotification(this.checked ? '3D透视已启用' : '3D透视已禁用');
+        });
+
+        document.getElementById('sound-toggle').addEventListener('change', function() {
+            soundSystem.toggle(this.checked);
+            showNotification(this.checked ? '声音效果已启用' : '声音效果已禁用');
+        });
+
+        // 移除昼夜循环相关代码（因为有问题）
+        document.getElementById('daynight-toggle').addEventListener('change', function() {
+            showNotification('昼夜循环功能正在开发中...');
+        });
+
+        // 按钮事件监听
+        document.getElementById('fireworks-btn').addEventListener('click', async function() {
+            await particleSystem.createFireworks();
+            showNotification('烟花效果已激活！');
+        });
+
+        document.getElementById('rain-btn').addEventListener('click', async function() {
+            await particleSystem.createRain();
+            showNotification('下雨效果已激活！');
+        });
+
+        document.getElementById('magnetic-btn').addEventListener('click', function() {
+            const isMagnetic = !particleSystem.magneticMode;
+            particleSystem.setMagneticMode(isMagnetic);
+            this.textContent = isMagnetic ? '🧲 关闭磁力' : '🧲 磁力模式';
+            showNotification(isMagnetic ? '磁力模式已启用' : '磁力模式已禁用');
+        });
+
+        document.getElementById('reset-physics-btn').addEventListener('click', function() {
+            particleSystem.clear();
+            particleSystem.createParticles(150);
+            showNotification('物理系统已重置');
+        });
+
+        document.getElementById('glitch-btn').addEventListener('click', async function() {
+            await filterSystem.applyGlitch();
+            showNotification('故障效果已激活，持续2秒');
+        });
+
+        document.getElementById('bloom-btn').addEventListener('click', function() {
+            const hasGlow = filterSystem.filters.includes(filterSystem.glowFilter);
+            filterSystem.toggleGlow(!hasGlow);
+            this.textContent = hasGlow ? '✨ 发光效果' : '✨ 关闭发光';
+            showNotification(hasGlow ? '发光效果已关闭' : '发光效果已启用');
+        });
+
+        document.getElementById('sepia-btn').addEventListener('click', function() {
+            const hasSepia = filterSystem.filters.includes(filterSystem.sepiaFilter);
+            filterSystem.toggleSepia(!hasSepia);
+            this.textContent = hasSepia ? '🟫 怀旧滤镜' : '🟫 关闭怀旧';
+            showNotification(hasSepia ? '怀旧滤镜已关闭' : '怀旧滤镜已启用');
+        });
+
+        document.getElementById('reset-filters-btn').addEventListener('click', function() {
+            filterSystem.reset();
+            showNotification('所有滤镜已重置');
+        });
+
+        document.getElementById('add-vehicle-btn').addEventListener('click', async function() {
+            await interactiveObjects.addVehicle();
+            showNotification('载具已添加到场景');
+        });
+
+        document.getElementById('add-building-btn').addEventListener('click', async function() {
+            await interactiveObjects.addBuilding();
+            showNotification('建筑已添加到场景');
+        });
+
+        document.getElementById('spawn-enemy-btn').addEventListener('click', async function() {
+            await interactiveObjects.addEnemy();
+            showNotification('敌人已生成，点击可消灭');
+        });
+
+        document.getElementById('clear-all-btn').addEventListener('click', function() {
+            interactiveObjects.clear();
+            showNotification('场景已清空');
+        });
+
+        // 键盘快捷键
+        document.addEventListener('keydown', async (e) => {
+            switch(e.key) {
+                case ' ':
+                    e.preventDefault();
+                    await particleSystem.createFireworks(
+                        Math.random() * app.screen.width,
+                        Math.random() * app.screen.height * 0.5
+                    );
+                    break;
+                    
+                case 'r':
+                case 'R':
+                    e.preventDefault();
+                    await particleSystem.createRain();
+                    break;
+                    
+                case 'g':
+                case 'G':
+                    e.preventDefault();
+                    const gravityToggle = document.getElementById('physics-toggle');
+                    gravityToggle.checked = !gravityToggle.checked;
+                    particleSystem.physicsEnabled = gravityToggle.checked;
+                    showNotification(gravityToggle.checked ? '物理碰撞已启用' : '物理碰撞已禁用');
+                    break;
+                    
+                case 'c':
+                case 'C':
+                    e.preventDefault();
+                    interactiveObjects.clear();
+                    particleSystem.clear();
+                    showNotification('场景已清空');
+                    break;
+                    
+                case 'f':
+                case 'F':
+                    e.preventDefault();
+                    if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen().catch(console.log);
+                    } else {
+                        document.exitFullscreen();
+                    }
+                    break;
+                    
+                case 'v':
+                case 'V':
+                    e.preventDefault();
+                    await interactiveObjects.addVehicle();
+                    break;
+                    
+                case 'b':
+                case 'B':
+                    e.preventDefault();
+                    await interactiveObjects.addBuilding();
+                    break;
+            }
+        });
+
+        // 点击画布添加粒子
+        app.stage.on('pointerdown', async (event) => {
+            await soundSystem.playClick();
+            
+            // 添加交互粒子
+            for (let i = 0; i < 15; i++) {
+                particleSystem.addParticle(
+                    event.data.global.x,
+                    event.data.global.y,
+                    {
+                        vx: (Math.random() - 0.5) * 8,
+                        vy: (Math.random() - 0.5) * 8,
+                        size: 2 + Math.random() * 6,
+                        color: [0xff6b6b, 0x4a9eff, 0x1dd1a1, 0xffd166][Math.floor(Math.random() * 4)],
+                        life: 1 + Math.random() * 2
+                    }
+                );
+            }
+            
+            // 随机添加一个对象
+            if (Math.random() > 0.7) {
+                const types = ['vehicle', 'enemy', 'cube'];
+                const type = types[Math.floor(Math.random() * types.length)];
+                
+                switch(type) {
+                    case 'vehicle':
+                        await interactiveObjects.addVehicle(event.data.global.x, event.data.global.y);
+                        break;
+                    case 'enemy':
+                        await interactiveObjects.addEnemy(event.data.global.x, event.data.global.y);
+                        break;
+                    case 'cube':
+                        perspectiveSystem.addObject(event.data.global.x, event.data.global.y);
+                        break;
+                }
+            }
+        });
+
+        // 全屏变化事件
+        document.addEventListener('fullscreenchange', () => {
+            if (document.fullscreenElement) {
+                app.renderer.resize(window.innerWidth, window.innerHeight);
+            } else {
+                const canvasContainer = document.querySelector('.canvas-container');
+                app.renderer.resize(canvasContainer.clientWidth, canvasContainer.clientHeight);
+            }
+        });
+
+        // 初始显示通知
+        setTimeout(() => {
+            showNotification('欢迎使用Pixi.js增强版演示！点击画布或使用控制面板探索功能。');
+        }, 1000);
+
+        console.log("Pixi.js增强版演示已加载！");
+        console.log("所有物体已优化，视觉效果大大提升！");
+    </script>
+</body>
+</html>

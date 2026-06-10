@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>个人简历 | Candy</title>
+  <!-- 引入外部资源 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+  
+  <!-- Tailwind配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            // 深色主题
+            dark: {
+              bg: '#0F172A',
+              card: 'rgba(255, 255, 255, 0.05)',
+              border: 'rgba(255, 255, 255, 0.08)',
+              text: '#F8FAFC',
+              textSecondary: '#94A3B8',
+              primary: '#3B82F6',
+              secondary: '#8B5CF6'
+            },
+            // 浅色主题
+            light: {
+              bg: '#F8FAFC',
+              card: 'rgba(0, 0, 0, 0.03)',
+              border: 'rgba(0, 0, 0, 0.08)',
+              text: '#0F172A',
+              textSecondary: '#64748B',
+              primary: '#2563EB',
+              secondary: '#7C3AED'
+            },
+            // 商务主题
+            business: {
+              bg: '#F5F5F4',
+              card: 'rgba(255, 255, 255, 0.7)',
+              border: 'rgba(0, 0, 0, 0.1)',
+              text: '#1C1917',
+              textSecondary: '#4B5563',
+              primary: '#0F766E',
+              secondary: '#7F1D1D'
+            },
+            // 创意主题
+            creative: {
+              bg: '#FFF7ED',
+              card: 'rgba(255, 255, 255, 0.8)',
+              border: 'rgba(234, 179, 8, 0.2)',
+              text: '#4B351D',
+              textSecondary: '#78350F',
+              primary: '#EA580C',
+              secondary: '#DB2777'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            display: ['Montserrat', 'sans-serif'],
+            business: ['Roboto', 'sans-serif'],
+            creative: ['Poppins', 'sans-serif']
+          },
+        },
+      }
+    }
+  </script>
+  
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .text-shadow {
+        text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      }
+      .text-gradient {
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+      }
+      .skill-bar {
+        height: 6px;
+        border-radius: 3px;
+        overflow: hidden;
+      }
+      .timeline-dot::before {
+        content: '';
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        left: 0;
+        top: 6px;
+        transform: translateX(-50%);
+        box-shadow: 0 0 0 4px currentColor;
+        opacity: 0.8;
+        z-index: 10;
+      }
+      .timeline-line::before {
+        content: '';
+        position: absolute;
+        width: 2px;
+        height: 100%;
+        left: 0;
+        top: 22px;
+        transform: translateX(-50%);
+        opacity: 0.3;
+        z-index: 5;
+      }
+      .experience-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+      .experience-card:hover {
+        transform: translateY(-5px);
+      }
+    }
+  </style>
+  
+  <!-- 引入Google字体 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@500;600;700;800&family=Poppins:wght@300;400;500;600&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+
+<body class="min-h-screen transition-all duration-500" id="resume-body">
+  <!-- 背景容器 -->
+  <div id="background-container" class="fixed inset-0 -z-10 transition-all duration-700"></div>
+  
+  <!-- 主容器 -->
+  <div class="container mx-auto px-4 md:px-6 lg:px-8 py-12 max-w-7xl relative z-10">
+    <!-- 顶部导航 -->
+    <nav class="rounded-xl p-4 mb-10 flex flex-wrap justify-between items-center transition-all duration-500" id="main-nav">
+      <div class="text-xl md:text-2xl font-display font-bold text-gradient bg-gradient-to-r from-primary to-secondary" id="name-title">
+        Candy<span class="text-secondary">.</span>
+      </div>
+      
+      <div class="flex flex-wrap gap-3 mt-4 md:mt-0">
+        <!-- 风格切换按钮组 -->
+        <div class="flex bg-card/50 p-1 rounded-lg">
+          <button class="style-btn px-3 py-1 rounded-md active" data-style="dark" title="深色主题">
+            <i class="fa fa-moon-o"></i>
+          </button>
+          <button class="style-btn px-3 py-1 rounded-md" data-style="light" title="浅色主题">
+            <i class="fa fa-sun-o"></i>
+          </button>
+          <button class="style-btn px-3 py-1 rounded-md" data-style="business" title="商务主题">
+            <i class="fa fa-briefcase"></i>
+          </button>
+          <button class="style-btn px-3 py-1 rounded-md" data-style="creative" title="创意主题">
+            <i class="fa fa-paint-brush"></i>
+          </button>
+        </div>
+        
+        <button id="toggle-edit" class="text-sm md:text-base px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors">
+          <i class="fa fa-pencil mr-1"></i> 编辑
+        </button>
+        <button id="download-resume" class="text-sm md:text-base px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors">
+          <i class="fa fa-download mr-1"></i> 下载
+        </button>
+      </div>
+    </nav>
+    
+    <!-- 个人信息头部 -->
+    <header class="mb-16" id="header-section">
+      <div class="flex flex-col md:flex-row items-center gap-8 md:gap-12">
+        <div class="relative">
+          <div class="w-40 h-40 md:w-56 md:h-56 rounded-xl overflow-hidden border-4 border-primary/20 shadow-xl transition-all duration-500" id="profile-pic-container">
+            <img src="https://picsum.photos/seed/profile/400/400" alt="张伟的照片" class="w-full h-full object-cover">
+          </div>
+          <div class="absolute -inset-2 bg-gradient-to-r from-primary to-secondary rounded-xl blur-lg opacity-30 -z-10 transition-all duration-700" id="profile-gradient"></div>
+        </div>
+        
+        <div class="text-center md:text-left">
+          <h1 class="text-3xl md:text-5xl font-display font-bold mb-3 text-shadow transition-all duration-500" id="full-name">
+            张伟
+          </h1>
+          <h2 class="text-xl md:text-2xl text-primary mb-4 transition-all duration-500" id="job-title">
+            高级前端开发工程师
+          </h2>
+          <p class="text-secondary max-w-xl mb-6 transition-all duration-500" id="intro-text">
+            拥有8年Web前端开发经验，专注于构建高性能、用户友好的现代Web应用，擅长React、Vue等前端框架及UI/UX设计。
+          </p>
+          
+          <div class="flex flex-wrap justify-center md:justify-start gap-4">
+            <a href="mailto:zhangwei@example.com" class="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-white/10 transition-all duration-300" id="email-link">
+              <i class="fa fa-envelope text-primary"></i>
+              <span>zhangwei@example.com</span>
+            </a>
+            <a href="tel:+8613800138000" class="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-white/10 transition-all duration-300" id="phone-link">
+              <i class="fa fa-phone text-primary"></i>
+              <span>138-0013-8000</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+    
+    <!-- 主要内容区域 -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+      <!-- 左侧栏 -->
+      <div class="lg:col-span-1 space-y-10">
+        <!-- 基本信息 -->
+        <section class="rounded-xl p-6 transition-all duration-500" id="info-section">
+          <h3 class="text-xl font-display font-bold mb-5 flex items-center transition-all duration-500" id="info-title">
+            <i class="fa fa-user-circle text-primary mr-3"></i>基本信息
+          </h3>
+          
+          <div class="space-y-4 info-container">
+            <div class="info-item flex justify-between pb-3 border-b transition-all duration-500" id="info-border">
+              <span class="text-secondary">出生日期</span>
+              <span>1990年5月</span>
+              <button class="remove-btn text-xs text-red-400 opacity-0 hover:opacity-100 transition-opacity ml-2">
+                <i class="fa fa-trash-o"></i>
+              </button>
+            </div>
+            <div class="info-item flex justify-between pb-3 border-b transition-all duration-500" id="info-border">
+              <span class="text-secondary">学历</span>
+              <span>本科</span>
+              <button class="remove-btn text-xs text-red-400 opacity-0 hover:opacity-100 transition-opacity ml-2">
+                <i class="fa fa-trash-o"></i>
+              </button>
+            </div>
+            <div class="info-item flex justify-between pb-3 border-b transition-all duration-500" id="info-border">
+              <span class="text-secondary">毕业院校</span>
+              <span>北京大学</span>
+              <button class="remove-btn text-xs text-red-400 opacity-0 hover:opacity-100 transition-opacity ml-2">
+                <i class="fa fa-trash-o"></i>
+              </button>
+            </div>
+            <div class="info-item flex justify-between pb-3 border-b transition-all duration-500" id="info-border">
+              <span class="text-secondary">专业</span>
+              <span>计算机科学与技术</span>
+              <button class="remove-btn text-xs text-red-400 opacity-0 hover:opacity-100 transition-opacity ml-2">
+                <i class="fa fa-trash-o"></i>
+              </button>
+            </div>
+            <div class="info-item flex justify-between transition-all duration-500">
+              <span class="text-secondary">现居住地</span>
+              <span>北京市</span>
+              <button class="remove-btn text-xs text-red-400 opacity-0 hover:opacity-100 transition-opacity ml-2">
+                <i class="fa fa-trash-o"></i>
+              </button>
+            </div>
+          </div>
+          
+          <button class="add-btn mt-4 text-sm text-primary hover:text-primary/80 transition-colors" data-type="info">
+            <i class="fa fa-plus-circle mr-1"></i> 添加信息
+          </button>
+        </section>
+        
+        <!-- 技能 -->
+        <section class="rounded-xl p-6 transition-all duration-500" id="skills-section">
+          <h3 class="text-xl font-display font-bold mb-5 flex items-center transition-all duration-500" id="skills-title">
+            <i class="fa fa-code text-primary mr-3"></i>专业技能
+          </h3>
+          
+          <div class="space-y-5 skills-container">
+            <div class="skill-item">
+              <div class="flex justify-between mb-2">
+                <span>HTML/CSS</span>
+                <span>95%</span>
+              </div>
+              <div class="skill-bar transition-all duration-500" id="skill-bar-bg">
+                <div class="skill-progress bg-gradient-to-r from-primary to-secondary transition-all duration-1000" style="width: 95%"></div>
+              </div>
+              <button class="remove-btn mt-1 text-xs text-red-400 opacity-0 hover:opacity-100 transition-opacity">
+                <i class="fa fa-trash-o"></i>
+              </button>
+            </div>
+            
+            <div class="skill-item">
+              <div class="flex justify-between mb-2">
+                <span>JavaScript</span>
+                <span>90%</span>
+              </div>
+              <div class="skill-bar transition-all duration-500" id="skill-bar-bg">
+                <div class="skill-progress bg-gradient-to-r from-primary to-secondary transition-all duration-1000" style="width: 90%"></div>
+              </div>
+              <button class="remove-btn mt-1 text-xs text-red-400 opacity-0 hover:opacity-100 transition-opacity">
+                <i class="fa fa-trash-o"></i>
+              </button>
+            </div>
+            
+            <div class="skill-item">
+              <div class="flex justify-between mb-2">
+                <span>React</span>
+                <span>85%</span>
+              </div>
+              <div class="skill-bar transition-all duration-500" id="skill-bar-bg">
+                <div class="skill-progress bg-gradient-to-r from-primary to-secondary transition-all duration-1000" style="width: 85%"></div>
+              </div>
+              <button class="remove-btn mt-1 text-xs text-red-400 opacity-0 hover:opacity-100 transition-opacity">
+                <i class="fa fa-trash-o"></i>
+              </button>
+            </div>
+            
+            <div class="skill-item">
+              <div class="flex justify-between mb-2">
+                <span>Vue</span>
+                <span>80%</span>
+              </div>
+              <div class="skill-bar transition-all duration-500" id="skill-bar-bg">
+                <div class="skill-progress bg-gradient-to-r from-primary to-secondary transition-all duration-1000" style="width: 80%"></div>
+              </div>
+              <button class="remove-btn mt-1 text-xs text-red-400 opacity-0 hover:opacity-100 transition-opacity">
+                <i class="fa fa-trash-o"></i>
+              </button>
+            </div>
+            
+            <div class="skill-item">
+              <div class="flex justify-between mb-2">
+                <span>TypeScript</span>
+                <span>75%</span>
+              </div>
+              <div class="skill-bar transition-all duration-500" id="skill-bar-bg">
+                <div class="skill-progress bg-gradient-to-r from-primary to-secondary transition-all duration-1000" style="width: 75%"></div>
+              </div>
+              <button class="remove-btn mt-1 text-xs text-red-400 opacity-0 hover:opacity-100 transition-opacity">
+                <i class="fa fa-trash-o"></i>
+              </button>
+            </div>
+          </div>
+          
+          <button class="add-btn mt-4 text-sm text-primary hover:text-primary/80 transition-colors" data-type="skill">
+            <i class="fa fa-plus-circle mr-1"></i> 添加技能
+          </button>
+        </section>
+        
+        <!-- 证书 -->
+        <section class="rounded-xl p-6 transition-all duration-500" id="certs-section">
+          <h3 class="text-xl font-display font-bold mb-5 flex items-center transition-all duration-500" id="certs-title">
+            <i class="fa fa-certificate text-primary mr-3"></i>证书与荣誉
+          </h3>
+          
+          <div class="space-y-4 certificates-container">
+            <div class="cert-item p-3 rounded-lg hover:bg-white/10 transition-all duration-300" id="cert-item-bg">
+              <h4 class="font-medium">高级Web前端工程师认证</h4>
+              <p class="text-sm text-secondary mt-1">2020年 · 中国计算机学会</p>
+              <button class="remove-btn mt-1 text-xs text-red-400 opacity-0 hover:opacity-100 transition-opacity">
+                <i class="fa fa-trash-o"></i>
+              </button>
+            </div>
+            
+            <div class="cert-item p-3 rounded-lg hover:bg-white/10 transition-all duration-300" id="cert-item-bg">
+              <h4 class="font-medium">年度优秀员工</h4>
+              <p class="text-sm text-secondary mt-1">2019年 · 科技有限公司</p>
+              <button class="remove-btn mt-1 text-xs text-red-400 opacity-0 hover:opacity-100 transition-opacity">
+                <i class="fa fa-trash-o"></i>
+              </button>
+            </div>
+          </div>
+          
+          <button class="add-btn mt-4 text-sm text-primary hover:text-primary/80 transition-colors" data-type="cert">
+            <i class="fa fa-plus-circle mr-1"></i> 添加证书
+          </button>
+        </section>
+      </div>
+      
+      <!-- 右侧主内容 -->
+      <div class="lg:col-span-2 space-y-10">
+        <!-- 工作经验 -->
+        <section id="experience-section" class="rounded-xl p-6 transition-all duration-500">
+          <h3 class="text-xl font-display font-bold mb-6 flex items-center transition-all duration-500" id="experience-title">
+            <i class="fa fa-briefcase text-primary mr-3"></i>工作经验
+          </h3>
+          
+          <div class="space-y-8 relative pl-8 timeline-line transition-all duration-500" id="timeline-line">
+            <!-- 经验1 - 最新工作 -->
+            <div class="experience-item relative timeline-dot transition-all duration-500 experience-card" id="timeline-dot">
+              <div class="p-5 rounded-lg transition-all duration-500" id="experience-card-bg">
+                <div class="flex flex-col md:flex-row md:items-center justify-between mb-2">
+                  <h4 class="text-lg font-semibold">高级前端开发工程师</h4>
+                  <span class="text-sm text-primary mt-1 md:mt-0">2020年3月 - 至今</span>
+                </div>
+                <h5 class="text-secondary mb-3 flex items-center">
+                  <i class="fa fa-building-o mr-2 opacity-70"></i>北京科技有限公司
+                </h5>
+                
+                <div class="mb-4">
+                  <h6 class="font-medium text-sm mb-2">主要职责：</h6>
+                  <ul class="text-secondary space-y-2 ml-5 list-disc">
+                    <li>负责公司核心产品的前端架构设计与技术选型</li>
+                    <li>带领5人前端团队完成多个重要项目的开发与上线</li>
+                    <li>优化前端性能，将页面加载速度提升40%+</li>
+                    <li>制定前端开发规范和最佳实践，提升团队协作效率</li>
+                    <li>与产品和设计团队紧密合作，提升用户体验</li>
+                  </ul>
+                </div>
+                
+                <div class="mb-4">
+                  <h6 class="font-medium text-sm mb-2">主要成就：</h6>
+                  <ul class="text-secondary space-y-2 ml-5 list-disc">
+                    <li>重构老旧项目，提升代码可维护性，减少50%的bug率</li>
+                    <li>设计并实现公司内部UI组件库，提高开发效率30%</li>
+                    <li>主导移动端适配方案，支持多终端统一体验</li>
+                  </ul>
+                </div>
+                
+                <div class="flex flex-wrap gap-2">
+                  <span class="text-xs px-2 py-1 rounded transition-all duration-500" id="skill-tag">React</span>
+                  <span class="text-xs px-2 py-1 rounded transition-all duration-500" id="skill-tag">TypeScript</span>
+                  <span class="text-xs px-2 py-1 rounded transition-all duration-500" id="skill-tag">Next.js</span>
+                  <span class="text-xs px-2 py-1 rounded transition-all duration-500" id="skill-tag">Redux</span>
+                  <span class="text-xs px-2 py-1 rounded transition-all duration-500" id="skill-tag">性能优化</span>
+                </div>
+              </div>
+              <button class="remove-btn mt-2 text-xs text-red-400 opacity-0 hover:opacity-100 transition-opacity">
+                <i class="fa fa-trash-o mr-1"></i> 删除
+              </button>
+            </div>
+            
+            <!-- 经验2 -->
+            <div class="experience-item relative timeline-dot transition-all duration-500 experience-card" id="timeline-dot">
+              <div class="p-5 rounded-lg transition-all duration-500" id="experience-card-bg">
+                <div class="flex flex-col md:flex-row md:items-center justify-between mb-2">
+                  <h4 class="text-lg font-semibold">前端开发工程师</h4>
+                  <span class="text-sm text-primary mt-1 md:mt-0">2017年6月 - 2020年2月</span>
+                </div>
+                <h5 class="text-secondary mb-3 flex items-center">
+                  <i class="fa fa-building-o mr-2 opacity-70"></i>上海互联网科技有限公司
+                </h5>
+                
+                <div class="mb-4">
+                  <h6 class="font-medium text-sm mb-2">主要职责：</h6>
+                  <ul class="text-secondary space-y-2 ml-5 list-disc">
+                    <li>参与电商平台的前端开发与维护工作</li>
+                    <li>实现响应式布局，确保多设备兼容性</li>
+                    <li>优化页面加载速度和用户交互体验</li>
+                    <li>与后端团队协作，完成接口对接和数据渲染</li>
+                  </ul>
+                </div>
+                
+                <div class="mb-4">
+                  <h6 class="font-medium text-sm mb-2">主要成就：</h6>
+                  <ul class="text-secondary space-y-2 ml-5 list-disc">
+                    <li>开发商品详情页组件，提升页面加载速度25%</li>
+                    <li>实现购物车实时结算功能，减少用户操作步骤</li>
+                    <li>解决多个浏览器兼容性问题，提升用户覆盖率</li>
+                  </ul>
+                </div>
+                
+                <div class="flex flex-wrap gap-2">
+                  <span class="text-xs px-2 py-1 rounded transition-all duration-500" id="skill-tag">Vue</span>
+                  <span class="text-xs px-2 py-1 rounded transition-all duration-500" id="skill-tag">Webpack</span>
+                  <span class="text-xs px-2 py-1 rounded transition-all duration-500" id="skill-tag">Sass</span>
+                  <span class="text-xs px-2 py-1 rounded transition-all duration-500" id="skill-tag">Element UI</span>
+                </div>
+              </div>
+              <button class="remove-btn mt-2 text-xs text-red-400 opacity-0 hover:opacity-100 transition-opacity">
+                <i class="fa fa-trash-o mr-1"></i> 删除
+              </button>
+            </div>
+            
+            <!-- 经验3 -->
+            <div class="experience-item relative timeline-dot transition-all duration-500 experience-card" id="timeline-dot">
+              <div class="p-5 rounded-lg transition-all duration-500" id="experience-card-bg">
+                <div class="flex flex-col md:flex-row md:items-center justify-between mb-2">
+                  <h4 class="text-lg font-semibold">初级前端开发工程师</h4>
+                  <span class="text-sm text-primary mt-1 md:mt-0">2015年7月 - 2017年5月</span>
+                </div>
+                <h5 class="text-secondary mb-3 flex items-center">
+                  <i class="fa fa-building-o mr-2 opacity-70"></i>广州软件有限公司
+                </h5>
+                
+                <div class="mb-4">
+                  <h6 class="font-medium text-sm mb-2">主要职责：</h6>
+                  <ul class="text-secondary space-y-2 ml-5 list-disc">
+                    <li>负责企业官网和内部系统的前端开发</li>
+                    <li>实现页面交互效果和动态数据展示</li>
+                    <li>协助设计师将UI设计稿转化为代码实现</li>
+                    <li>参与页面性能优化和bug修复</li>
+                  </ul>
+                </div>
+                
+                <div class="mb-4">
+                  <h6 class="font-medium text-sm mb-2">主要成就：</h6>
+                  <ul class="text-secondary space-y-2 ml-5 list-disc">
+                    <li>独立完成企业官网改版，提升用户体验</li>
+                    <li>开发内部数据统计页面，提高工作效率</li>
+                    <li>学习并引入新的前端框架，得到团队认可</li>
+                  </ul>
+                </div>
+                
+                <div class="flex flex-wrap gap-2">
+                  <span class="text-xs px-2 py-1 rounded transition-all duration-500" id="skill-tag">jQuery</span>
+                  <span class="text-xs px-2 py-1 rounded transition-all duration-500" id="skill-tag">Bootstrap</span>
+                  <span class="text-xs px-2 py-1 rounded transition-all duration-500" id="skill-tag">Ajax</span>
+                  <span class="text-xs px-2 py-1 rounded transition-all duration-500" id="skill-tag">Less</span>
+                </div>
+              </div>
+              <button class="remove-btn mt-2 text-xs text-red-400 opacity-0 hover:opacity-100 transition-opacity">
+                <i class="fa fa-trash-o mr-1"></i> 删除
+              </button>
+            </div>
+          </div>
+          
+          <button class="add-btn mt-6 text-sm text-primary hover:text-primary/80 transition-colors" data-type="experience">
+            <i class="fa fa-plus-circle mr-1"></i> 添加工作经验
+          </button>
+        </section>
+        
+        <!-- 项目经验 -->
+        <section class="rounded-xl p-6 transition-all duration-500" id="projects-section">
+          <h3 class="text-xl font-display font-bold mb-6 flex items-center transition-all duration-500" id="projects-title">
+            <i class="fa fa-cubes text-primary mr-3"></i>项目经验
+          </h3>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 projects-container">
+            <!-- 项目1 -->
+            <div class="project-item rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1" id="project-item-bg">
+              <div class="h-40 overflow-hidden">
+                <img src="https://picsum.photos/seed/project1/600/400" alt="电商管理系统" class="w-full h-full object-cover transition-transform duration-500 hover:scale-110">
+              </div>
+              <div class="p-4">
+                <h4 class="font-semibold mb-1">电商管理系统</h4>
+                <p class="text-sm text-secondary mb-3">基于React开发的企业级电商后台管理系统，支持商品管理、订单处理等功能。</p>
+                <div class="flex flex-wrap gap-2 mb-3">
+                  <span class="text-xs px-2 py-0.5 rounded transition-all duration-500" id="skill-tag">React</span>
+                  <span class="text-xs px-2 py-0.5 rounded transition-all duration-500" id="skill-tag">Redux</span>
+                  <span class="text-xs px-2 py-0.5 rounded transition-all duration-500" id="skill-tag">Ant Design</span>
+                </div>
+                <button class="remove-btn text-xs text-red-400 opacity-0 hover:opacity-100 transition-opacity">
+                  <i class="fa fa-trash-o mr-1"></i> 删除
+                </button>
+              </div>
+            </div>
+            
+            <!-- 项目2 -->
+            <div class="project-item rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1" id="project-item-bg">
+              <div class="h-40 overflow-hidden">
+                <img src="https://picsum.photos/seed/project2/600/400" alt="数据可视化平台" class="w-full h-full object-cover transition-transform duration-500 hover:scale-110">
+              </div>
+              <div class="p-4">
+                <h4 class="font-semibold mb-1">数据可视化平台</h4>
+                <p class="text-sm text-secondary mb-3">使用D3.js开发的数据可视化平台，支持多种图表展示和数据交互分析。</p>
+                <div class="flex flex-wrap gap-2 mb-3">
+                  <span class="text-xs px-2 py-0.5 rounded transition-all duration-500" id="skill-tag">Vue</span>
+                  <span class="text-xs px-2 py-0.5 rounded transition-all duration-500" id="skill-tag">D3.js</span>
+                  <span class="text-xs px-2 py-0.5 rounded transition-all duration-500" id="skill-tag">ECharts</span>
+                </div>
+                <button class="remove-btn text-xs text-red-400 opacity-0 hover:opacity-100 transition-opacity">
+                  <i class="fa fa-trash-o mr-1"></i> 删除
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <button class="add-btn mt-6 text-sm text-primary hover:text-primary/80 transition-colors" data-type="project">
+            <i class="fa fa-plus-circle mr-1"></i> 添加项目经验
+          </button>
+        </section>
+        
+        <!-- 自我评价 -->
+        <section class="rounded-xl p-6 transition-all duration-500" id="evaluation-section">
+          <h3 class="text-xl font-display font-bold mb-5 flex items-center transition-all duration-500" id="evaluation-title">
+            <i class="fa fa-comment text-primary mr-3"></i>自我评价
+          </h3>
+          
+          <div class="evaluation-container">
+            <p class="text-secondary leading-relaxed">
+              8年前端开发经验，熟悉各种前端技术栈和开发工具，具备良好的代码规范和编程习惯。善于沟通协作，能够快速融入团队，有较强的问题解决能力和学习能力。
+              对用户体验有深刻理解，注重细节，追求高质量的产品。热衷于前端技术的研究和应用，不断学习新技术，提升自身专业水平。
+            </p>
+            <button class="remove-btn mt-3 text-xs text-red-400 opacity-0 hover:opacity-100 transition-opacity">
+              <i class="fa fa-trash-o mr-1"></i> 删除
+            </button>
+          </div>
+          
+          <button class="add-btn mt-4 text-sm text-primary hover:text-primary/80 transition-colors" data-type="evaluation">
+            <i class="fa fa-plus-circle mr-1"></i> 添加自我评价
+          </button>
+        </section>
+      </div>
+    </div>
+    
+    <!-- 页脚 -->
+    <footer class="mt-16 text-center text-secondary text-sm py-6 border-t transition-all duration-500" id="footer-border">
+      <p>© 2023 张伟的个人简历 | 最后更新：2023年10月</p>
+    </footer>
+  </div>
+  
+  <!-- 添加项目的模态框 -->
+  <div id="modal" class="fixed inset-0 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300">
+    <div class="rounded-xl p-6 w-full max-w-md transform scale-95 transition-transform duration-300" id="modal-card">
+      <div class="flex justify-between items-center mb-5">
+        <h3 class="text-xl font-bold" id="modal-title">添加信息</h3>
+        <button id="close-modal" class="text-xl hover:text-primary transition-colors">
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+      
+      <form id="add-form" class="space-y-4">
+        <input type="hidden" id="item-type">
+        
+        <div id="form-fields">
+          <!-- 动态生成表单字段 -->
+        </div>
+        
+        <div class="flex justify-end pt-2">
+          <button type="submit" class="px-4 py-2 bg-primary hover:bg-primary/90 rounded-lg transition-colors">
+            保存
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <script>
+    // 全局变量
+    let isEditMode = false;
+    let currentStyle = 'dark';
+    
+    // 初始化3D背景
+    function init3DBackground() {
+      try {
+        const container = document.getElementById('background-container');
+        if (!container) throw new Error('未找到背景容器');
+        
+        // 创建场景
+        const scene = new THREE.Scene();
+        
+        // 创建相机
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 5;
+        
+        // 创建渲染器
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0x000000, 0);
+        container.appendChild(renderer.domElement);
+        
+        // 创建粒子
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 1200;
+        
+        const posArray = new Float32Array(particlesCount * 3);
+        
+        for (let i = 0; i < particlesCount * 3; i++) {
+          posArray[i] = (Math.random() - 0.5) * 15;
+        }
+        
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        
+        // 创建粒子材质
+        const particlesMaterial = new THREE.PointsMaterial({
+          size: 0.02,
+          color: 0x3B82F6,
+          transparent: true,
+          opacity: 0.8
+        });
+        
+        // 创建粒子网格
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+        
+        // 添加控制器
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.enableZoom = false;
+        controls.enableRotate = false;
+        
+        // 鼠标移动效果
+        document.addEventListener('mousemove', (event) => {
+          const mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+          const mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+          
+          particlesMesh.rotation.x = mouseY * 0.1;
+          particlesMesh.rotation.y = mouseX * 0.1;
+        });
+        
+        // 动画循环
+        function animate() {
+          requestAnimationFrame(animate);
+          
+          particlesMesh.rotation.x += 0.0002;
+          particlesMesh.rotation.y += 0.0003;
+          
+          controls.update();
+          renderer.render(scene, camera);
+        }
+        
+        // 响应窗口大小变化
+        window.addEventListener('resize', () => {
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        animate();
+        
+        // 暴露给全局，用于风格切换时更新颜色
+        window.particlesMaterial = particlesMaterial;
+      } catch (error) {
+        console.error('3D背景初始化失败:', error);
+        document.getElementById('background-container').style.display = 'none';
+      }
+    }
+    
+    // 初始化风格切换功能
+    function initStyleSwitcher() {
+      const styleButtons = document.querySelectorAll('.style-btn');
+      
+      // 应用风格的函数
+      function applyStyle(style) {
+        currentStyle = style;
+        
+        // 获取DOM元素并进行空值检查
+        const resumeBody = document.getElementById('resume-body');
+        if (resumeBody) {
+          resumeBody.className = `min-h-screen bg-${style}-bg text-${style}-text font-${style === 'business' ? 'business' : style === 'creative' ? 'creative' : 'sans'} transition-all duration-500`;
+        }
+        
+        // 更新导航栏
+        const mainNav = document.getElementById('main-nav');
+        if (mainNav) {
+          mainNav.className = `bg-${style}-card rounded-xl p-4 mb-10 flex flex-wrap justify-between items-center border border-${style}-border transition-all duration-500`;
+        }
+        
+        // 更新各个区块
+        const sections = ['info-section', 'skills-section', 'certs-section', 'experience-section', 'projects-section', 'evaluation-section'];
+        sections.forEach(section => {
+          const el = document.getElementById(section);
+          if (el) {
+            el.className = `bg-${style}-card rounded-xl p-6 border border-${style}-border transition-all duration-500`;
+          }
+        });
+        
+        // 更新工作经验卡片
+        document.querySelectorAll('#experience-card-bg').forEach(el => {
+          if (el) {
+            el.className = `p-5 bg-${style}-card/80 rounded-lg border border-${style}-border/30 transition-all duration-500`;
+          }
+        });
+        
+        // 更新标题颜色
+        const titles = ['info-title', 'skills-title', 'certs-title', 'experience-title', 'projects-title', 'evaluation-title'];
+        titles.forEach(title => {
+          const el = document.getElementById(title);
+          if (el) {
+            el.className = `${el.className} text-${style}-text`;
+            const icon = el.querySelector('i');
+            if (icon) {
+              icon.className = `${icon.className} text-${style}-primary`;
+            }
+          }
+        });
+        
+        // 更新次要文本
+        const introText = document.getElementById('intro-text');
+        if (introText) {
+          introText.className = `text-${style}-textSecondary max-w-xl mb-6 transition-all duration-500`;
+        }
+        
+        // 更新链接样式
+        const links = ['email-link', 'phone-link'];
+        links.forEach(link => {
+          const el = document.getElementById(link);
+          if (el) {
+            el.className = `${el.className} bg-${style}-card/50 border border-${style}-border/50`;
+          }
+        });
+        
+        // 更新信息项边框
+        document.querySelectorAll('#info-border').forEach(el => {
+          if (el) {
+            el.className = `${el.className} border-${style}-border`;
+          }
+        });
+        
+        // 更新技能条
+        document.querySelectorAll('#skill-bar-bg').forEach(el => {
+          if (el) {
+            el.className = `${el.className} bg-${style}-border`;
+          }
+        });
+        
+        // 更新证书项背景
+        document.querySelectorAll('#cert-item-bg').forEach(el => {
+          if (el) {
+            el.className = `${el.className} bg-${style}-card/50 border border-${style}-border/30`;
+          }
+        });
+        
+        // 更新项目项背景
+        document.querySelectorAll('#project-item-bg').forEach(el => {
+          if (el) {
+            el.className = `${el.className} bg-${style}-card border border-${style}-border/50`;
+          }
+        });
+        
+        // 更新技能标签
+        document.querySelectorAll('#skill-tag').forEach(el => {
+          if (el) {
+            el.className = `${el.className} bg-${style}-primary/10 text-${style}-primary`;
+          }
+        });
+        
+        // 更新时间线
+        const timelineLine = document.getElementById('timeline-line');
+        if (timelineLine) {
+          timelineLine.className = `${timelineLine.className} bg-${style}-primary`;
+        }
+        
+        document.querySelectorAll('#timeline-dot').forEach(el => {
+          if (el) {
+            el.className = `${el.className} text-${style}-primary`;
+          }
+        });
+        
+        // 更新页脚边框
+        const footerBorder = document.getElementById('footer-border');
+        if (footerBorder) {
+          footerBorder.className = `${footerBorder.className} border-${style}-border`;
+        }
+        
+        // 更新模态框
+        const modalCard = document.getElementById('modal-card');
+        if (modalCard) {
+          modalCard.className = `${modalCard.className} bg-${style}-card border border-${style}-border`;
+        }
+        
+        const modalTitle = document.getElementById('modal-title');
+        if (modalTitle) {
+          modalTitle.className = `${modalTitle.className} text-${style}-text`;
+        }
+        
+        // 更新3D粒子颜色
+        if (window.particlesMaterial) {
+          const colors = {
+            dark: 0x3B82F6,
+            light: 0x2563EB,
+            business: 0x0F766E,
+            creative: 0xEA580C
+          };
+          window.particlesMaterial.color.set(colors[style]);
+        }
+        
+        // 更新按钮状态
+        styleButtons.forEach(btn => {
+          if (btn.getAttribute('data-style') === style) {
+            btn.classList.add('bg-primary/20', `text-${style}-primary`);
+            btn.classList.remove('hover:bg-white/10');
+          } else {
+            btn.classList.remove('bg-primary/20', `text-${style}-primary`);
+            btn.classList.add('hover:bg-white/10');
+          }
+        });
+      }
+      
+      // 为每个风格按钮添加点击事件
+      styleButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const style = btn.getAttribute('data-style');
+          applyStyle(style);
+        });
+      });
+      
+      // 应用初始风格
+      applyStyle('dark');
+    }
+    
+    // 初始化编辑模式
+    function initEditMode() {
+      const toggleBtn = document.getElementById('toggle-edit');
+      if (!toggleBtn) return;
+      
+      // 切换编辑模式
+      toggleBtn.addEventListener('click', () => {
+        isEditMode = !isEditMode;
+        
+        const removeBtns = document.querySelectorAll('.remove-btn');
+        if (isEditMode) {
+          toggleBtn.innerHTML = '<i class="fa fa-eye mr-1"></i> 查看';
+          removeBtns.forEach(btn => {
+            btn.classList.remove('opacity-0');
+            btn.classList.add('opacity-100', 'cursor-pointer');
+          });
+        } else {
+          toggleBtn.innerHTML = '<i class="fa fa-pencil mr-1"></i> 编辑';
+          removeBtns.forEach(btn => {
+            btn.classList.remove('opacity-100', 'cursor-pointer');
+            btn.classList.add('opacity-0');
+          });
+        }
+      });
+      
+      // 绑定删除按钮事件
+      document.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-btn')) {
+          e.preventDefault();
+          const btn = e.target.closest('.remove-btn');
+          const item = btn.closest('.info-item, .skill-item, .cert-item, .experience-item, .project-item, .evaluation-container');
+          
+          if (item) {
+            // 添加删除动画
+            item.style.opacity = '0';
+            item.style.transform = 'translateY(10px)';
+            item.style.height = item.offsetHeight + 'px';
+            item.style.overflow = 'hidden';
+            item.style.transition = 'all 0.3s ease';
+            
+            setTimeout(() => {
+              item.style.height = '0';
+              item.style.margin = '0';
+              item.style.padding = '0';
+              
+              setTimeout(() => {
+                item.remove();
+              }, 300);
+            }, 300);
+          }
+        }
+      });
+    }
+    
+    // 初始化添加项目功能
+    function initAddItems() {
+      const modal = document.getElementById('modal');
+      const modalCard = document.getElementById('modal-card');
+      const closeModal = document.getElementById('close-modal');
+      const addForm = document.getElementById('add-form');
+      const formFields = document.getElementById('form-fields');
+      const modalTitle = document.getElementById('modal-title');
+      const itemTypeInput = document.getElementById('item-type');
+      
+      // 检查必要元素是否存在
+      if (!modal || !modalCard || !closeModal || !addForm || !formFields || !modalTitle || !itemTypeInput) {
+        console.error('添加项目功能所需的DOM元素不完整');
+        return;
+      }
+      
+      // 打开模态框
+      document.addEventListener('click', function(e) {
+        if (e.target.closest('.add-btn')) {
+          const btn = e.target.closest('.add-btn');
+          const type = btn.getAttribute('data-type');
+          itemTypeInput.value = type;
+          
+          // 设置标题
+          const titles = {
+            info: '添加基本信息',
+            skill: '添加专业技能',
+            cert: '添加证书与荣誉',
+            experience: '添加工作经验',
+            project: '添加项目经验',
+            evaluation: '添加自我评价'
+          };
+          
+          modalTitle.textContent = titles[type] || '添加信息';
+          
+          // 生成表单字段
+          generateFormFields(type);
+          
+          // 显示模态框
+          modal.classList.remove('opacity-0', 'pointer-events-none');
+          setTimeout(() => {
+            modalCard.classList.remove('scale-95');
+            modalCard.classList.add('scale-100');
+          }, 10);
+        }
+      });
+      
+      // 关闭模态框
+      closeModal.addEventListener('click', closeModalFunc);
+      
+      // 点击外部关闭
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          closeModalFunc();
+        }
+      });
+      
+      // 提交表单
+      addForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const type = itemTypeInput.value;
+        const formData = getFormData(type);
+        
+        // 添加新项目
+        addNewItem(type, formData);
+        
+        // 关闭模态框
+        closeModalFunc();
+        
+        // 重置表单
+        addForm.reset();
+      });
+      
+      // 关闭模态框函数
+      function closeModalFunc() {
+        modalCard.classList.remove('scale-100');
+        modalCard.classList.add('scale-95');
+        setTimeout(() => {
+          modal.classList.add('opacity-0', 'pointer-events-none');
+        }, 300);
+      }
+    }
+    
+    // 生成表单字段
+    function generateFormFields(type) {
+      const formFields = document.getElementById('form-fields');
+      if (!formFields) return;
+      
+      formFields.innerHTML = '';
+      
+      // 生成表单控件的通用函数
+      const createFormGroup = (label, name, type = 'text', attributes = {}) => {
+        const group = document.createElement('div');
+        let inputHtml = `<input type="${type}" name="${name}" class="w-full bg-${currentStyle}-card border border-${currentStyle}-border rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-${currentStyle}-primary"`;
+        
+        // 添加属性
+        Object.keys(attributes).forEach(key => {
+          inputHtml += ` ${key}="${attributes[key]}"`;
+        });
+        
+        inputHtml += '>';
+        
+        if (type === 'textarea') {
+          inputHtml = `<textarea name="${name}" rows="${attributes.rows || 3}" class="w-full bg-${currentStyle}-card border border-${currentStyle}-border rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-${currentStyle}-primary resize-none ${attributes.class || ''}"`;
+          
+          Object.keys(attributes).forEach(key => {
+            if (key !== 'rows' && key !== 'class') {
+              inputHtml += ` ${key}="${attributes[key]}"`;
+            }
+          });
+          
+          inputHtml += '></textarea>';
+        }
+        
+        group.innerHTML = `
+          <label class="block text-sm mb-1">${label}</label>
+          ${inputHtml}
+        `;
+        
+        return group;
+      };
+      
+      switch (type) {
+        case 'info':
+          formFields.appendChild(createFormGroup('信息名称', 'name', 'text', {placeholder: '例如：政治面貌'}));
+          formFields.appendChild(createFormGroup('信息内容', 'value', 'text', {placeholder: '例如：群众'}));
+          break;
+          
+        case 'skill':
+          formFields.appendChild(createFormGroup('技能名称', 'name', 'text', {placeholder: '例如：JavaScript'}));
+          formFields.appendChild(createFormGroup('熟练程度 (%)', 'level', 'number', {min: 1, max: 100, placeholder: '例如：90'}));
+          break;
+          
+        case 'cert':
+          formFields.appendChild(createFormGroup('证书名称', 'name', 'text', {placeholder: '例如：计算机等级证书'}));
+          formFields.appendChild(createFormGroup('获得时间与机构', 'info', 'text', {placeholder: '例如：2020年 · 教育部'}));
+          break;
+          
+        case 'experience':
+          formFields.appendChild(createFormGroup('职位名称', 'title', 'text', {placeholder: '例如：前端开发工程师'}));
+          formFields.appendChild(createFormGroup('公司名称', 'company', 'text', {placeholder: '例如：科技有限公司'}));
+          formFields.appendChild(createFormGroup('工作时间', 'period', 'text', {placeholder: '例如：2020年1月 - 至今'}));
+          formFields.appendChild(createFormGroup(
+            '主要职责（每行一项）', 
+            'responsibilities', 
+            'textarea', 
+            {placeholder: '请描述您的工作内容，每行一项...', rows: 3}
+          ));
+          formFields.appendChild(createFormGroup(
+            '主要成就（每行一项）', 
+            'achievements', 
+            'textarea', 
+            {placeholder: '请描述您的工作成就，每行一项...', rows: 3}
+          ));
+          formFields.appendChild(createFormGroup('相关技术（逗号分隔）', 'skills', 'text', {placeholder: '例如：React, JavaScript, CSS'}));
+          break;
+          
+        case 'project':
+          formFields.appendChild(createFormGroup('项目名称', 'title', 'text', {placeholder: '例如：企业官网重构'}));
+          formFields.appendChild(createFormGroup(
+            '项目描述', 
+            'description', 
+            'textarea', 
+            {placeholder: '请描述项目内容...', rows: 2}
+          ));
+          formFields.appendChild(createFormGroup('相关技术（逗号分隔）', 'skills', 'text', {placeholder: '例如：Vue, SCSS, Webpack'}));
+          formFields.appendChild(createFormGroup('项目图片URL（可选）', 'image', 'url', {placeholder: 'https://example.com/image.jpg'}));
+          break;
+          
+        case 'evaluation':
+          formFields.appendChild(createFormGroup(
+            '自我评价', 
+            'content', 
+            'textarea', 
+            {placeholder: '请输入您的自我评价...', rows: 5}
+          ));
+          break;
+      }
+    }
+    
+    // 获取表单数据
+    function getFormData(type) {
+      const formData = {};
+      const inputs = document.querySelectorAll('#add-form input, #add-form textarea');
+      
+      inputs.forEach(input => {
+        formData[input.name] = input.value.trim();
+      });
+      
+      return formData;
+    }
+    
+    // 添加新项目
+    function addNewItem(type, data) {
+      // 验证必填字段
+      const requiredFields = {
+        info: ['name', 'value'],
+        skill: ['name', 'level'],
+        cert: ['name', 'info'],
+        experience: ['title', 'company', 'period'],
+        project: ['title', 'description'],
+        evaluation: ['content']
+      };
+      
+      const isValid = requiredFields[type]?.every(field => data[field] !== '');
+      if (!isValid) {
+        alert('请填写所有必填字段');
+        return;
+      }
+      
+      switch (type) {
+        case 'info':
+          const infoContainer = document.querySelector('.info-container');
+          if (infoContainer) {
+            const newInfo = document.createElement('div');
+            newInfo.className = `info-item flex justify-between pb-3 border-b border-${currentStyle}-border transition-all duration-500`;
+            newInfo.innerHTML = `
+              <span class="text-${currentStyle}-textSecondary">${data.name}</span>
+              <span>${data.value}</span>
+              <button class="remove-btn text-xs text-red-400 ${isEditMode ? 'opacity-100' : 'opacity-0'} hover:opacity-100 transition-opacity ml-2">
+                <i class="fa fa-trash-o"></i>
+              </button>
+            `;
+            infoContainer.appendChild(newInfo);
+          }
+          break;
+          
+        case 'skill':
+          const skillsContainer = document.querySelector('.skills-container');
+          if (skillsContainer) {
+            const newSkill = document.createElement('div');
+            newSkill.className = 'skill-item';
+            newSkill.innerHTML = `
+              <div class="flex justify-between mb-2">
+                <span>${data.name}</span>
+                <span>${data.level}%</span>
+              </div>
+              <div class="skill-bar bg-${currentStyle}-border transition-all duration-500">
+                <div class="skill-progress bg-gradient-to-r from-${currentStyle}-primary to-${currentStyle}-secondary transition-all duration-1000" style="width: ${data.level}%"></div>
+              </div>
+              <button class="remove-btn mt-1 text-xs text-red-400 ${isEditMode ? 'opacity-100' : 'opacity-0'} hover:opacity-100 transition-opacity">
+                <i class="fa fa-trash-o"></i>
+              </button>
+            `;
+            skillsContainer.appendChild(newSkill);
+          }
+          break;
+          
+        case 'cert':
+          const certsContainer = document.querySelector('.certificates-container');
+          if (certsContainer) {
+            const newCert = document.createElement('div');
+            newCert.className = `cert-item p-3 bg-${currentStyle}-card/50 border border-${currentStyle}-border/30 rounded-lg hover:bg-white/10 transition-all duration-300`;
+            newCert.innerHTML = `
+              <h4 class="font-medium">${data.name}</h4>
+              <p class="text-sm text-${currentStyle}-textSecondary mt-1">${data.info}</p>
+              <button class="remove-btn mt-1 text-xs text-red-400 ${isEditMode ? 'opacity-100' : 'opacity-0'} hover:opacity-100 transition-opacity">
+                <i class="fa fa-trash-o"></i>
+              </button>
+            `;
+            certsContainer.appendChild(newCert);
+          }
+          break;
+          
+        case 'experience':
+          const experienceContainer = document.querySelector('#timeline-line');
+          if (experienceContainer) {
+            const newExperience = document.createElement('div');
+            
+            // 处理职责列表
+            const responsibilities = data.responsibilities.split('\n')
+              .filter(item => item.trim() !== '')
+              .map(item => `<li>${item}</li>`)
+              .join('');
+            
+            // 处理成就列表
+            const achievements = data.achievements.split('\n')
+              .filter(item => item.trim() !== '')
+              .map(item => `<li>${item}</li>`)
+              .join('');
+            
+            // 处理技能标签
+            const skillTags = data.skills ? data.skills.split(',')
+              .filter(item => item.trim() !== '')
+              .map(item => `<span class="text-xs px-2 py-1 rounded bg-${currentStyle}-primary/10 text-${currentStyle}-primary transition-all duration-500">${item.trim()}</span>`)
+              .join('') : '';
+            
+            newExperience.className = `experience-item relative timeline-dot transition-all duration-500 experience-card text-${currentStyle}-text`;
+            newExperience.innerHTML = `
+              <div class="p-5 bg-${currentStyle}-card/80 rounded-lg border border-${currentStyle}-border/30 transition-all duration-500">
+                <div class="flex flex-col md:flex-row md:items-center justify-between mb-2">
+                  <h4 class="text-lg font-semibold">${data.title}</h4>
+                  <span class="text-sm text-${currentStyle}-primary mt-1 md:mt-0">${data.period}</span>
+                </div>
+                <h5 class="text-${currentStyle}-textSecondary mb-3 flex items-center">
+                  <i class="fa fa-building-o mr-2 opacity-70"></i>${data.company}
+                </h5>
+                
+                <div class="mb-4">
+                  <h6 class="font-medium text-sm mb-2">主要职责：</h6>
+                  <ul class="text-${currentStyle}-textSecondary space-y-2 ml-5 list-disc">
+                    ${responsibilities || '<li>无相关信息</li>'}
+                  </ul>
+                </div>
+                
+                <div class="mb-4">
+                  <h6 class="font-medium text-sm mb-2">主要成就：</h6>
+                  <ul class="text-${currentStyle}-textSecondary space-y-2 ml-5 list-disc">
+                    ${achievements || '<li>无相关信息</li>'}
+                  </ul>
+                </div>
+                
+                <div class="flex flex-wrap gap-2">
+                  ${skillTags || '<span class="text-xs px-2 py-1 text-gray-400">无相关技能</span>'}
+                </div>
+              </div>
+              <button class="remove-btn mt-2 text-xs text-red-400 ${isEditMode ? 'opacity-100' : 'opacity-0'} hover:opacity-100 transition-opacity">
+                <i class="fa fa-trash-o mr-1"></i> 删除
+              </button>
+            `;
+            
+            // 添加到容器最前面（最新的经验）
+            experienceContainer.insertBefore(newExperience, experienceContainer.firstChild);
+          }
+          break;
+          
+        case 'project':
+          const projectsContainer = document.querySelector('.projects-container');
+          if (projectsContainer) {
+            const newProject = document.createElement('div');
+            
+            // 处理技能标签
+            const projectSkillTags = data.skills ? data.skills.split(',')
+              .filter(item => item.trim() !== '')
+              .map(item => `<span class="text-xs px-2 py-0.5 rounded bg-${currentStyle}-primary/10 text-${currentStyle}-primary transition-all duration-500">${item.trim()}</span>`)
+              .join('') : '';
+              
+            // 处理图片
+            const imageUrl = data.image || 'https://picsum.photos/seed/newproject/600/400';
+            
+            newProject.className = `project-item rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 bg-${currentStyle}-card border border-${currentStyle}-border/50`;
+            newProject.innerHTML = `
+              <div class="h-40 overflow-hidden">
+                <img src="${imageUrl}" alt="${data.title}" class="w-full h-full object-cover transition-transform duration-500 hover:scale-110">
+              </div>
+              <div class="p-4">
+                <h4 class="font-semibold mb-1">${data.title}</h4>
+                <p class="text-sm text-${currentStyle}-textSecondary mb-3">${data.description}</p>
+                <div class="flex flex-wrap gap-2 mb-3">
+                  ${projectSkillTags || '<span class="text-xs px-2 py-0.5 text-gray-400">无相关技能</span>'}
+                </div>
+                <button class="remove-btn text-xs text-red-400 ${isEditMode ? 'opacity-100' : 'opacity-0'} hover:opacity-100 transition-opacity">
+                  <i class="fa fa-trash-o mr-1"></i> 删除
+                </button>
+              </div>
+            `;
+            
+            projectsContainer.appendChild(newProject);
+          }
+          break;
+          
+        case 'evaluation':
+          const evaluationContainer = document.querySelector('.evaluation-container');
+          if (evaluationContainer) {
+            const newEvaluation = document.createElement('div');
+            newEvaluation.className = 'evaluation-item';
+            newEvaluation.innerHTML = `
+              <p class="text-${currentStyle}-textSecondary leading-relaxed">
+                ${data.content}
+              </p>
+              <button class="remove-btn mt-3 text-xs text-red-400 ${isEditMode ? 'opacity-100' : 'opacity-0'} hover:opacity-100 transition-opacity">
+                <i class="fa fa-trash-o mr-1"></i> 删除
+              </button>
+            `;
+            
+            // 清空现有评价并添加新的
+            evaluationContainer.innerHTML = '';
+            evaluationContainer.appendChild(newEvaluation);
+          }
+          break;
+      }
+    }
+    
+    // 初始化下载功能
+    function initDownload() {
+      const downloadBtn = document.getElementById('download-resume');
+      if (downloadBtn) {
+        downloadBtn.addEventListener('click', () => {
+          alert('简历下载功能已触发，实际应用中会下载当前风格的PDF版本简历');
+        });
+      }
+    }
+    
+    // 页面加载完成后初始化
+    window.addEventListener('DOMContentLoaded', () => {
+      // 初始化3D背景
+      init3DBackground();
+      
+      // 初始化风格切换
+      initStyleSwitcher();
+      
+      // 初始化编辑模式和删除功能
+      initEditMode();
+      
+      // 初始化添加项目功能
+      initAddItems();
+      
+      // 初始化下载功能
+      initDownload();
+    });
+  </script>
+</body>
+</html>

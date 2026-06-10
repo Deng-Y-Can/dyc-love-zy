@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>WebGIS演示系统</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #667eea;
+            min-height: 100vh;
+            padding: 10px;
+        }
+        
+        .container {
+            display: flex;
+            height: calc(100vh - 20px);
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        #map {
+            flex: 1;
+            height: 100%;
+        }
+        
+        .sidebar {
+            width: 320px;
+            background: #2c3e50;
+            color: white;
+            padding: 0;
+            overflow-y: auto;
+        }
+        
+        .sidebar-header {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            text-align: center;
+            border-bottom: 2px solid #3498db;
+        }
+        
+        .sidebar-header h1 {
+            font-size: 22px;
+            margin: 0;
+            color: #3498db;
+        }
+        
+        .sidebar-header p {
+            color: #95a5a6;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        .tab-container {
+            display: flex;
+            background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab:hover {
+            background: rgba(52, 152, 219, 0.2);
+        }
+        
+        .tab.active {
+            background: rgba(52, 152, 219, 0.3);
+            border-bottom-color: #3498db;
+        }
+        
+        .tab-content {
+            padding: 15px;
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .control-panel {
+            margin-bottom: 20px;
+        }
+        
+        .control-panel h3 {
+            color: #3498db;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid rgba(52, 152, 219, 0.3);
+            font-size: 14px;
+        }
+        
+        .control-group {
+            background: rgba(255,255,255,0.05);
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-left: 3px solid #3498db;
+        }
+        
+        .layer-control {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            padding: 8px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .layer-control:hover {
+            background: rgba(52, 152, 219, 0.2);
+        }
+        
+        .layer-control input {
+            margin-right: 10px;
+        }
+        
+        .layer-control label {
+            flex: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+        
+        .color-preview {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        
+        .btn:hover {
+            background: #2980b9;
+        }
+        
+        .btn.success {
+            background: #2ecc71;
+        }
+        
+        .btn.warning {
+            background: #f39c12;
+        }
+        
+        .btn.danger {
+            background: #e74c3c;
+        }
+        
+        .input-group {
+            margin: 8px 0;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 3px;
+            color: #bdc3c7;
+            font-size: 12px;
+        }
+        
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 8px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 3px;
+            color: white;
+            font-size: 13px;
+        }
+        
+        .info-panel {
+            background: rgba(0,0,0,0.3);
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-size: 12px;
+        }
+        
+        .info-label {
+            color: #bdc3c7;
+        }
+        
+        .info-value {
+            color: #3498db;
+            font-weight: bold;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .stat-card {
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2ecc71;
+            margin: 3px 0;
+        }
+        
+        .stat-label {
+            font-size: 10px;
+            color: #95a5a6;
+        }
+        
+        .map-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            display: flex;
+            gap: 5px;
+        }
+        
+        .map-control {
+            width: 35px;
+            height: 35px;
+            background: white;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            font-size: 16px;
+        }
+        
+        .search-box {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            width: 300px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 10px 15px;
+            padding-left: 40px;
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            font-size: 13px;
+        }
+        
+        .notification {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: #2ecc71;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            z-index: 2000;
+            max-width: 300px;
+        }
+        
+        .tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 11px;
+            pointer-events: none;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div id="notification" class="notification" style="display:none;"></div>
+    <div id="tooltip" class="tooltip" style="display:none;"></div>
+    
+    <div class="container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1>🌍 WebGIS演示系统</h1>
+                <p>无需数据库 | 全功能演示</p>
+            </div>
+            
+            <div class="tab-container">
+                <div class="tab active" onclick="switchTab('layers')">图层</div>
+                <div class="tab" onclick="switchTab('tools')">工具</div>
+                <div class="tab" onclick="switchTab('data')">数据</div>
+                <div class="tab" onclick="switchTab('analysis')">分析</div>
+            </div>
+            
+            <div id="layers-tab" class="tab-content active">
+                <div class="control-panel">
+                    <h3>底图选择</h3>
+                    <div class="control-group">
+                        <div class="layer-control" onclick="switchBasemap('streets')">
+                            <input type="radio" name="basemap" id="streets" checked>
+                            <label for="streets">
+                                <div class="color-preview" style="background: #27ae60"></div>
+                                街道地图
+                            </label>
+                        </div>
+                        <div class="layer-control" onclick="switchBasemap('satellite')">
+                            <input type="radio" name="basemap" id="satellite">
+                            <label for="satellite">
+                                <div class="color-preview" style="background: #2c3e50"></div>
+                                卫星影像
+                            </label>
+                        </div>
+                        <div class="layer-control" onclick="switchBasemap('terrain')">
+                            <input type="radio" name="basemap" id="terrain">
+                            <label for="terrain">
+                                <div class="color-preview" style="background: #8e44ad"></div>
+                                地形图
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="control-panel">
+                    <h3>叠加图层</h3>
+                    <div class="control-group" id="overlay-controls"></div>
+                </div>
+            </div>
+            
+            <div id="tools-tab" class="tab-content">
+                <div class="control-panel">
+                    <h3>绘制工具</h3>
+                    <button class="btn" onclick="startDrawing('marker')">📍 添加标记</button>
+                    <button class="btn" onclick="startDrawing('rectangle')">⬜ 绘制矩形</button>
+                    <button class="btn" onclick="startDrawing('polygon')">🔺 绘制多边形</button>
+                    <button class="btn" onclick="startDrawing('polyline')">📏 测量距离</button>
+                </div>
+                
+                <div class="control-panel">
+                    <h3>定位工具</h3>
+                    <button class="btn success" onclick="locateUser()">📍 定位我的位置</button>
+                    <div class="input-group">
+                        <label for="search-place">搜索地点</label>
+                        <input type="text" id="search-place" placeholder="输入地名..." 
+                               onkeypress="if(event.key === 'Enter') searchLocation()">
+                    </div>
+                </div>
+                
+                <div class="control-panel">
+                    <h3>编辑工具</h3>
+                    <button class="btn warning" onclick="clearDrawings()">🗑️ 清除绘制</button>
+                    <button class="btn danger" onclick="clearAll()">🗑️ 清除所有</button>
+                </div>
+            </div>
+            
+            <div id="data-tab" class="tab-content">
+                <div class="control-panel">
+                    <h3>数据导入</h3>
+                    <div class="input-group">
+                        <label for="import-file">导入GeoJSON</label>
+                        <input type="file" id="import-file" accept=".json,.geojson" 
+                               onchange="importData(event)">
+                    </div>
+                    <button class="btn success" onclick="generateSampleData()">📊 生成示例数据</button>
+                </div>
+                
+                <div class="control-panel">
+                    <h3>数据导出</h3>
+                    <button class="btn" onclick="exportGeoJSON()">📥 导出GeoJSON</button>
+                    <button class="btn warning" onclick="saveToLocal()">💾 保存到本地</button>
+                </div>
+                
+                <div class="control-panel">
+                    <h3>数据统计</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="total-features">0</div>
+                            <div class="stat-label">总要素</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="points-count">0</div>
+                            <div class="stat-label">点要素</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="lines-count">0</div>
+                            <div class="stat-label">线要素</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="polygons-count">0</div>
+                            <div class="stat-label">面要素</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="analysis-tab" class="tab-content">
+                <div class="control-panel">
+                    <h3>空间分析</h3>
+                    <button class="btn warning" onclick="generateHeatmap()">🔥 生成热力图</button>
+                    <button class="btn" onclick="bufferAnalysis()">🎯 缓冲区分析</button>
+                    <button class="btn info" onclick="analyzeDensity()">📈 分析密度</button>
+                </div>
+                
+                <div class="control-panel">
+                    <h3>分析设置</h3>
+                    <div class="input-group">
+                        <label for="heatmap-radius">热力图半径</label>
+                        <input type="range" id="heatmap-radius" min="10" max="50" value="25" 
+                               oninput="updateHeatmapRadius(this.value)">
+                    </div>
+                </div>
+                
+                <div class="info-panel">
+                    <div class="info-row">
+                        <span class="info-label">中心坐标</span>
+                        <span class="info-value" id="coordinates">0, 0</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">缩放级别</span>
+                        <span class="info-value" id="zoom-level">5</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">比例尺</span>
+                        <span class="info-value" id="scale">1:100000</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="map"></div>
+        
+        <div class="map-controls">
+            <div class="map-control" onclick="toggleFullscreen()" title="全屏">📺</div>
+            <div class="map-control" onclick="takeScreenshot()" title="截图">📸</div>
+            <div class="map-control" onclick="toggle3DView()" title="3D视图">🏔️</div>
+        </div>
+        
+        <div class="search-box">
+            <input type="text" class="search-input" id="global-search" 
+                   placeholder="搜索地点或坐标..." 
+                   onkeypress="if(event.key === 'Enter') globalSearch()">
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+    
+    <script>
+        // 全局变量
+        let map, drawnItems, currentDrawControl;
+        let overlays = {};
+        let baseLayers = {};
+        let is3DEnabled = false;
+        
+        // 初始化
+        window.onload = function() {
+            initializeMap();
+            initializeLayers();
+            initializeControls();
+            loadFromLocalStorage();
+            updateStatistics();
+            updateMapInfo();
+        };
+        
+        // 地图初始化
+        function initializeMap() {
+            map = L.map('map', {
+                center: [35.0, 105.0],
+                zoom: 5,
+                zoomControl: true,
+                attributionControl: true
+            });
+            
+            // 比例尺
+            L.control.scale({position: 'bottomleft'}).addTo(map);
+            
+            // 绘制图层
+            drawnItems = new L.FeatureGroup();
+            map.addLayer(drawnItems);
+            
+            // 事件监听
+            map.on('click', onMapClick);
+            map.on('mousemove', onMouseMove);
+            map.on('zoomend', onZoomEnd);
+            map.on('moveend', onMapMove);
+            
+            // 底图
+            initializeBasemaps();
+        }
+        
+        function initializeBasemaps() {
+            baseLayers = {
+                "streets": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap'
+                }),
+                "satellite": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    attribution: '© Esri'
+                }),
+                "terrain": L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenTopoMap'
+                })
+            };
+            
+            baseLayers.streets.addTo(map);
+        }
+        
+        // 图层初始化
+        function initializeLayers() {
+            overlays = {
+                "主要城市": L.layerGroup(),
+                "主要河流": L.layerGroup(),
+                "绘制内容": drawnItems,
+                "热力图": L.layerGroup(),
+                "分析结果": L.layerGroup()
+            };
+            
+            addSampleData();
+            
+            // 图层控制
+            L.control.layers(baseLayers, overlays, {
+                collapsed: false,
+                position: 'topright'
+            }).addTo(map);
+            
+            overlays["主要城市"].addTo(map);
+            overlays["绘制内容"].addTo(map);
+            
+            // 初始化侧边栏控件
+            initSidebarControls();
+        }
+        
+        function addSampleData() {
+            // 城市数据
+            const cities = [
+                { name: "北京", coords: [39.9042, 116.4074], population: "2170万", type: "首都" },
+                { name: "上海", coords: [31.2304, 121.4737], population: "2487万", type: "直辖市" },
+                { name: "广州", coords: [23.1291, 113.2644], population: "1867万", type: "省会" },
+                { name: "深圳", coords: [22.5431, 114.0579], population: "1768万", type: "经济特区" }
+            ];
+            
+            cities.forEach(city => {
+                const marker = L.circleMarker(city.coords, {
+                    radius: 8,
+                    fillColor: "#e74c3c",
+                    color: "#c0392b",
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                }).bindPopup(`
+                    <div style="font-weight: bold; color: #e74c3c;">
+                        ${city.name}
+                    </div>
+                    <div>类型: ${city.type}</div>
+                    <div>人口: ${city.population}</div>
+                `);
+                overlays["主要城市"].addLayer(marker);
+            });
+            
+            // 河流数据
+            const rivers = [
+                { name: "长江", coords: [[32.0, 90.0], [32.0, 100.0], [32.0, 110.0], [32.0, 120.0]], length: "6387km" },
+                { name: "黄河", coords: [[40.0, 105.0], [38.0, 110.0], [36.0, 115.0], [37.0, 119.0]], length: "5464km" }
+            ];
+            
+            rivers.forEach(river => {
+                const polyline = L.polyline(river.coords, {
+                    color: "#3498db",
+                    weight: 3,
+                    opacity: 0.7
+                }).bindPopup(`
+                    <div style="font-weight: bold; color: #3498db;">
+                        ${river.name}
+                    </div>
+                    <div>长度: ${river.length}</div>
+                `);
+                overlays["主要河流"].addLayer(polyline);
+            });
+        }
+        
+        function initSidebarControls() {
+            const overlayControls = document.getElementById('overlay-controls');
+            const layerConfigs = [
+                { name: "主要城市", color: "#e74c3c", icon: "🏙️", layer: overlays["主要城市"] },
+                { name: "主要河流", color: "#3498db", icon: "🌊", layer: overlays["主要河流"] },
+                { name: "绘制内容", color: "#f39c12", icon: "✏️", layer: overlays["绘制内容"] },
+                { name: "热力图", color: "#e67e22", icon: "🔥", layer: overlays["热力图"] },
+                { name: "分析结果", color: "#9b59b6", icon: "🔬", layer: overlays["分析结果"] }
+            ];
+            
+            overlayControls.innerHTML = '';
+            layerConfigs.forEach(config => {
+                const controlDiv = document.createElement('div');
+                controlDiv.className = 'layer-control';
+                controlDiv.innerHTML = `
+                    <input type="checkbox" id="layer-${config.name}" 
+                           onchange="toggleLayer('${config.name}', this.checked)" 
+                           ${map.hasLayer(config.layer) ? 'checked' : ''}>
+                    <label for="layer-${config.name}">
+                        <div class="color-preview" style="background: ${config.color}"></div>
+                        ${config.icon} ${config.name}
+                    </label>
+                `;
+                overlayControls.appendChild(controlDiv);
+            });
+        }
+        
+        // 控件初始化
+        function initializeControls() {
+            const drawControl = new L.Control.Draw({
+                position: 'topleft',
+                draw: {
+                    polygon: true,
+                    polyline: true,
+                    rectangle: true,
+                    circle: true,
+                    marker: true
+                },
+                edit: {
+                    featureGroup: drawnItems,
+                    remove: true
+                }
+            });
+            map.addControl(drawControl);
+            
+            map.on('draw:created', onDrawCreated);
+            map.on('draw:edited', onDrawEdited);
+            map.on('draw:deleted', onDrawDeleted);
+        }
+        
+        // 标签页函数
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+        
+        // 底图切换
+        function switchBasemap(basemapType) {
+            Object.values(baseLayers).forEach(layer => {
+                map.removeLayer(layer);
+            });
+            
+            if (baseLayers[basemapType]) {
+                baseLayers[basemapType].addTo(map);
+                showNotification(`已切换到${basemapType}底图`, 'info');
+            }
+        }
+        
+        // 图层控制
+        function toggleLayer(layerName, isVisible) {
+            const layer = overlays[layerName];
+            if (layer) {
+                if (isVisible) {
+                    layer.addTo(map);
+                } else {
+                    map.removeLayer(layer);
+                }
+                updateStatistics();
+            }
+        }
+        
+        // 绘图功能
+        function startDrawing(type) {
+            if (currentDrawControl) {
+                currentDrawControl.disable();
+            }
+            
+            switch(type) {
+                case 'marker':
+                    currentDrawControl = new L.Draw.Marker(map);
+                    break;
+                case 'rectangle':
+                    currentDrawControl = new L.Draw.Rectangle(map);
+                    break;
+                case 'polygon':
+                    currentDrawControl = new L.Draw.Polygon(map);
+                    break;
+                case 'polyline':
+                    currentDrawControl = new L.Draw.Polyline(map);
+                    break;
+            }
+            
+            if (currentDrawControl) {
+                currentDrawControl.enable();
+                showNotification(`开始绘制${type}`, 'info');
+            }
+        }
+        
+        // 地图事件
+        function onMapClick(e) {
+            showNotification(`坐标: ${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`, 'info');
+        }
+        
+        function onMouseMove(e) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.style.left = e.originalEvent.clientX + 10 + 'px';
+            tooltip.style.top = e.originalEvent.clientY + 10 + 'px';
+            tooltip.style.display = 'block';
+            tooltip.textContent = `${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`;
+        }
+        
+        function onZoomEnd() {
+            updateMapInfo();
+        }
+        
+        function onMapMove() {
+            updateMapInfo();
+        }
+        
+        function onDrawCreated(e) {
+            const layer = e.layer;
+            drawnItems.addLayer(layer);
+            
+            if (layer instanceof L.Marker) {
+                layer.bindPopup("标记点");
+            } else if (layer instanceof L.Polygon) {
+                const area = L.GeometryUtil.geodesicArea(layer.getLatLngs()[0]);
+                layer.bindPopup(`面积: ${(area/1000000).toFixed(2)} km²`);
+            } else if (layer instanceof L.Polyline) {
+                const distance = calculatePolylineDistance(layer);
+                layer.bindPopup(`长度: ${(distance/1000).toFixed(2)} km`);
+            }
+            
+            showNotification("图形已创建", "success");
+            updateStatistics();
+        }
+        
+        function onDrawEdited(e) {
+            showNotification("图形已编辑", "warning");
+            updateStatistics();
+        }
+        
+        function onDrawDeleted(e) {
+            showNotification("图形已删除", "danger");
+            updateStatistics();
+        }
+        
+        function calculatePolylineDistance(layer) {
+            const latlngs = layer.getLatLngs();
+            let totalDistance = 0;
+            
+            for (let i = 1; i < latlngs.length; i++) {
+                totalDistance += latlngs[i-1].distanceTo(latlngs[i]);
+            }
+            
+            return totalDistance;
+        }
+        
+        // 定位功能
+        function locateUser() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const { latitude, longitude } = position.coords;
+                        map.setView([latitude, longitude], 15);
+                        
+                        const marker = L.marker([latitude, longitude]).addTo(map);
+                        marker.bindPopup("您的位置").openPopup();
+                        showNotification("已定位", 'success');
+                    },
+                    error => {
+                        showNotification("定位失败: " + error.message, 'danger');
+                    }
+                );
+            } else {
+                showNotification("浏览器不支持定位", 'danger');
+            }
+        }
+        
+        function searchLocation() {
+            const input = document.getElementById('search-place');
+            const query = input.value.trim();
+            
+            if (!query) {
+                showNotification("请输入地名", 'warning');
+                return;
+            }
+            
+            const locations = {
+                "北京": [39.9042, 116.4074],
+                "上海": [31.2304, 121.4737],
+                "广州": [23.1291, 113.2644],
+                "深圳": [22.5431, 114.0579],
+                "成都": [30.5728, 104.0668]
+            };
+            
+            if (locations[query]) {
+                map.setView(locations[query], 12);
+                const marker = L.marker(locations[query]).addTo(map);
+                marker.bindPopup(query).openPopup();
+                showNotification(`已定位到${query}`, 'success');
+            } else {
+                showNotification(`未找到"${query}"`, 'warning');
+            }
+        }
+        
+        // 数据功能
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (data.type === 'FeatureCollection') {
+                        L.geoJSON(data, {
+                            onEachFeature: (feature, layer) => {
+                                if (feature.properties) {
+                                    layer.bindPopup(JSON.stringify(feature.properties));
+                                }
+                            }
+                        }).addTo(drawnItems);
+                        
+                        showNotification(`已导入 ${data.features.length} 个要素`, 'success');
+                        updateStatistics();
+                    }
+                } catch (error) {
+                    showNotification("文件解析错误", 'danger');
+                }
+            };
+            
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+        
+        function generateSampleData() {
+            const features = [];
+            
+            for (let i = 0; i < 30; i++) {
+                features.push({
+                    type: "Feature",
+                    geometry: {
+                        type: "Point",
+                        coordinates: [
+                            100 + Math.random() * 20,
+                            30 + Math.random() * 10
+                        ]
+                    },
+                    properties: {
+                        id: i + 1,
+                        name: `点${i + 1}`
+                    }
+                });
+            }
+            
+            const geoJSON = {
+                type: "FeatureCollection",
+                features: features
+            };
+            
+            L.geoJSON(geoJSON, {
+                pointToLayer: function(feature, latlng) {
+                    return L.circleMarker(latlng, {
+                        radius: 5,
+                        fillColor: '#3498db',
+                        color: '#2980b9'
+                    });
+                }
+            }).addTo(drawnItems);
+            
+            showNotification(`已生成 ${features.length} 个点`, 'success');
+            updateStatistics();
+        }
+        
+        function exportGeoJSON() {
+            const geoJSON = drawnItems.toGeoJSON();
+            if (geoJSON.features.length === 0) {
+                showNotification("没有数据", 'warning');
+                return;
+            }
+            
+            const dataStr = JSON.stringify(geoJSON, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const link = document.createElement('a');
+            link.href = dataUri;
+            link.download = 'map_data.geojson';
+            link.click();
+            
+            showNotification(`已导出 ${geoJSON.features.length} 个要素`, 'success');
+        }
+        
+        function saveToLocal() {
+            const geoJSON = drawnItems.toGeoJSON();
+            localStorage.setItem('webgis_data', JSON.stringify(geoJSON));
+            showNotification("数据已保存", 'success');
+        }
+        
+        function loadFromLocalStorage() {
+            const savedData = localStorage.getItem('webgis_data');
+            if (savedData) {
+                try {
+                    const geoJSON = JSON.parse(savedData);
+                    L.geoJSON(geoJSON).addTo(drawnItems);
+                    showNotification("数据已加载", 'success');
+                    updateStatistics();
+                } catch (error) {
+                    console.error("加载失败:", error);
+                }
+            }
+        }
+        
+        // 分析功能
+        function generateHeatmap() {
+            const points = [];
+            
+            drawnItems.eachLayer(layer => {
+                if (layer instanceof L.CircleMarker || layer instanceof L.Marker) {
+                    const latlng = layer.getLatLng();
+                    points.push([latlng.lat, latlng.lng, 1]);
+                }
+            });
+            
+            if (points.length === 0) {
+                for (let i = 0; i < 50; i++) {
+                    points.push([
+                        30 + Math.random() * 10,
+                        100 + Math.random() * 20,
+                        Math.random()
+                    ]);
+                }
+            }
+            
+            overlays["热力图"].clearLayers();
+            
+            const radius = parseInt(document.getElementById('heatmap-radius').value) * 100;
+            
+            points.forEach(point => {
+                const circle = L.circle([point[0], point[1]], {
+                    radius: radius,
+                    color: 'transparent',
+                    fillColor: getHeatColor(point[2]),
+                    fillOpacity: 0.2
+                });
+                overlays["热力图"].addLayer(circle);
+            });
+            
+            overlays["热力图"].addTo(map);
+            showNotification(`已生成热力图`, 'success');
+        }
+        
+        function getHeatColor(intensity) {
+            if (intensity < 0.3) return '#89CFF0';
+            if (intensity < 0.5) return '#00FF7F';
+            if (intensity < 0.7) return '#FFFF00';
+            return '#FF0000';
+        }
+        
+        function updateHeatmapRadius(radius) {
+            generateHeatmap();
+        }
+        
+        function bufferAnalysis() {
+            const center = map.getCenter();
+            
+            const bufferCircle = L.circle(center, {
+                radius: 100000,
+                color: '#f1c40f',
+                weight: 2,
+                fillColor: '#f1c40f',
+                fillOpacity: 0.2
+            }).addTo(overlays["分析结果"]);
+            
+            bufferCircle.bindPopup("缓冲区分析");
+            overlays["分析结果"].addTo(map);
+            showNotification("已创建缓冲区", 'success');
+        }
+        
+        function analyzeDensity() {
+            const bounds = map.getBounds();
+            let pointCount = 0;
+            
+            drawnItems.eachLayer(layer => {
+                if (layer instanceof L.CircleMarker || layer instanceof L.Marker) {
+                    pointCount++;
+                }
+            });
+            
+            const area = bounds.getNorth() - bounds.getSouth();
+            const density = pointCount / (area * area);
+            
+            showNotification(`密度: ${density.toFixed(4)} 点/平方度`, 'info');
+        }
+        
+        // 工具函数
+        function clearDrawings() {
+            drawnItems.clearLayers();
+            updateStatistics();
+            showNotification("已清除绘制", 'success');
+        }
+        
+        function clearAll() {
+            if (confirm("确定清除所有内容？")) {
+                drawnItems.clearLayers();
+                overlays["热力图"].clearLayers();
+                overlays["分析结果"].clearLayers();
+                updateStatistics();
+                showNotification("已清除所有", 'success');
+            }
+        }
+        
+        function toggleFullscreen() {
+            const elem = document.documentElement;
+            
+            if (!document.fullscreenElement) {
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen();
+                }
+                showNotification("全屏模式", 'info');
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+                showNotification("退出全屏", 'info');
+            }
+        }
+        
+        function takeScreenshot() {
+            html2canvas = html2canvas || function() {
+                showNotification("截图功能需要html2canvas库", 'warning');
+                return Promise.reject("html2canvas not loaded");
+            };
+            
+            try {
+                html2canvas(document.getElementById('map')).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = 'map.png';
+                    link.href = canvas.toDataURL();
+                    link.click();
+                    showNotification("截图已保存", 'success');
+                });
+            } catch (error) {
+                showNotification("截图失败", 'danger');
+            }
+        }
+        
+        function toggle3DView() {
+            is3DEnabled = !is3DEnabled;
+            showNotification(is3DEnabled ? "3D视图开启" : "3D视图关闭", 'info');
+        }
+        
+        function globalSearch() {
+            const input = document.getElementById('global-search');
+            const query = input.value.trim();
+            
+            if (!query) return;
+            
+            const coordMatch = query.match(/^(-?\d+\.?\d*)[, ]+(-?\d+\.?\d*)$/);
+            if (coordMatch) {
+                const lat = parseFloat(coordMatch[1]);
+                const lng = parseFloat(coordMatch[2]);
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    map.setView([lat, lng], 12);
+                    showNotification(`已定位到坐标`, 'success');
+                    return;
+                }
+            }
+            
+            searchLocation();
+        }
+        
+        // 信息更新
+        function updateMapInfo() {
+            const center = map.getCenter();
+            const zoom = map.getZoom();
+            
+            document.getElementById('coordinates').textContent = 
+                `${center.lat.toFixed(2)}, ${center.lng.toFixed(2)}`;
+            document.getElementById('zoom-level').textContent = zoom;
+            
+            const scale = 591657550.5 / Math.pow(2, zoom);
+            document.getElementById('scale').textContent = `1:${Math.round(scale).toLocaleString()}`;
+        }
+        
+        function updateStatistics() {
+            let total = 0, points = 0, lines = 0, polygons = 0;
+            
+            drawnItems.eachLayer(layer => {
+                total++;
+                if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
+                    points++;
+                } else if (layer instanceof L.Polyline) {
+                    lines++;
+                } else if (layer instanceof L.Polygon || layer instanceof L.Rectangle || layer instanceof L.Circle) {
+                    polygons++;
+                }
+            });
+            
+            document.getElementById('total-features').textContent = total;
+            document.getElementById('points-count').textContent = points;
+            document.getElementById('lines-count').textContent = lines;
+            document.getElementById('polygons-count').textContent = polygons;
+        }
+        
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.background = 
+                type === 'success' ? '#2ecc71' :
+                type === 'warning' ? '#f39c12' :
+                type === 'danger' ? '#e74c3c' : '#3498db';
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+        
+        // 全局函数注册
+        window.switchTab = switchTab;
+        window.switchBasemap = switchBasemap;
+        window.toggleLayer = toggleLayer;
+        window.startDrawing = startDrawing;
+        window.locateUser = locateUser;
+        window.searchLocation = searchLocation;
+        window.clearDrawings = clearDrawings;
+        window.clearAll = clearAll;
+        window.importData = importData;
+        window.generateSampleData = generateSampleData;
+        window.exportGeoJSON = exportGeoJSON;
+        window.saveToLocal = saveToLocal;
+        window.generateHeatmap = generateHeatmap;
+        window.updateHeatmapRadius = updateHeatmapRadius;
+        window.bufferAnalysis = bufferAnalysis;
+        window.analyzeDensity = analyzeDensity;
+        window.toggleFullscreen = toggleFullscreen;
+        window.takeScreenshot = takeScreenshot;
+        window.toggle3DView = toggle3DView;
+        window.globalSearch = globalSearch;
+    </script>
+</body>
+</html>

@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Zoe - Precision in Numbers</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Roboto+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    :root {
+      --bg-dark: #0f0f13;
+      --bg-card: #1a1a25;
+      --text-primary: #f0f0f5;
+      --text-secondary: #a0a0b0;
+      --accent-color: #00eeff; /* 电光蓝 */
+      --accent-color-glow: rgba(0, 238, 255, 0.5);
+      --border-color: #2a2a3a;
+      --transition-base: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-primary);
+      font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        font-weight: 600;
+        line-height: 1.3;
+        margin-bottom: 0.8rem;
+        color: var(--text-primary);
+    }
+
+    p {
+        margin-bottom: 1rem;
+        color: var(--text-secondary);
+    }
+
+    a {
+        color: var(--accent-color);
+        text-decoration: none;
+        transition: var(--transition-base);
+    }
+
+    a:hover {
+        color: var(--text-primary);
+        text-shadow: 0 0 8px var(--accent-color-glow);
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 50px 25px;
+    }
+
+    /* --- Header --- */
+    header {
+        text-align: center;
+        margin-bottom: 80px;
+        position: relative;
+    }
+
+    header::after {
+        content: '';
+        position: absolute;
+        bottom: -20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        height: 3px;
+        background: var(--accent-color);
+        box-shadow: 0 0 10px var(--accent-color-glow);
+        animation: pulseGlow 2s infinite alternate;
+    }
+
+    @keyframes pulseGlow {
+        from { opacity: 0.6; }
+        to { opacity: 1; box-shadow: 0 0 15px var(--accent-color-glow); }
+    }
+
+    .profile-placeholder {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        background: url('https://via.placeholder.com/140') no-repeat center;
+        background-size: cover;
+        margin: 0 auto 25px;
+        border: 2px solid var(--border-color);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .profile-placeholder::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        border: 2px solid var(--accent-color);
+        border-radius: 50%;
+        clip-path: polygon(50% 50%, 50% 0, 0 0, 0 100%, 100% 100%, 100% 50%);
+        opacity: 0;
+        transition: opacity 0.5s ease;
+    }
+
+    .profile-placeholder:hover::before {
+        opacity: 1;
+    }
+
+    h1 {
+        font-size: 2.8rem;
+        letter-spacing: 1px;
+        margin-bottom: 10px;
+    }
+
+    .tagline {
+        font-size: 1.2rem;
+        color: var(--text-secondary);
+        font-weight: 300;
+    }
+
+    /* --- Sections --- */
+    section {
+        margin-bottom: 70px;
+        padding: 30px 0;
+        position: relative;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+
+    section.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .section-icon {
+        font-size: 1.8rem;
+        color: var(--accent-color);
+        margin-right: 15px;
+        width: 40px;
+        text-align: center;
+    }
+
+    .section-title {
+        font-size: 1.8rem;
+        position: relative;
+        display: inline-block;
+    }
+
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: -5px;
+        left: 0;
+        width: 100%;
+        height: 1px;
+        background: linear-gradient(to right, var(--accent-color), transparent);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.6s ease;
+    }
+
+    section.visible .section-title::after {
+        transform: scaleX(1);
+    }
+
+    /* --- Content Styles --- */
+    .grid-2col {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+    }
+
+    @media (max-width: 768px) {
+        .grid-2col {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .item {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px dashed var(--border-color);
+    }
+
+    .item:last-child {
+        margin-bottom: 0;
+        border-bottom: none;
+    }
+
+    .item-title {
+        font-size: 1.3rem;
+        color: var(--text-primary);
+        margin-bottom: 5px;
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+
+    .item-subtitle {
+        font-size: 1.1rem;
+        color: var(--accent-color);
+        margin-bottom: 10px;
+        font-weight: 500;
+    }
+
+    .item-meta {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        font-family: 'Roboto Mono', monospace;
+        margin-bottom: 10px;
+    }
+
+    .skills-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .skill-badge {
+        background-color: rgba(0, 238, 255, 0.1);
+        color: var(--accent-color);
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        border: 1px solid rgba(0, 238, 255, 0.2);
+        transition: var(--transition-base);
+    }
+
+    .skill-badge:hover {
+        background-color: rgba(0, 238, 255, 0.2);
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3), 0 0 8px var(--accent-color-glow);
+    }
+
+    .contact-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 25px;
+    }
+
+    .contact-item {
+        display: flex;
+        align-items: flex-start;
+    }
+
+    .contact-icon {
+        font-size: 1.3rem;
+        color: var(--accent-color);
+        margin-right: 12px;
+        min-width: 25px;
+        text-align: center;
+        margin-top: 3px;
+    }
+
+    .contact-label {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-bottom: 3px;
+    }
+
+    /* --- Footer --- */
+    footer {
+        text-align: center;
+        padding-top: 30px;
+        margin-top: 50px;
+        border-top: 1px solid var(--border-color);
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    /* --- Animations --- */
+    @keyframes drawLine {
+      to { stroke-dashoffset: 0; }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="profile-placeholder" title="Zoe Chen"></div>
+      <h1>ZOE CHEN</h1>
+      <p class="tagline">Certified Public Accountant | Financial Strategist</p>
+    </header>
+
+    <section id="about">
+      <div class="section-header">
+        <div class="section-icon"><i class="fas fa-user"></i></div>
+        <h2 class="section-title">ABOUT ME</h2>
+      </div>
+      <p>
+        Results-driven finance professional with over a decade of experience in accounting, financial analysis, and strategic planning.
+        Expertise in IFRS/GAAP compliance, risk management, and leveraging data analytics for business insights.
+        Proven track record in optimizing financial operations and supporting high-growth companies through scalable financial infrastructure.
+      </p>
+      <p>
+        Passionate about precision, integrity, and the power of numbers to tell a story and drive decision-making.
+      </p>
+    </section>
+
+    <section id="experience">
+      <div class="section-header">
+        <div class="section-icon"><i class="fas fa-briefcase"></i></div>
+        <h2 class="section-title">EXPERIENCE</h2>
+      </div>
+      <div class="item">
+        <h3 class="item-title">
+            <span>HEAD OF FINANCE</span>
+            <span class="item-meta">@ Stellar Innovations Ltd.</span>
+        </h3>
+        <div class="item-subtitle">2021 - Present</div>
+        <p>Led financial strategy for a $500M tech firm. Spearheaded FP&A, investor reporting, and financial systems integration. Reduced close cycle time by 35%.</p>
+      </div>
+      <div class="item">
+        <h3 class="item-title">
+            <span>SENIOR MANAGER</span>
+            <span class="item-meta">@ Deloitte & Touche LLP</span>
+        </h3>
+        <div class="item-subtitle">2016 - 2021</div>
+        <p>Managed audit engagements for Fortune 500 clients in TMT sector. Led teams on complex accounting research and internal control assessments. Recognized as "Rising Star".</p>
+      </div>
+      <div class="item">
+        <h3 class="item-title">
+            <span>FINANCIAL ANALYST</span>
+            <span class="item-meta">@ Global Manufacturing Inc.</span>
+        </h3>
+        <div class="item-subtitle">2013 - 2016</div>
+        <p>Built monthly financial models and variance analysis reports. Played key role in annual budgeting process and cost-saving initiatives.</p>
+      </div>
+    </section>
+
+    <section id="education">
+        <div class="section-header">
+            <div class="section-icon"><i class="fas fa-graduation-cap"></i></div>
+            <h2 class="section-title">EDUCATION & CERTIFICATIONS</h2>
+        </div>
+        <div class="grid-2col">
+            <div>
+                <h3>MSc in Accounting and Finance</h3>
+                <p class="item-meta">London School of Economics | 2011 - 2013</p>
+            </div>
+            <div>
+                <h3>Bachelor of Science in Business Administration</h3>
+                <p class="item-meta">Fudan University | 2007 - 2011</p>
+            </div>
+            <div>
+                <h3>Certified Public Accountant (CPA)</h3>
+                <p class="item-meta">China, 2015</p>
+            </div>
+            <div>
+                <h3>Association of Chartered Certified Accountants (ACCA)</h3>
+                <p class="item-meta">Fully Qualified, 2014</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="skills">
+      <div class="section-header">
+        <div class="section-icon"><i class="fas fa-sliders-h"></i></div>
+        <h2 class="section-title">SKILLS</h2>
+      </div>
+      <div class="skills-container">
+        <span class="skill-badge">Financial Modeling</span>
+        <span class="skill-badge">IFRS & US GAAP</span>
+        <span class="skill-badge">Budgeting & Forecasting</span>
+        <span class="skill-badge">SAP ERP</span>
+        <span class="skill-badge">Power BI</span>
+        <span class="skill-badge">Risk Assessment</span>
+        <span class="skill-badge">Team Leadership</span>
+        <span class="skill-badge">Strategic Planning</span>
+        <span class="skill-badge">Data Analysis</span>
+        <span class="skill-badge">Python (for Finance)</span>
+      </div>
+    </section>
+
+    <section id="contact">
+      <div class="section-header">
+        <div class="section-icon"><i class="fas fa-paper-plane"></i></div>
+        <h2 class="section-title">CONTACT</h2>
+      </div>
+      <div class="contact-grid">
+        <div class="contact-item">
+            <div class="contact-icon"><i class="fas fa-envelope"></i></div>
+            <div>
+                <div class="contact-label">EMAIL</div>
+                <a href="mailto:zoe.chen.contact@proton.me">zoe.chen.contact@proton.me</a>
+            </div>
+        </div>
+        <div class="contact-item">
+            <div class="contact-icon"><i class="fas fa-phone-alt"></i></div>
+            <div>
+                <div class="contact-label">PHONE</div>
+                <a href="tel:+8613800138000">+86 138 0013 8000</a>
+            </div>
+        </div>
+        <div class="contact-item">
+            <div class="contact-icon"><i class="fab fa-linkedin-in"></i></div>
+            <div>
+                <div class="contact-label">LINKEDIN</div>
+                <a href="https://linkedin.com/in/zoechen-finance" target="_blank" rel="noopener noreferrer">linkedin.com/in/zoechen-finance</a>
+            </div>
+        </div>
+        <div class="contact-item">
+            <div class="contact-icon"><i class="fas fa-map-marker-alt"></i></div>
+            <div>
+                <div class="contact-label">LOCATION</div>
+                <p>Pudong, Shanghai, China</p>
+            </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <p>&copy; 2025 ZOE CHEN. ALL RIGHTS RESERVED.</p>
+    </footer>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // --- Scroll Animation for Sections ---
+        const sections = document.querySelectorAll('section');
+
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+
+        const observerCallback = (entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target); // Stop observing after animation
+                }
+            });
+        };
+
+        const sectionObserver = new IntersectionObserver(observerCallback, observerOptions);
+        sections.forEach(section => {
+            sectionObserver.observe(section);
+        });
+
+        // --- Optional: Add a subtle glow effect on skill badge hover via JS for browsers that might not support :hover transitions smoothly ---
+        // This is usually handled well by CSS, but kept for robustness
+        /*
+        const skillBadges = document.querySelectorAll('.skill-badge');
+        skillBadges.forEach(badge => {
+            badge.addEventListener('mouseenter', () => {
+                badge.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.3), 0 0 8px var(--accent-color-glow)';
+            });
+            badge.addEventListener('mouseleave', () => {
+                badge.style.boxShadow = 'none';
+            });
+        });
+        */
+
+    });
+  </script>
+</body>
+</html>

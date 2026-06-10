@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>鸟语花香</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-image: url('../img/background.jpg');
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
+        .flower {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: pink;
+            border-radius: 50%;
+            animation: fall 5s linear infinite;
+        }
+        @keyframes fall {
+            0% { transform: translateY(-100%); opacity: 1; }
+            100% { transform: translateY(100vh); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div id="man" style="position: absolute; left: 50px; top: 50%; transform: translateY(-50%);"></div>
+    <div id="woman" style="position: absolute; right: 50px; top: 50%; transform: translateY(-50%);"></div>
+    <div id="heart" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);"></div>
+
+    <script>
+        let heart = document.getElementById('heart');
+        let man = document.getElementById('man');
+        let woman = document.getElementById('woman');
+
+        let manPosition = 50;
+        let womanPosition = window.innerWidth - 150;
+        let heartPosition = manPosition;
+        let direction = 1; // 1表示向右，-1表示向左
+
+        function animate() {
+            heartPosition += direction * 5;
+            if (heartPosition >= womanPosition || heartPosition <= manPosition) {
+                direction *= -1;
+            }
+            heart.style.left = heartPosition + 'px';
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        function createFlower() {
+            let flower = document.createElement('div');
+            flower.className = 'flower';
+            flower.style.left = Math.random() * window.innerWidth + 'px';
+            flower.style.animationDuration = Math.random() * 5 + 3 + 's';
+            document.body.appendChild(flower);
+        }
+
+        setInterval(createFlower, 100);
+    </script>
+</body>
+</html>

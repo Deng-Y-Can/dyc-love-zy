@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人资料生成器</title>
+    <!-- 引入Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <!-- 配置Tailwind自定义颜色和字体 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#36CFC9',
+                        dark: '#1D2129',
+                        light: '#F2F3F5',
+                        gray: {
+                            100: '#F7F8FA',
+                            200: '#E5E6EB',
+                            300: '#C9CDD4',
+                            400: '#86909C',
+                            500: '#4E5969',
+                            600: '#272E3B',
+                        }
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .card-hover {
+                @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+            }
+            .input-focus {
+                @apply focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none;
+            }
+            .btn-effect {
+                @apply transform transition-all duration-200 active:scale-95;
+            }
+        }
+    </style>
+    
+    <style>
+        /* 基础动画定义 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease forwards;
+        }
+        
+        .section-item {
+            animation: fadeIn 0.3s ease forwards;
+        }
+        
+        /* 平滑滚动 */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+    </style>
+</head>
+
+<body class="font-inter bg-gray-100 text-dark min-h-screen flex flex-col">
+    <!-- 顶部导航栏 -->
+    <header class="bg-white shadow-sm sticky top-0 z-50 transition-all duration-300" id="navbar">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-user-circle text-primary text-2xl"></i>
+                <h1 class="text-xl font-bold text-primary">个人资料生成器</h1>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <button id="preview-toggle" class="hidden md:flex items-center space-x-1 px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition-colors btn-effect">
+                    <i class="fa fa-eye"></i>
+                    <span>预览</span>
+                </button>
+                
+                <button id="export-pdf" class="flex items-center space-x-1 px-3 py-1.5 text-sm bg-primary text-white hover:bg-primary/90 rounded-md transition-colors btn-effect">
+                    <i class="fa fa-download"></i>
+                    <span>导出PDF</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="flex-grow container mx-auto px-4 py-6 md:py-8 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- 左侧编辑区 -->
+        <section class="lg:col-span-7 space-y-6">
+            <!-- 个人信息部分 -->
+            <div class="bg-white rounded-xl shadow-sm p-5 md:p-6 animate-fade-in" style="animation-delay: 0.1s">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-gray-600 flex items-center">
+                        <i class="fa fa-user text-primary mr-2"></i>个人信息
+                    </h2>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">姓名</label>
+                        <input type="text" id="fullname" placeholder="请输入您的姓名" 
+                               class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">职位</label>
+                        <input type="text" id="job-title" placeholder="请输入您的职位" 
+                               class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">邮箱</label>
+                        <input type="email" id="email" placeholder="请输入您的邮箱" 
+                               class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">电话</label>
+                        <input type="tel" id="phone" placeholder="请输入您的电话" 
+                               class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-500 mb-1">地址</label>
+                        <input type="text" id="location" placeholder="请输入您的地址" 
+                               class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-500 mb-1">个人简介</label>
+                        <textarea id="summary" rows="3" placeholder="请简要介绍您自己" 
+                                  class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors"></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 教育经历部分 -->
+            <div class="bg-white rounded-xl shadow-sm p-5 md:p-6 animate-fade-in" style="animation-delay: 0.2s">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-gray-600 flex items-center">
+                        <i class="fa fa-graduation-cap text-primary mr-2"></i>教育经历
+                    </h2>
+                    <button id="add-education" class="text-primary hover:text-primary/80 text-sm flex items-center transition-colors btn-effect">
+                        <i class="fa fa-plus-circle mr-1"></i> 添加
+                    </button>
+                </div>
+                
+                <div id="education-container" class="space-y-5">
+                    <!-- 教育经历条目 -->
+                    <div class="education-item section-item p-4 border border-gray-200 rounded-lg relative group">
+                        <button class="delete-item absolute top-3 right-3 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity btn-effect">
+                            <i class="fa fa-trash-o"></i>
+                        </button>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">学校名称</label>
+                                <input type="text" placeholder="请输入学校名称" 
+                                       class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">学位/专业</label>
+                                <input type="text" placeholder="请输入学位和专业" 
+                                       class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">开始日期</label>
+                                <input type="month" 
+                                       class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">结束日期</label>
+                                <input type="month" 
+                                       class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                            </div>
+                            
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-500 mb-1">描述</label>
+                                <textarea rows="2" placeholder="请描述您在学校的经历、成就等" 
+                                          class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 工作经历部分 -->
+            <div class="bg-white rounded-xl shadow-sm p-5 md:p-6 animate-fade-in" style="animation-delay: 0.3s">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-gray-600 flex items-center">
+                        <i class="fa fa-briefcase text-primary mr-2"></i>工作经历
+                    </h2>
+                    <button id="add-experience" class="text-primary hover:text-primary/80 text-sm flex items-center transition-colors btn-effect">
+                        <i class="fa fa-plus-circle mr-1"></i> 添加
+                    </button>
+                </div>
+                
+                <div id="experience-container" class="space-y-5">
+                    <!-- 工作经历条目 -->
+                    <div class="experience-item section-item p-4 border border-gray-200 rounded-lg relative group">
+                        <button class="delete-item absolute top-3 right-3 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity btn-effect">
+                            <i class="fa fa-trash-o"></i>
+                        </button>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">公司名称</label>
+                                <input type="text" placeholder="请输入公司名称" 
+                                       class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">职位</label>
+                                <input type="text" placeholder="请输入您的职位" 
+                                       class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">开始日期</label>
+                                <input type="month" 
+                                       class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">结束日期</label>
+                                <div class="flex items-center">
+                                    <input type="month" 
+                                           class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                                    <div class="ml-2 flex items-center">
+                                        <input type="checkbox" id="current-job" class="mr-1">
+                                        <label for="current-job" class="text-sm text-gray-500">至今</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-500 mb-1">工作描述</label>
+                                <textarea rows="3" placeholder="请描述您的工作职责和成就" 
+                                          class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 技能部分 -->
+            <div class="bg-white rounded-xl shadow-sm p-5 md:p-6 animate-fade-in" style="animation-delay: 0.4s">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-gray-600 flex items-center">
+                        <i class="fa fa-star text-primary mr-2"></i>技能
+                    </h2>
+                    <button id="add-skill" class="text-primary hover:text-primary/80 text-sm flex items-center transition-colors btn-effect">
+                        <i class="fa fa-plus-circle mr-1"></i> 添加
+                    </button>
+                </div>
+                
+                <div id="skills-container" class="flex flex-wrap gap-3">
+                    <!-- 技能标签 -->
+                    <div class="skill-item section-item flex items-center bg-gray-100 rounded-full px-3 py-1.5 relative group">
+                        <input type="text" placeholder="技能名称" 
+                               class="bg-transparent border-none focus:ring-0 px-2 py-1 w-32 input-focus">
+                        <div class="flex items-center ml-2">
+                            <span class="text-xs text-gray-500 mr-2">熟练度</span>
+                            <select class="bg-white text-xs border border-gray-200 rounded px-1.5 py-0.5 focus:ring-0 input-focus">
+                                <option>入门</option>
+                                <option>基础</option>
+                                <option selected>熟练</option>
+                                <option>精通</option>
+                                <option>专家</option>
+                            </select>
+                        </div>
+                        <button class="delete-item ml-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity btn-effect">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 项目经验部分 -->
+            <div class="bg-white rounded-xl shadow-sm p-5 md:p-6 animate-fade-in" style="animation-delay: 0.5s">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-gray-600 flex items-center">
+                        <i class="fa fa-cubes text-primary mr-2"></i>项目经验
+                    </h2>
+                    <button id="add-project" class="text-primary hover:text-primary/80 text-sm flex items-center transition-colors btn-effect">
+                        <i class="fa fa-plus-circle mr-1"></i> 添加
+                    </button>
+                </div>
+                
+                <div id="projects-container" class="space-y-5">
+                    <!-- 项目经验条目 -->
+                    <div class="project-item section-item p-4 border border-gray-200 rounded-lg relative group">
+                        <button class="delete-item absolute top-3 right-3 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity btn-effect">
+                            <i class="fa fa-trash-o"></i>
+                        </button>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">项目名称</label>
+                                <input type="text" placeholder="请输入项目名称" 
+                                       class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">角色</label>
+                                <input type="text" placeholder="您在项目中的角色" 
+                                       class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">开始日期</label>
+                                <input type="month" 
+                                       class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">结束日期</label>
+                                <input type="month" 
+                                       class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                            </div>
+                            
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-500 mb-1">项目描述</label>
+                                <textarea rows="2" placeholder="请描述项目内容、您的贡献和成果" 
+                                          class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors"></textarea>
+                            </div>
+                            
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-500 mb-1">技术栈</label>
+                                <input type="text" placeholder="请输入项目使用的技术，用逗号分隔" 
+                                       class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 证书部分 -->
+            <div class="bg-white rounded-xl shadow-sm p-5 md:p-6 animate-fade-in" style="animation-delay: 0.6s">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-gray-600 flex items-center">
+                        <i class="fa fa-certificate text-primary mr-2"></i>证书/奖项
+                    </h2>
+                    <button id="add-certificate" class="text-primary hover:text-primary/80 text-sm flex items-center transition-colors btn-effect">
+                        <i class="fa fa-plus-circle mr-1"></i> 添加
+                    </button>
+                </div>
+                
+                <div id="certificates-container" class="space-y-5">
+                    <!-- 证书条目 -->
+                    <div class="certificate-item section-item p-4 border border-gray-200 rounded-lg relative group">
+                        <button class="delete-item absolute top-3 right-3 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity btn-effect">
+                            <i class="fa fa-trash-o"></i>
+                        </button>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">证书/奖项名称</label>
+                                <input type="text" placeholder="请输入证书或奖项名称" 
+                                       class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">颁发机构</label>
+                                <input type="text" placeholder="请输入颁发机构名称" 
+                                       class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">获得日期</label>
+                                <input type="month" 
+                                       class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                            </div>
+                            
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-500 mb-1">描述</label>
+                                <textarea rows="2" placeholder="请描述该证书或奖项的相关信息" 
+                                          class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 右侧预览区 -->
+        <section id="preview-section" class="lg:col-span-5 bg-white rounded-xl shadow-sm overflow-hidden animate-fade-in" style="animation-delay: 0.3s">
+            <!-- 预览区头部 -->
+            <div class="bg-primary text-white p-6 md:p-8">
+                <h2 id="preview-name" class="text-2xl md:text-3xl font-bold mb-1">您的姓名</h2>
+                <p id="preview-title" class="text-white/90 mb-4">您的职位</p>
+                
+                <div class="flex flex-wrap gap-y-2 text-sm">
+                    <div class="flex items-center mr-4">
+                        <i class="fa fa-envelope-o mr-1.5"></i>
+                        <span id="preview-email">您的邮箱</span>
+                    </div>
+                    <div class="flex items-center mr-4">
+                        <i class="fa fa-phone mr-1.5"></i>
+                        <span id="preview-phone">您的电话</span>
+                    </div>
+                    <div class="flex items-center">
+                        <i class="fa fa-map-marker mr-1.5"></i>
+                        <span id="preview-location">您的地址</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 预览内容区 -->
+            <div class="p-6 md:p-8 max-h-[calc(100vh-280px)] overflow-y-auto">
+                <!-- 个人简介预览 -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-gray-600 border-b border-gray-200 pb-1 mb-3">个人简介</h3>
+                    <p id="preview-summary" class="text-gray-500 text-sm leading-relaxed">请在左侧填写您的个人简介，这部分将简要介绍您的背景、专长和职业目标。</p>
+                </div>
+                
+                <!-- 工作经历预览 -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-gray-600 border-b border-gray-200 pb-1 mb-3">工作经历</h3>
+                    <div id="preview-experience" class="space-y-4">
+                        <div class="experience-preview">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-semibold">您的职位</h4>
+                                <span class="text-xs text-gray-400">日期范围</span>
+                            </div>
+                            <p class="text-primary text-sm font-medium mb-1">您的公司</p>
+                            <p class="text-gray-500 text-sm leading-relaxed">请在左侧填写您的工作描述，包括主要职责、成就和使用的技能。</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 教育经历预览 -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-gray-600 border-b border-gray-200 pb-1 mb-3">教育经历</h3>
+                    <div id="preview-education" class="space-y-4">
+                        <div class="education-preview">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-semibold">您的学位/专业</h4>
+                                <span class="text-xs text-gray-400">日期范围</span>
+                            </div>
+                            <p class="text-primary text-sm font-medium mb-1">您的学校</p>
+                            <p class="text-gray-500 text-sm leading-relaxed">请在左侧填写您的教育经历描述，包括主要课程、GPA（如优秀）、荣誉等。</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 项目经验预览 -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-gray-600 border-b border-gray-200 pb-1 mb-3">项目经验</h3>
+                    <div id="preview-projects" class="space-y-4">
+                        <div class="project-preview">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-semibold">您的项目名称</h4>
+                                <span class="text-xs text-gray-400">日期范围</span>
+                            </div>
+                            <p class="text-primary text-sm font-medium mb-1">您的角色</p>
+                            <p class="text-gray-500 text-sm leading-relaxed mb-2">请在左侧填写您的项目描述，包括项目目标、您的贡献和成果。</p>
+                            <div class="flex flex-wrap gap-1">
+                                <span class="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded">技术1</span>
+                                <span class="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded">技术2</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 技能预览 -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold text-gray-600 border-b border-gray-200 pb-1 mb-3">技能</h3>
+                    <div id="preview-skills" class="flex flex-wrap gap-2">
+                        <div class="flex items-center bg-gray-100 rounded-full px-3 py-1 text-xs">
+                            <span>技能名称</span>
+                            <span class="ml-2 text-gray-400">熟练</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 证书预览 -->
+                <div>
+                    <h3 class="text-lg font-bold text-gray-600 border-b border-gray-200 pb-1 mb-3">证书/奖项</h3>
+                    <div id="preview-certificates" class="space-y-4">
+                        <div class="certificate-preview">
+                            <div class="flex justify-between items-start">
+                                <h4 class="font-semibold">证书/奖项名称</h4>
+                                <span class="text-xs text-gray-400">获得日期</span>
+                            </div>
+                            <p class="text-primary text-sm font-medium mb-1">颁发机构</p>
+                            <p class="text-gray-500 text-sm leading-relaxed">请在左侧填写证书或奖项的相关描述。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <!-- 移动端预览切换栏 -->
+    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 z-40">
+        <button id="mobile-preview-toggle" class="w-full py-2 bg-primary text-white rounded-lg flex items-center justify-center btn-effect">
+            <i class="fa fa-eye mr-2"></i>
+            <span>切换到预览</span>
+        </button>
+    </div>
+    
+    <!-- 页脚 -->
+    <footer class="bg-white border-t border-gray-200 py-4 mt-8">
+        <div class="container mx-auto px-4 text-center text-sm text-gray-400">
+            <p>个人资料生成器 &copy; 2023 - 创建专业的个人简历和资料</p>
+        </div>
+    </footer>
+    
+    <!-- 成功提示 -->
+    <div id="toast" class="fixed bottom-20 right-5 bg-dark text-white px-4 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 flex items-center">
+        <i class="fa fa-check-circle mr-2"></i>
+        <span id="toast-message">操作成功</span>
+    </div>
+
+    <script>
+        // DOM元素引用
+        const navbar = document.getElementById('navbar');
+        const previewToggle = document.getElementById('preview-toggle');
+        const mobilePreviewToggle = document.getElementById('mobile-preview-toggle');
+        const previewSection = document.getElementById('preview-section');
+        const exportPdfBtn = document.getElementById('export-pdf');
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toast-message');
+        
+        // 个人信息输入框
+        const fullnameInput = document.getElementById('fullname');
+        const jobTitleInput = document.getElementById('job-title');
+        const emailInput = document.getElementById('email');
+        const phoneInput = document.getElementById('phone');
+        const locationInput = document.getElementById('location');
+        const summaryInput = document.getElementById('summary');
+        
+        // 预览区元素
+        const previewName = document.getElementById('preview-name');
+        const previewTitle = document.getElementById('preview-title');
+        const previewEmail = document.getElementById('preview-email');
+        const previewPhone = document.getElementById('preview-phone');
+        const previewLocation = document.getElementById('preview-location');
+        const previewSummary = document.getElementById('preview-summary');
+        
+        // 容器引用
+        const educationContainer = document.getElementById('education-container');
+        const experienceContainer = document.getElementById('experience-container');
+        const skillsContainer = document.getElementById('skills-container');
+        const projectsContainer = document.getElementById('projects-container');
+        const certificatesContainer = document.getElementById('certificates-container');
+        
+        // 预览容器
+        const previewExperience = document.getElementById('preview-experience');
+        const previewEducation = document.getElementById('preview-education');
+        const previewProjects = document.getElementById('preview-projects');
+        const previewSkills = document.getElementById('preview-skills');
+        const previewCertificates = document.getElementById('preview-certificates');
+        
+        // 导航栏滚动效果
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 10) {
+                navbar.classList.add('py-2', 'shadow');
+                navbar.classList.remove('py-3', 'shadow-sm');
+            } else {
+                navbar.classList.add('py-3', 'shadow-sm');
+                navbar.classList.remove('py-2', 'shadow');
+            }
+        });
+        
+        // 移动端预览切换
+        let isPreviewMode = false;
+        const mainContent = document.querySelector('main');
+        
+        function togglePreviewMode() {
+            isPreviewMode = !isPreviewMode;
+            
+            if (isPreviewMode) {
+                // 切换到预览模式
+                mainContent.classList.add('lg:grid-cols-1');
+                previewSection.classList.add('lg:col-span-1');
+                document.querySelector('section.lg\\:col-span-7').classList.add('hidden');
+                mobilePreviewToggle.innerHTML = '<i class="fa fa-edit mr-2"></i><span>切换到编辑</span>';
+                previewToggle.innerHTML = '<i class="fa fa-edit"></i><span>编辑</span>';
+            } else {
+                // 切换到编辑模式
+                mainContent.classList.remove('lg:grid-cols-1');
+                previewSection.classList.remove('lg:col-span-1');
+                document.querySelector('section.lg\\:col-span-7').classList.remove('hidden');
+                mobilePreviewToggle.innerHTML = '<i class="fa fa-eye mr-2"></i><span>切换到预览</span>';
+                previewToggle.innerHTML = '<i class="fa fa-eye"></i><span>预览</span>';
+            }
+        }
+        
+        previewToggle.addEventListener('click', togglePreviewMode);
+        mobilePreviewToggle.addEventListener('click', togglePreviewMode);
+        
+        // 显示提示消息
+        function showToast(message) {
+            toastMessage.textContent = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+        
+        // 更新个人信息预览
+        function updatePersonalInfoPreview() {
+            previewName.textContent = fullnameInput.value || '您的姓名';
+            previewTitle.textContent = jobTitleInput.value || '您的职位';
+            previewEmail.textContent = emailInput.value || '您的邮箱';
+            previewPhone.textContent = phoneInput.value || '您的电话';
+            previewLocation.textContent = locationInput.value || '您的地址';
+            previewSummary.textContent = summaryInput.value || '请在左侧填写您的个人简介，这部分将简要介绍您的背景、专长和职业目标。';
+        }
+        
+        // 监听个人信息输入变化
+        fullnameInput.addEventListener('input', updatePersonalInfoPreview);
+        jobTitleInput.addEventListener('input', updatePersonalInfoPreview);
+        emailInput.addEventListener('input', updatePersonalInfoPreview);
+        phoneInput.addEventListener('input', updatePersonalInfoPreview);
+        locationInput.addEventListener('input', updatePersonalInfoPreview);
+        summaryInput.addEventListener('input', updatePersonalInfoPreview);
+        
+        // 添加教育经历
+        document.getElementById('add-education').addEventListener('click', () => {
+            const newEducation = document.createElement('div');
+            newEducation.className = 'education-item section-item p-4 border border-gray-200 rounded-lg relative group';
+            newEducation.innerHTML = `
+                <button class="delete-item absolute top-3 right-3 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity btn-effect">
+                    <i class="fa fa-trash-o"></i>
+                </button>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">学校名称</label>
+                        <input type="text" placeholder="请输入学校名称" 
+                               class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">学位/专业</label>
+                        <input type="text" placeholder="请输入学位和专业" 
+                               class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">开始日期</label>
+                        <input type="month" 
+                               class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">结束日期</label>
+                        <input type="month" 
+                               class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-500 mb-1">描述</label>
+                        <textarea rows="2" placeholder="请描述您在学校的经历、成就等" 
+                                  class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors"></textarea>
+                    </div>
+                </div>
+            `;
+            
+            educationContainer.appendChild(newEducation);
+            setupDeleteListener(newEducation.querySelector('.delete-item'));
+            setupEducationPreviewUpdate(newEducation);
+            showToast('已添加教育经历');
+        });
+        
+        // 添加工作经历
+        document.getElementById('add-experience').addEventListener('click', () => {
+            const newExperience = document.createElement('div');
+            newExperience.className = 'experience-item section-item p-4 border border-gray-200 rounded-lg relative group';
+            newExperience.innerHTML = `
+                <button class="delete-item absolute top-3 right-3 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity btn-effect">
+                    <i class="fa fa-trash-o"></i>
+                </button>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">公司名称</label>
+                        <input type="text" placeholder="请输入公司名称" 
+                               class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">职位</label>
+                        <input type="text" placeholder="请输入您的职位" 
+                               class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">开始日期</label>
+                        <input type="month" 
+                               class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">结束日期</label>
+                        <div class="flex items-center">
+                            <input type="month" 
+                                   class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                            <div class="ml-2 flex items-center">
+                                <input type="checkbox" class="mr-1 job-current">
+                                <label class="text-sm text-gray-500">至今</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-500 mb-1">工作描述</label>
+                        <textarea rows="3" placeholder="请描述您的工作职责和成就" 
+                                  class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors"></textarea>
+                    </div>
+                </div>
+            `;
+            
+            experienceContainer.appendChild(newExperience);
+            setupDeleteListener(newExperience.querySelector('.delete-item'));
+            setupExperiencePreviewUpdate(newExperience);
+            
+            // 处理"至今"复选框逻辑
+            const currentCheckbox = newExperience.querySelector('.job-current');
+            const endDateInput = newExperience.querySelector('input[type="month"]:nth-of-type(2)');
+            
+            currentCheckbox.addEventListener('change', () => {
+                if (currentCheckbox.checked) {
+                    endDateInput.disabled = true;
+                    endDateInput.classList.add('opacity-50');
+                } else {
+                    endDateInput.disabled = false;
+                    endDateInput.classList.remove('opacity-50');
+                }
+                updateExperiencePreview(newExperience);
+            });
+            
+            showToast('已添加工作经历');
+        });
+        
+        // 添加技能
+        document.getElementById('add-skill').addEventListener('click', () => {
+            const newSkill = document.createElement('div');
+            newSkill.className = 'skill-item section-item flex items-center bg-gray-100 rounded-full px-3 py-1.5 relative group';
+            newSkill.innerHTML = `
+                <input type="text" placeholder="技能名称" 
+                       class="bg-transparent border-none focus:ring-0 px-2 py-1 w-32 input-focus">
+                <div class="flex items-center ml-2">
+                    <span class="text-xs text-gray-500 mr-2">熟练度</span>
+                    <select class="bg-white text-xs border border-gray-200 rounded px-1.5 py-0.5 focus:ring-0 input-focus">
+                        <option>入门</option>
+                        <option>基础</option>
+                        <option selected>熟练</option>
+                        <option>精通</option>
+                        <option>专家</option>
+                    </select>
+                </div>
+                <button class="delete-item ml-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity btn-effect">
+                    <i class="fa fa-times"></i>
+                </button>
+            `;
+            
+            skillsContainer.appendChild(newSkill);
+            setupDeleteListener(newSkill.querySelector('.delete-item'));
+            setupSkillPreviewUpdate(newSkill);
+            showToast('已添加技能');
+        });
+        
+        // 添加项目
+        document.getElementById('add-project').addEventListener('click', () => {
+            const newProject = document.createElement('div');
+            newProject.className = 'project-item section-item p-4 border border-gray-200 rounded-lg relative group';
+            newProject.innerHTML = `
+                <button class="delete-item absolute top-3 right-3 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity btn-effect">
+                    <i class="fa fa-trash-o"></i>
+                </button>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">项目名称</label>
+                        <input type="text" placeholder="请输入项目名称" 
+                               class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">角色</label>
+                        <input type="text" placeholder="您在项目中的角色" 
+                               class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">开始日期</label>
+                        <input type="month" 
+                               class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">结束日期</label>
+                        <input type="month" 
+                               class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-500 mb-1">项目描述</label>
+                        <textarea rows="2" placeholder="请描述项目内容、您的贡献和成果" 
+                                  class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors"></textarea>
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-500 mb-1">技术栈</label>
+                        <input type="text" placeholder="请输入项目使用的技术，用逗号分隔" 
+                               class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                    </div>
+                </div>
+            `;
+            
+            projectsContainer.appendChild(newProject);
+            setupDeleteListener(newProject.querySelector('.delete-item'));
+            setupProjectPreviewUpdate(newProject);
+            showToast('已添加项目经验');
+        });
+        
+        // 添加证书
+        document.getElementById('add-certificate').addEventListener('click', () => {
+            const newCertificate = document.createElement('div');
+            newCertificate.className = 'certificate-item section-item p-4 border border-gray-200 rounded-lg relative group';
+            newCertificate.innerHTML = `
+                <button class="delete-item absolute top-3 right-3 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity btn-effect">
+                    <i class="fa fa-trash-o"></i>
+                </button>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">证书/奖项名称</label>
+                        <input type="text" placeholder="请输入证书或奖项名称" 
+                               class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">颁发机构</label>
+                        <input type="text" placeholder="请输入颁发机构名称" 
+                               class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-500 mb-1">获得日期</label>
+                        <input type="month" 
+                               class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors">
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-500 mb-1">描述</label>
+                        <textarea rows="2" placeholder="请描述该证书或奖项的相关信息" 
+                                  class="w-full px-3 py-2 border border-gray-200 rounded-md input-focus transition-colors"></textarea>
+                    </div>
+                </div>
+            `;
+            
+            certificatesContainer.appendChild(newCertificate);
+            setupDeleteListener(newCertificate.querySelector('.delete-item'));
+            setupCertificatePreviewUpdate(newCertificate);
+            showToast('已添加证书/奖项');
+        });
+        
+        // 设置删除按钮监听
+        function setupDeleteListener(deleteBtn) {
+            deleteBtn.addEventListener('click', () => {
+                const item = deleteBtn.closest('.section-item');
+                const itemType = Array.from(item.classList).find(c => c.endsWith('-item'));
+                
+                // 添加删除动画
+                item.style.opacity = '0';
+                item.style.transform = 'translateX(20px)';
+                item.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                
+                setTimeout(() => {
+                    // 从预览区移除对应的元素
+                    if (itemType === 'education-item') {
+                        const previewItems = previewEducation.querySelectorAll('.education-preview');
+                        previewItems[Array.from(educationContainer.children).indexOf(item)].remove();
+                    } else if (itemType === 'experience-item') {
+                        const previewItems = previewExperience.querySelectorAll('.experience-preview');
+                        previewItems[Array.from(experienceContainer.children).indexOf(item)].remove();
+                    } else if (itemType === 'skill-item') {
+                        const previewItems = previewSkills.querySelectorAll('div');
+                        previewItems[Array.from(skillsContainer.children).indexOf(item)].remove();
+                    } else if (itemType === 'project-item') {
+                        const previewItems = previewProjects.querySelectorAll('.project-preview');
+                        previewItems[Array.from(projectsContainer.children).indexOf(item)].remove();
+                    } else if (itemType === 'certificate-item') {
+                        const previewItems = previewCertificates.querySelectorAll('.certificate-preview');
+                        previewItems[Array.from(certificatesContainer.children).indexOf(item)].remove();
+                    }
+                    
+                    item.remove();
+                    showToast('已删除条目');
+                }, 300);
+            });
+        }
+        
+        // 设置教育经历预览更新
+        function setupEducationPreviewUpdate(educationItem) {
+            const inputs = educationItem.querySelectorAll('input, textarea');
+            inputs.forEach(input => {
+                input.addEventListener('input', () => updateEducationPreview(educationItem));
+            });
+            
+            // 初始化预览
+            updateEducationPreview(educationItem);
+        }
+        
+        function updateEducationPreview(educationItem) {
+            const index = Array.from(educationContainer.children).indexOf(educationItem);
+            const inputs = educationItem.querySelectorAll('input, textarea');
+            
+            const school = inputs[0].value || '您的学校';
+            const degree = inputs[1].value || '您的学位/专业';
+            const startDate = inputs[2].value ? formatDate(inputs[2].value) : '';
+            const endDate = inputs[3].value ? formatDate(inputs[3].value) : '';
+            const dateRange = startDate && endDate ? `${startDate} - ${endDate}` : '日期范围';
+            const description = inputs[4].value || '请在左侧填写您的教育经历描述，包括主要课程、GPA（如优秀）、荣誉等。';
+            
+            // 检查预览项是否存在，不存在则创建
+            let previewItem = previewEducation.querySelectorAll('.education-preview')[index];
+            if (!previewItem) {
+                previewItem = document.createElement('div');
+                previewItem.className = 'education-preview';
+                previewEducation.appendChild(previewItem);
+            }
+            
+            previewItem.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <h4 class="font-semibold">${degree}</h4>
+                    <span class="text-xs text-gray-400">${dateRange}</span>
+                </div>
+                <p class="text-primary text-sm font-medium mb-1">${school}</p>
+                <p class="text-gray-500 text-sm leading-relaxed">${description}</p>
+            `;
+        }
+        
+        // 设置工作经历预览更新
+        function setupExperiencePreviewUpdate(experienceItem) {
+            const inputs = experienceItem.querySelectorAll('input, textarea');
+            inputs.forEach(input => {
+                input.addEventListener('input', () => updateExperiencePreview(experienceItem));
+            });
+            
+            // 初始化预览
+            updateExperiencePreview(experienceItem);
+        }
+        
+        function updateExperiencePreview(experienceItem) {
+            const index = Array.from(experienceContainer.children).indexOf(experienceItem);
+            const inputs = experienceItem.querySelectorAll('input, textarea');
+            const currentCheckbox = experienceItem.querySelector('.job-current');
+            
+            const company = inputs[0].value || '您的公司';
+            const position = inputs[1].value || '您的职位';
+            const startDate = inputs[2].value ? formatDate(inputs[2].value) : '';
+            let endDate = currentCheckbox.checked ? '至今' : (inputs[3].value ? formatDate(inputs[3].value) : '');
+            const dateRange = startDate ? `${startDate} - ${endDate}` : '日期范围';
+            const description = inputs[4].value || '请在左侧填写您的工作描述，包括主要职责、成就和使用的技能。';
+            
+            // 检查预览项是否存在，不存在则创建
+            let previewItem = previewExperience.querySelectorAll('.experience-preview')[index];
+            if (!previewItem) {
+                previewItem = document.createElement('div');
+                previewItem.className = 'experience-preview';
+                previewExperience.appendChild(previewItem);
+            }
+            
+            previewItem.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <h4 class="font-semibold">${position}</h4>
+                    <span class="text-xs text-gray-400">${dateRange}</span>
+                </div>
+                <p class="text-primary text-sm font-medium mb-1">${company}</p>
+                <p class="text-gray-500 text-sm leading-relaxed">${description}</p>
+            `;
+        }
+        
+        // 设置技能预览更新
+        function setupSkillPreviewUpdate(skillItem) {
+            const nameInput = skillItem.querySelector('input');
+            const levelSelect = skillItem.querySelector('select');
+            
+            const update = () => {
+                const index = Array.from(skillsContainer.children).indexOf(skillItem);
+                const name = nameInput.value || '技能名称';
+                const level = levelSelect.value;
+                
+                // 检查预览项是否存在，不存在则创建
+                let previewItems = previewSkills.querySelectorAll('div');
+                let previewItem = previewItems[index];
+                
+                if (!previewItem) {
+                    previewItem = document.createElement('div');
+                    previewSkills.appendChild(previewItem);
+                }
+                
+                previewItem.className = 'flex items-center bg-gray-100 rounded-full px-3 py-1 text-xs';
+                previewItem.innerHTML = `
+                    <span>${name}</span>
+                    <span class="ml-2 text-gray-400">${level}</span>
+                `;
+            };
+            
+            nameInput.addEventListener('input', update);
+            levelSelect.addEventListener('change', update);
+            
+            // 初始化预览
+            update();
+        }
+        
+        // 设置项目预览更新
+        function setupProjectPreviewUpdate(projectItem) {
+            const inputs = projectItem.querySelectorAll('input, textarea');
+            inputs.forEach(input => {
+                input.addEventListener('input', () => updateProjectPreview(projectItem));
+            });
+            
+            // 初始化预览
+            updateProjectPreview(projectItem);
+        }
+        
+        function updateProjectPreview(projectItem) {
+            const index = Array.from(projectsContainer.children).indexOf(projectItem);
+            const inputs = projectItem.querySelectorAll('input, textarea');
+            
+            const name = inputs[0].value || '您的项目名称';
+            const role = inputs[1].value || '您的角色';
+            const startDate = inputs[2].value ? formatDate(inputs[2].value) : '';
+            const endDate = inputs[3].value ? formatDate(inputs[3].value) : '';
+            const dateRange = startDate && endDate ? `${startDate} - ${endDate}` : '日期范围';
+            const description = inputs[4].value || '请在左侧填写您的项目描述，包括项目目标、您的贡献和成果。';
+            const technologies = inputs[5].value ? inputs[5].value.split(',').map(tech => tech.trim()) : ['技术1', '技术2'];
+            
+            // 生成技术标签HTML
+            const techTags = technologies.map(tech => 
+                `<span class="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded">${tech}</span>`
+            ).join('');
+            
+            // 检查预览项是否存在，不存在则创建
+            let previewItem = previewProjects.querySelectorAll('.project-preview')[index];
+            if (!previewItem) {
+                previewItem = document.createElement('div');
+                previewItem.className = 'project-preview';
+                previewProjects.appendChild(previewItem);
+            }
+            
+            previewItem.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <h4 class="font-semibold">${name}</h4>
+                    <span class="text-xs text-gray-400">${dateRange}</span>
+                </div>
+                <p class="text-primary text-sm font-medium mb-1">${role}</p>
+                <p class="text-gray-500 text-sm leading-relaxed mb-2">${description}</p>
+                <div class="flex flex-wrap gap-1">
+                    ${techTags}
+                </div>
+            `;
+        }
+        
+        // 设置证书预览更新
+        function setupCertificatePreviewUpdate(certificateItem) {
+            const inputs = certificateItem.querySelectorAll('input, textarea');
+            inputs.forEach(input => {
+                input.addEventListener('input', () => updateCertificatePreview(certificateItem));
+            });
+            
+            // 初始化预览
+            updateCertificatePreview(certificateItem);
+        }
+        
+        function updateCertificatePreview(certificateItem) {
+            const index = Array.from(certificatesContainer.children).indexOf(certificateItem);
+            const inputs = certificateItem.querySelectorAll('input, textarea');
+            
+            const name = inputs[0].value || '证书/奖项名称';
+            const issuer = inputs[1].value || '颁发机构';
+            const date = inputs[2].value ? formatDate(inputs[2].value) : '获得日期';
+            const description = inputs[3].value || '请在左侧填写证书或奖项的相关描述。';
+            
+            // 检查预览项是否存在，不存在则创建
+            let previewItem = previewCertificates.querySelectorAll('.certificate-preview')[index];
+            if (!previewItem) {
+                previewItem = document.createElement('div');
+                previewItem.className = 'certificate-preview';
+                previewCertificates.appendChild(previewItem);
+            }
+            
+            previewItem.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <h4 class="font-semibold">${name}</h4>
+                    <span class="text-xs text-gray-400">${date}</span>
+                </div>
+                <p class="text-primary text-sm font-medium mb-1">${issuer}</p>
+                <p class="text-gray-500 text-sm leading-relaxed">${description}</p>
+            `;
+        }
+        
+        // 格式化日期
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const parts = dateString.split('-');
+            return `${parts[0]}年${parts[1]}月`;
+        }
+        
+        // 导出PDF功能
+        exportPdfBtn.addEventListener('click', () => {
+            // 这里只是模拟导出功能
+            showToast('PDF导出功能已触发（实际项目中需集成jsPDF等库）');
+            
+            // 实际项目中可以使用jsPDF或html2pdf等库实现
+            /*
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // 配置和生成PDF的代码...
+            */
+        });
+        
+        // 初始化现有条目的事件监听
+        document.querySelectorAll('.delete-item').forEach(btn => {
+            setupDeleteListener(btn);
+        });
+        
+        // 初始化预览更新
+        setupEducationPreviewUpdate(document.querySelector('.education-item'));
+        setupExperiencePreviewUpdate(document.querySelector('.experience-item'));
+        setupSkillPreviewUpdate(document.querySelector('.skill-item'));
+        setupProjectPreviewUpdate(document.querySelector('.project-item'));
+        setupCertificatePreviewUpdate(document.querySelector('.certificate-item'));
+        
+        // 处理"至今"复选框初始状态
+        const currentCheckbox = document.querySelector('.job-current');
+        if (currentCheckbox) {
+            const endDateInput = document.querySelector('.experience-item input[type="month"]:nth-of-type(2)');
+            
+            currentCheckbox.addEventListener('change', () => {
+                if (currentCheckbox.checked) {
+                    endDateInput.disabled = true;
+                    endDateInput.classList.add('opacity-50');
+                } else {
+                    endDateInput.disabled = false;
+                    endDateInput.classList.remove('opacity-50');
+                }
+                updateExperiencePreview(document.querySelector('.experience-item'));
+            });
+        }
+    </script>
+</body>
+</html>

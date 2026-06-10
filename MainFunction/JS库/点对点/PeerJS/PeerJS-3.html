@@ -1,0 +1,2243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>协作编辑器 - 支持文件传输和同设备连接</title>
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: calc(100vh - 40px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            font-size: 36px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .logo-text {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-subtext {
+            font-size: 14px;
+            opacity: 0.9;
+            font-weight: 300;
+            margin-top: 2px;
+        }
+
+        .connection-status {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 12px 20px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ff4757;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connected {
+            background: #2ed573;
+            animation: none;
+        }
+
+        .status-dot.connecting {
+            background: #ffa502;
+            animation: blink 1s infinite;
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .sidebar {
+            width: 350px;
+            background: #f8f9fa;
+            border-right: 1px solid #e9ecef;
+            padding: 25px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            border: 1px solid #eef2f7;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-title-icon {
+            font-size: 20px;
+        }
+
+        .room-code {
+            font-size: 42px;
+            font-weight: 900;
+            color: #667eea;
+            text-align: center;
+            letter-spacing: 5px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f0f4ff 0%, #f8faff 100%);
+            border-radius: 12px;
+            border: 3px dashed #c3dafe;
+            margin: 10px 0;
+            font-family: 'Monaco', 'Courier New', monospace;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 8px;
+        }
+
+        input[type="text"],
+        input[type="file"] {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .button {
+            padding: 14px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-align: center;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        .button-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .button-success {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+
+        .button-warning {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            color: white;
+        }
+
+        .button-danger {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+            color: white;
+        }
+
+        .button-secondary {
+            background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
+            color: white;
+        }
+
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .user-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .user-badge {
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-radius: 25px;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 2px solid #bbdefb;
+            transition: all 0.3s ease;
+        }
+
+        .user-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-badge.host {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border-color: #ffd54f;
+        }
+
+        .user-badge.self {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border-color: #a3e4c7;
+        }
+
+        .editor-area {
+            flex: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .editor-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .editor-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toolbar-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        #editor {
+            flex: 1;
+            width: 100%;
+            border: none;
+            padding: 25px;
+            font-size: 15px;
+            line-height: 1.8;
+            font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+            background: #fafcff;
+            border-radius: 15px;
+            resize: none;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.02);
+        }
+
+        #editor:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: inset 0 2px 10px rgba(102, 126, 234, 0.1), 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .file-transfer-area {
+            margin-top: 25px;
+        }
+
+        .file-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 15px;
+            background: white;
+        }
+
+        .file-item {
+            padding: 15px;
+            border-bottom: 1px solid #edf2f7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .file-item:hover {
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .file-icon {
+            font-size: 24px;
+        }
+
+        .file-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 14px;
+        }
+
+        .file-size {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 2px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78, #38a169);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            margin-top: 25px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 15px;
+            max-width: 85%;
+            word-wrap: break-word;
+            animation: slideIn 0.3s ease;
+            position: relative;
+        }
+
+        .message.self {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.other {
+            background: white;
+            color: #2d3748;
+            margin-right: auto;
+            border: 1px solid #e2e8f0;
+            border-bottom-left-radius: 5px;
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .message-text {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .typing-indicator {
+            height: 20px;
+            font-size: 12px;
+            color: #718096;
+            font-style: italic;
+            margin-top: 5px;
+            padding: 0 10px;
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 18px 24px;
+            border-radius: 15px;
+            color: white;
+            z-index: 1000;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            animation: slideInRight 0.3s ease, fadeOut 0.3s ease 2.7s forwards;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            max-width: 400px;
+            backdrop-filter: blur(10px);
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, rgba(72, 187, 120, 0.95) 0%, rgba(56, 161, 105, 0.95) 100%);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, rgba(245, 101, 101, 0.95) 0%, rgba(229, 62, 62, 0.95) 100%);
+        }
+
+        .notification.warning {
+            background: linear-gradient(135deg, rgba(237, 137, 54, 0.95) 0%, rgba(221, 107, 32, 0.95) 100%);
+        }
+
+        .notification.info {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
+        }
+
+        .same-device-section {
+            background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+            border: 2px dashed #ffb74d;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .same-device-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #d97706;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            padding: 18px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #718096;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .log-panel {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 20px;
+            font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            border-radius: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 25px;
+            display: none;
+            border: 2px solid #2d3748;
+        }
+
+        .log-entry {
+            padding: 6px 0;
+            border-bottom: 1px solid #2d3748;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .log-entry.info { color: #68d391; }
+        .log-entry.warn { color: #f6ad55; }
+        .log-entry.error { color: #fc8181; }
+        .log-entry.debug { color: #63b3ed; }
+        .log-entry.success { color: #48bb78; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #e9ecef;
+            }
+        }
+
+        .room-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .connection-type-selector {
+            display: flex;
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .connection-type {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .connection-type:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .connection-type.active {
+            border-color: #667eea;
+            background: #f0f4ff;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .connection-type-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .connection-type-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .connection-type-desc {
+            font-size: 12px;
+            color: #718096;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">✍️</div>
+                <div>
+                    <div class="logo-text">协作编辑器</div>
+                    <div class="logo-subtext">实时协作 · 文件共享 · 同设备连接</div>
+                </div>
+            </div>
+            <div class="connection-status" id="connectionStatus">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">未连接</span>
+            </div>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 侧边栏 -->
+            <div class="sidebar">
+                <!-- 房间控制面板 -->
+                <div class="panel">
+                    <div class="panel-title">
+                        <span class="panel-title-icon">🚪</span>
+                        <span>房间控制</span>
+                    </div>
+                    
+                    <div id="roomSetup">
+                        <!-- 连接类型选择 -->
+                        <div class="connection-type-selector">
+                            <div class="connection-type active" onclick="setConnectionType('standard')">
+                                <div class="connection-type-icon">🌐</div>
+                                <div class="connection-type-title">标准模式</div>
+                                <div class="connection-type-desc">互联网连接</div>
+                            </div>
+                            <div class="connection-type" onclick="setConnectionType('local')">
+                                <div class="connection-type-icon">💻</div>
+                                <div class="connection-type-title">本地模式</div>
+                                <div class="connection-type-desc">同一设备</div>
+                            </div>
+                        </div>
+
+                        <div class="input-group" id="standardRoomSection">
+                            <div class="input-label">房间代码 (4位)</div>
+                            <input type="text" id="roomInput" placeholder="例如: ABCD" maxlength="4" pattern="[A-Z0-9]{4}">
+                            <div class="button-group">
+                                <button class="button button-success" onclick="joinRoom()" id="joinBtn">
+                                    <span>🚪</span> 加入房间
+                                </button>
+                                <button class="button button-primary" onclick="createRoom()" id="createBtn">
+                                    <span>➕</span> 创建房间
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="same-device-section" id="localRoomSection" style="display: none;">
+                            <div class="same-device-title">
+                                <span>💻</span>
+                                <span>同一设备连接</span>
+                            </div>
+                            <div style="margin-bottom: 15px; font-size: 14px; color: #666;">
+                                在同一台电脑的不同浏览器标签页之间连接
+                            </div>
+                            <input type="text" id="deviceTokenInput" placeholder="输入或生成连接令牌" style="margin-bottom: 12px;">
+                            <div class="button-group">
+                                <button class="button button-warning" onclick="generateDeviceToken()">
+                                    <span>🎫</span> 生成令牌
+                                </button>
+                                <button class="button button-success" onclick="joinLocalRoom()">
+                                    <span>🔗</span> 连接
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="roomInfo" style="display: none;">
+                        <div class="room-code" id="roomCode"></div>
+                        
+                        <div class="user-list" id="userList"></div>
+                        
+                        <div class="room-actions">
+                            <button class="button button-primary" onclick="copyRoomLink()">
+                                <span>📋</span> 复制链接
+                            </button>
+                            <button class="button button-warning" onclick="forceSync()">
+                                <span>🔄</span> 强制同步
+                            </button>
+                            <button class="button button-danger" onclick="leaveRoom()">
+                                <span>🚪</span> 离开房间
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 用户统计面板 -->
+                <div class="panel">
+                    <div class="panel-title">
+                        <span class="panel-title-icon">👥</span>
+                        <span>用户统计</span>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="userCount">1</div>
+                            <div class="stat-label">在线用户</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="charCount">0</div>
+                            <div class="stat-label">文档字数</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="fileCount">0</div>
+                            <div class="stat-label">共享文件</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="msgCount">0</div>
+                            <div class="stat-label">聊天消息</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 文件传输面板 -->
+                <div class="panel">
+                    <div class="panel-title">
+                        <span class="panel-title-icon">📁</span>
+                        <span>文件传输</span>
+                    </div>
+                    <input type="file" id="fileInput" multiple style="display: none;" onchange="handleFileSelect(event)">
+                    <button class="button button-primary" onclick="document.getElementById('fileInput').click()" style="width: 100%; margin-bottom: 15px;">
+                        <span>📤</span> 选择文件
+                    </button>
+                    <div class="file-list" id="fileList">
+                        <!-- 文件列表将在这里动态生成 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 编辑器区域 -->
+            <div class="editor-area">
+                <div class="editor-toolbar">
+                    <div class="editor-title">
+                        <span>✏️</span>
+                        <span>协作编辑器</span>
+                    </div>
+                    <div class="toolbar-buttons">
+                        <button class="button button-success" onclick="downloadDocument()">
+                            <span>💾</span> 保存文档
+                        </button>
+                        <button class="button button-secondary" onclick="toggleLogPanel()" id="logToggleBtn">
+                            <span>📋</span> 显示日志
+                        </button>
+                    </div>
+                </div>
+
+                <textarea id="editor" placeholder="开始输入... 内容将实时同步给所有用户"></textarea>
+
+                <!-- 聊天区域 -->
+                <div class="chat-area">
+                    <div class="panel-title">
+                        <span class="panel-title-icon">💬</span>
+                        <span>实时聊天</span>
+                    </div>
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message system">
+                            <div class="message-header">
+                                <span>系统消息</span>
+                                <span>现在</span>
+                            </div>
+                            <div class="message-text">欢迎使用协作编辑器！开始聊天吧。</div>
+                        </div>
+                    </div>
+                    <div class="typing-indicator" id="typingIndicator"></div>
+                    <div class="chat-input-area">
+                        <input type="text" class="chat-input" id="chatInput" placeholder="输入消息..." onkeypress="handleChatKeyPress(event)">
+                        <button class="button button-primary" onclick="sendChatMessage()">
+                            <span>发送</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 调试日志面板 -->
+                <div class="log-panel" id="logPanel">
+                    <div class="panel-title" style="color: #e2e8f0; margin-bottom: 15px;">
+                        <span>📋</span>
+                        <span>调试日志</span>
+                    </div>
+                    <div id="logContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ 全局变量和配置 ============
+        let peer = null;
+        let currentRoom = null;
+        let connections = new Map(); // 存储所有连接
+        let lastContent = '';
+        let isHost = false;
+        let myPeerId = '';
+        let myUsername = `用户${Math.floor(Math.random() * 1000)}`;
+        let files = new Map(); // 存储文件信息
+        let chatMessages = 0;
+        let isLocalMode = false;
+        let currentConnectionType = 'standard';
+        let activeHostId = null;
+        let isTyping = false;
+        let typingTimeout = null;
+        let sendTimeout = null;
+        let reconnectTimer = null;
+        let logEnabled = false;
+        let broadcastChannel = null;
+
+        // ============ 初始化函数 ============
+        function init() {
+            // 加载用户名
+            const savedUsername = localStorage.getItem('collab_username');
+            if (savedUsername) {
+                myUsername = savedUsername;
+            } else {
+                localStorage.setItem('collab_username', myUsername);
+            }
+
+            // 初始化设备令牌
+            initDeviceToken();
+
+            // 设置广播通道
+            if ('BroadcastChannel' in window) {
+                broadcastChannel = new BroadcastChannel('collab_editor_channel');
+                broadcastChannel.onmessage = handleBroadcastMessage;
+            }
+
+            // 设置 storage 事件监听
+            window.addEventListener('storage', handleStorageEvent);
+
+            // 检查 URL 参数
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomParam = urlParams.get('room');
+            const tokenParam = urlParams.get('token');
+
+            if (roomParam && roomParam.length === 4) {
+                document.getElementById('roomInput').value = roomParam.toUpperCase();
+                setTimeout(() => joinRoom(), 1000);
+            } else if (tokenParam) {
+                document.getElementById('deviceTokenInput').value = tokenParam;
+                setConnectionType('local');
+                setTimeout(() => joinLocalRoom(), 1000);
+            }
+
+            // 设置编辑器事件
+            document.getElementById('editor').addEventListener('input', handleEditorInput);
+
+            updateStatus('未连接', 'disconnected');
+        }
+
+        function initDeviceToken() {
+            let token = localStorage.getItem('collab_device_token');
+            if (!token) {
+                token = generateToken();
+                localStorage.setItem('collab_device_token', token);
+            }
+            document.getElementById('deviceTokenInput').placeholder = `当前令牌: ${token}`;
+        }
+
+        function generateToken() {
+            return Math.random().toString(36).substr(2, 6).toUpperCase();
+        }
+
+        // ============ 连接类型管理 ============
+        function setConnectionType(type) {
+            currentConnectionType = type;
+            
+            // 更新 UI
+            document.querySelectorAll('.connection-type').forEach(el => {
+                el.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            
+            if (type === 'standard') {
+                document.getElementById('standardRoomSection').style.display = 'block';
+                document.getElementById('localRoomSection').style.display = 'none';
+            } else {
+                document.getElementById('standardRoomSection').style.display = 'none';
+                document.getElementById('localRoomSection').style.display = 'block';
+            }
+        }
+
+        // ============ 房间管理 ============
+        function generateRoomCode() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let code = '';
+            for (let i = 0; i < 4; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return code;
+        }
+
+        function createRoom() {
+            const createBtn = document.getElementById('createBtn');
+            createBtn.disabled = true;
+            createBtn.innerHTML = '<span>⏳</span> 创建中...';
+
+            currentRoom = generateRoomCode();
+            isHost = true;
+            isLocalMode = false;
+
+            // 生成更可靠的 Peer ID
+            const timestamp = Date.now();
+            const randomSuffix = Math.random().toString(36).substr(2, 8);
+            myPeerId = `room_${currentRoom}_host_${timestamp}_${randomSuffix}`;
+
+            // 保存主机信息
+            localStorage.setItem(`host_${currentRoom}`, myPeerId);
+
+            log(`创建房间: ${currentRoom}`, 'info');
+            log(`主机ID: ${myPeerId}`, 'debug');
+
+            setupPeer();
+            showRoomInfo();
+            updateStatus('已创建房间，等待连接...', 'connecting');
+            showNotification('房间创建成功！', 'success');
+
+            setTimeout(() => {
+                createBtn.disabled = false;
+                createBtn.innerHTML = '<span>➕</span> 创建房间';
+            }, 2000);
+        }
+
+        function joinRoom() {
+            const joinBtn = document.getElementById('joinBtn');
+            const roomCode = document.getElementById('roomInput').value.trim().toUpperCase();
+
+            if (roomCode.length !== 4) {
+                showNotification('请输入4位房间代码', 'error');
+                return;
+            }
+
+            joinBtn.disabled = true;
+            joinBtn.innerHTML = '<span>⏳</span> 加入中...';
+
+            currentRoom = roomCode;
+            isHost = false;
+            isLocalMode = false;
+
+            // 生成访客 Peer ID
+            const timestamp = Date.now();
+            const randomSuffix = Math.random().toString(36).substr(2, 8);
+            myPeerId = `room_${currentRoom}_guest_${timestamp}_${randomSuffix}`;
+
+            // 尝试获取保存的主机 ID
+            activeHostId = localStorage.getItem(`host_${currentRoom}`);
+
+            log(`加入房间: ${currentRoom}`, 'info');
+            log(`访客ID: ${myPeerId}`, 'debug');
+            if (activeHostId) {
+                log(`找到保存的主机ID: ${activeHostId}`, 'debug');
+            }
+
+            setupPeer();
+            showRoomInfo();
+            updateStatus('正在加入房间...', 'connecting');
+            showNotification('正在加入房间...', 'info');
+
+            setTimeout(() => {
+                joinBtn.disabled = false;
+                joinBtn.innerHTML = '<span>🚪</span> 加入房间';
+            }, 3000);
+        }
+
+        function joinLocalRoom() {
+            const tokenInput = document.getElementById('deviceTokenInput');
+            let token = tokenInput.value.trim().toUpperCase();
+
+            if (!token) {
+                // 使用当前设备的令牌
+                token = localStorage.getItem('collab_device_token');
+                tokenInput.value = token;
+            }
+
+            if (token.length < 4) {
+                showNotification('请输入有效的令牌', 'error');
+                return;
+            }
+
+            currentRoom = `local_${token}`;
+            isLocalMode = true;
+
+            // 检查是否已经有主机
+            const existingHost = localStorage.getItem(`local_host_${token}`);
+            if (existingHost) {
+                // 已有主机，作为访客加入
+                isHost = false;
+                myPeerId = `local_${token}_guest_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+                activeHostId = existingHost;
+                log(`加入本地房间，已有主机: ${existingHost}`, 'info');
+            } else {
+                // 第一个加入，作为主机
+                isHost = true;
+                myPeerId = `local_${token}_host_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+                localStorage.setItem(`local_host_${token}`, myPeerId);
+                log(`创建本地房间，作为主机`, 'info');
+            }
+
+            // 广播本地房间信息
+            broadcastLocalRoom(token);
+
+            setupPeer();
+            showRoomInfo();
+            updateStatus('本地连接模式', 'connected');
+            showNotification('已进入本地连接模式', 'success');
+        }
+
+        function generateDeviceToken() {
+            const token = generateToken();
+            document.getElementById('deviceTokenInput').value = token;
+            localStorage.setItem('collab_device_token', token);
+            showNotification(`新令牌已生成: ${token}`, 'success');
+        }
+
+        // ============ PeerJS 连接管理 ============
+        function setupPeer() {
+            log(`初始化Peer连接...`, 'info');
+
+            // 清理现有连接
+            if (peer) {
+                try {
+                    peer.destroy();
+                } catch (e) {
+                    // 忽略错误
+                }
+            }
+
+            connections.clear();
+
+            // 创建新的 Peer 实例
+            peer = new Peer(myPeerId, {
+                host: '0.peerjs.com',
+                port: 443,
+                path: '/',
+                debug: 0, // 减少调试输出
+                config: {
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' },
+                        { urls: 'stun:stun1.l.google.com:19302' }
+                    ]
+                }
+            });
+
+            // 事件处理
+            peer.on('open', handlePeerOpen);
+            peer.on('connection', handlePeerConnection);
+            peer.on('error', handlePeerError);
+            peer.on('disconnected', handlePeerDisconnected);
+            peer.on('close', handlePeerClose);
+        }
+
+        function handlePeerOpen(id) {
+            log(`Peer连接成功: ${id.substring(0, 20)}...`, 'success');
+            updateStatus('已连接到服务器', 'connected');
+            updateUserList();
+            
+            if (isHost) {
+                // 主机等待连接
+                log(`主机已就绪，等待连接...`, 'info');
+                if (isLocalMode) {
+                    // 本地模式：广播自己的存在
+                    broadcastLocalPresence();
+                }
+            } else {
+                // 访客尝试连接主机
+                setTimeout(() => {
+                    connectToHost();
+                }, 1000);
+            }
+        }
+
+        function handlePeerConnection(conn) {
+            log(`收到连接请求: ${conn.peer.substring(0, 20)}...`, 'info');
+
+            if (connections.has(conn.peer)) {
+                log(`重复连接，忽略`, 'debug');
+                return;
+            }
+
+            setupConnection(conn, false);
+        }
+
+        function handlePeerError(err) {
+            // 忽略常见的连接失败错误
+            if (err.type === 'peer-unavailable' || err.type === 'network') {
+                log(`连接状态: ${err.message}`, 'debug');
+                return;
+            }
+
+            if (err.type === 'unavailable-id') {
+                log(`ID不可用，重新生成...`, 'warn');
+                // 重新生成ID并重试
+                const timestamp = Date.now();
+                const randomSuffix = Math.random().toString(36).substr(2, 8);
+                myPeerId = isHost ? 
+                    `room_${currentRoom}_host_${timestamp}_${randomSuffix}` :
+                    `room_${currentRoom}_guest_${timestamp}_${randomSuffix}`;
+                
+                setTimeout(setupPeer, 1000);
+            } else {
+                log(`Peer错误: ${err.type} - ${err.message}`, 'error');
+            }
+        }
+
+        function handlePeerDisconnected() {
+            log(`Peer连接断开`, 'warn');
+            updateStatus('连接断开，重连中...', 'connecting');
+            
+            setTimeout(() => {
+                if (peer && peer.disconnected) {
+                    peer.reconnect();
+                }
+            }, 2000);
+        }
+
+        function handlePeerClose() {
+            log(`Peer连接关闭`, 'info');
+        }
+
+        // ============ 主机连接 ============
+        function connectToHost() {
+            if (isHost || !currentRoom) return;
+
+            log(`尝试连接主机...`, 'info');
+
+            // 1. 首先尝试已知的主机ID
+            if (activeHostId) {
+                log(`尝试连接已知主机: ${activeHostId}`, 'info');
+                tryConnect(activeHostId);
+                return;
+            }
+
+            // 2. 本地模式：从localStorage发现
+            if (isLocalMode) {
+                const token = currentRoom.replace('local_', '');
+                const hostId = localStorage.getItem(`local_host_${token}`);
+                if (hostId && hostId !== myPeerId) {
+                    log(`发现本地主机: ${hostId}`, 'info');
+                    tryConnect(hostId);
+                    return;
+                }
+            }
+
+            // 3. 标准模式：尝试可能的ID格式
+            const possibleHostIds = generatePossibleHostIds();
+            log(`尝试连接可能的主机: ${possibleHostIds.join(', ')}`, 'debug');
+
+            // 顺序尝试连接
+            let index = 0;
+            const tryNextHost = () => {
+                if (index >= possibleHostIds.length || connections.size > 0) {
+                    if (connections.size === 0) {
+                        log(`未找到主机，5秒后重试...`, 'warn');
+                        setTimeout(connectToHost, 5000);
+                    }
+                    return;
+                }
+
+                const hostId = possibleHostIds[index];
+                index++;
+
+                tryConnect(hostId);
+
+                // 继续下一个
+                setTimeout(tryNextHost, 1000);
+            };
+
+            tryNextHost();
+        }
+
+        function generatePossibleHostIds() {
+            const ids = [];
+            
+            if (isLocalMode) {
+                const token = currentRoom.replace('local_', '');
+                ids.push(`local_${token}_host`);
+            } else {
+                // 标准模式的可能ID
+                ids.push(`room_${currentRoom}_host`);
+                ids.push(`host_${currentRoom}`);
+                ids.push(`${currentRoom}_host`);
+                
+                // 尝试最近的主机ID（最近30秒内）
+                const now = Date.now();
+                for (let i = 0; i < 3; i++) {
+                    const timestamp = now - (i * 10000);
+                    ids.push(`room_${currentRoom}_host_${timestamp}`);
+                }
+            }
+            
+            return ids.filter(id => id !== myPeerId);
+        }
+
+        function tryConnect(targetId) {
+            if (!peer || peer.disconnected) {
+                log(`Peer未就绪，无法连接`, 'debug');
+                return false;
+            }
+
+            if (connections.has(targetId) || targetId === myPeerId) {
+                return false;
+            }
+
+            log(`尝试连接: ${targetId.substring(0, 20)}...`, 'debug');
+
+            const conn = peer.connect(targetId, {
+                reliable: true,
+                serialization: 'json',
+                metadata: {
+                    room: currentRoom,
+                    username: myUsername,
+                    isLocal: isLocalMode,
+                    timestamp: Date.now()
+                }
+            });
+
+            if (!conn) {
+                log(`创建连接失败`, 'debug');
+                return false;
+            }
+
+            // 设置连接超时
+            const timeout = setTimeout(() => {
+                if (conn && !conn.open) {
+                    log(`连接超时: ${targetId.substring(0, 20)}...`, 'debug');
+                    try {
+                        conn.close();
+                    } catch (e) {
+                        // 忽略错误
+                    }
+                }
+            }, 8000);
+
+            conn.on('open', () => {
+                clearTimeout(timeout);
+                log(`连接成功: ${targetId.substring(0, 20)}...`, 'success');
+                setupConnection(conn, true);
+                
+                // 如果是主机，保存ID
+                if (targetId.includes('host')) {
+                    activeHostId = targetId;
+                    if (!isLocalMode) {
+                        localStorage.setItem(`host_${currentRoom}`, targetId);
+                    }
+                }
+            });
+
+            conn.on('error', (err) => {
+                clearTimeout(timeout);
+                log(`连接失败: ${err}`, 'debug');
+            });
+
+            return true;
+        }
+
+        // ============ 连接管理 ============
+        function setupConnection(conn, isInitiator) {
+            const peerId = conn.peer;
+
+            conn.on('open', () => {
+                log(`连接已建立: ${peerId.substring(0, 20)}...`, 'success');
+                
+                connections.set(peerId, conn);
+                updateUserList();
+                
+                const userCount = connections.size + 1;
+                updateStatus(`已连接 ${userCount} 个用户`, 'connected');
+                
+                // 发送握手信息
+                setTimeout(() => {
+                    if (conn.open) {
+                        conn.send(JSON.stringify({
+                            type: 'handshake',
+                            peerId: myPeerId,
+                            username: myUsername,
+                            isHost: isHost,
+                            timestamp: Date.now(),
+                            room: currentRoom
+                        }));
+                    }
+                }, 100);
+                
+                if (isHost) {
+                    // 主机发送初始数据
+                    setTimeout(() => sendInitialData(conn), 500);
+                }
+                
+                showNotification(`成功连接${isInitiator ? '到' : ''}用户`, 'success');
+            });
+
+            conn.on('data', handleIncomingData);
+            conn.on('close', () => handleConnectionClose(peerId));
+            conn.on('error', (err) => handleConnectionError(peerId, err));
+        }
+
+        function handleIncomingData(data) {
+            try {
+                const parsed = JSON.parse(data);
+                const peerId = parsed.peerId || 'unknown';
+                
+                switch(parsed.type) {
+                    case 'handshake':
+                        handleHandshake(parsed, peerId);
+                        break;
+                    case 'sync':
+                        handleSync(parsed);
+                        break;
+                    case 'edit':
+                        handleEdit(parsed, peerId);
+                        break;
+                    case 'chat':
+                        handleChat(parsed, peerId);
+                        break;
+                    case 'typing':
+                        handleTyping(parsed, peerId);
+                        break;
+                    case 'file_list':
+                        handleFileList(parsed);
+                        break;
+                    case 'file_request':
+                        handleFileRequest(parsed, peerId);
+                        break;
+                    case 'ping':
+                        sendPong(peerId);
+                        break;
+                }
+            } catch (e) {
+                log(`处理数据失败: ${e.message}`, 'debug');
+            }
+        }
+
+        function handleConnectionClose(peerId) {
+            log(`连接关闭: ${peerId.substring(0, 20)}...`, 'info');
+            connections.delete(peerId);
+            updateUserList();
+            
+            if (connections.size === 0 && !isHost) {
+                updateStatus('与主机断开连接', 'connecting');
+            }
+        }
+
+        function handleConnectionError(peerId, err) {
+            log(`连接错误 ${peerId.substring(0, 20)}...: ${err}`, 'debug');
+        }
+
+        // ============ 数据处理 ============
+        function handleHandshake(data, peerId) {
+            log(`收到握手: ${data.username}`, 'debug');
+            
+            if (data.isHost && !isHost) {
+                updateStatus('已连接到房间主机', 'connected');
+                showNotification(`已连接到主机: ${data.username}`, 'success');
+                
+                // 请求同步数据
+                const conn = connections.get(peerId);
+                if (conn) {
+                    conn.send(JSON.stringify({
+                        type: 'sync_request',
+                        peerId: myPeerId
+                    }));
+                }
+            }
+        }
+
+        function handleSync(data) {
+            const editor = document.getElementById('editor');
+            if (data.content && data.content !== editor.value) {
+                editor.value = data.content;
+                lastContent = data.content;
+                localStorage.setItem(`doc_${currentRoom}`, data.content);
+                updateCharCount();
+                log(`文档已从主机同步`, 'info');
+            }
+        }
+
+        function handleEdit(data, peerId) {
+            const editor = document.getElementById('editor');
+            if (data.content && data.content !== editor.value) {
+                editor.value = data.content;
+                lastContent = data.content;
+                localStorage.setItem(`doc_${currentRoom}`, data.content);
+                updateCharCount();
+                
+                if (data.username) {
+                    showTypingIndicator(data.username);
+                }
+            }
+        }
+
+        function handleChat(data, peerId) {
+            addChatMessage(data.message, data.username || peerId, false);
+        }
+
+        function handleTyping(data, peerId) {
+            showTypingIndicator(data.username || peerId);
+        }
+
+        function handleFileList(data) {
+            data.files.forEach(file => {
+                if (!files.has(file.id)) {
+                    files.set(file.id, file);
+                    addFileToList(file, false);
+                }
+            });
+        }
+
+        function handleFileRequest(data, peerId) {
+            const file = files.get(data.fileId);
+            if (file) {
+                sendFile(file, peerId);
+            }
+        }
+
+        // ============ 数据发送 ============
+        function sendInitialData(conn) {
+            if (!conn.open) return;
+
+            const editor = document.getElementById('editor');
+            const content = editor.value;
+
+            conn.send(JSON.stringify({
+                type: 'sync',
+                content: content,
+                peerId: myPeerId,
+                timestamp: Date.now()
+            }));
+
+            // 发送文件列表
+            if (files.size > 0) {
+                const fileList = Array.from(files.values()).map(file => ({
+                    id: file.id,
+                    name: file.name,
+                    size: file.size,
+                    type: file.type
+                }));
+
+                conn.send(JSON.stringify({
+                    type: 'file_list',
+                    files: fileList,
+                    peerId: myPeerId
+                }));
+            }
+        }
+
+        function sendPong(peerId) {
+            const conn = connections.get(peerId);
+            if (conn) {
+                conn.send(JSON.stringify({
+                    type: 'pong',
+                    peerId: myPeerId,
+                    timestamp: Date.now()
+                }));
+            }
+        }
+
+        // ============ 编辑器功能 ============
+        function handleEditorInput() {
+            const editor = document.getElementById('editor');
+            const content = editor.value;
+
+            updateCharCount();
+            localStorage.setItem(`doc_${currentRoom}`, content);
+
+            // 发送输入状态
+            sendTypingStatus();
+
+            // 防抖发送编辑内容
+            clearTimeout(sendTimeout);
+            sendTimeout = setTimeout(() => {
+                if (content !== lastContent && connections.size > 0) {
+                    connections.forEach(conn => {
+                        if (conn.open) {
+                            conn.send(JSON.stringify({
+                                type: 'edit',
+                                content: content,
+                                username: myUsername,
+                                timestamp: Date.now(),
+                                peerId: myPeerId
+                            }));
+                        }
+                    });
+                    lastContent = content;
+                }
+            }, 300);
+        }
+
+        function sendTypingStatus() {
+            if (!isTyping) {
+                isTyping = true;
+                
+                connections.forEach(conn => {
+                    if (conn.open) {
+                        conn.send(JSON.stringify({
+                            type: 'typing',
+                            username: myUsername,
+                            timestamp: Date.now(),
+                            peerId: myPeerId
+                        }));
+                    }
+                });
+
+                // 广播给其他标签页
+                broadcastLocalMessage({
+                    type: 'typing',
+                    username: myUsername
+                });
+            }
+
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                isTyping = false;
+            }, 2000);
+        }
+
+        function showTypingIndicator(username) {
+            const indicator = document.getElementById('typingIndicator');
+            indicator.textContent = `${username} 正在输入...`;
+
+            clearTimeout(indicator.timeout);
+            indicator.timeout = setTimeout(() => {
+                indicator.textContent = '';
+            }, 2000);
+        }
+
+        function forceSync() {
+            if (connections.size > 0) {
+                const content = document.getElementById('editor').value;
+                connections.forEach(conn => {
+                    if (conn.open) {
+                        conn.send(JSON.stringify({
+                            type: 'sync',
+                            content: content,
+                            peerId: myPeerId,
+                            timestamp: Date.now(),
+                            force: true
+                        }));
+                    }
+                });
+                showNotification('已发送强制同步', 'info');
+            } else {
+                showNotification('没有已连接的用户', 'warning');
+            }
+        }
+
+        // ============ 文件传输 ============
+        function handleFileSelect(event) {
+            const fileList = event.target.files;
+            for (let file of fileList) {
+                addFile(file);
+            }
+            event.target.value = '';
+        }
+
+        function addFile(file) {
+            const fileId = `file_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            
+            const fileInfo = {
+                id: fileId,
+                name: file.name,
+                size: file.size,
+                type: file.type,
+                file: file,
+                progress: 0
+            };
+
+            files.set(fileId, fileInfo);
+            addFileToList(fileInfo, true);
+            
+            // 通知其他用户
+            connections.forEach(conn => {
+                if (conn.open) {
+                    conn.send(JSON.stringify({
+                        type: 'file_available',
+                        fileInfo: {
+                            id: fileId,
+                            name: file.name,
+                            size: file.size,
+                            type: file.type
+                        },
+                        peerId: myPeerId
+                    }));
+                }
+            });
+
+            // 广播给其他标签页
+            broadcastLocalMessage({
+                type: 'file_available',
+                fileInfo: fileInfo
+            });
+
+            showNotification(`文件已添加: ${file.name}`, 'success');
+            updateFileCount();
+        }
+
+        function addFileToList(fileInfo, isOwner) {
+            const fileList = document.getElementById('fileList');
+            
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item';
+            fileItem.id = `file-${fileInfo.id}`;
+
+            const fileIcon = getFileIcon(fileInfo.type);
+            
+            fileItem.innerHTML = `
+                <div class="file-info">
+                    <div class="file-icon">${fileIcon}</div>
+                    <div class="file-details">
+                        <div class="file-name">${fileInfo.name}</div>
+                        <div class="file-size">${formatFileSize(fileInfo.size)}</div>
+                    </div>
+                </div>
+                <div>
+                    ${isOwner ? 
+                        `<button class="button button-primary" onclick="shareFile('${fileInfo.id}')" style="padding: 8px 12px; font-size: 12px;">
+                            <span>📤</span> 共享
+                        </button>` :
+                        `<button class="button button-success" onclick="downloadFile('${fileInfo.id}')" style="padding: 8px 12px; font-size: 12px;">
+                            <span>📥</span> 下载
+                        </button>`
+                    }
+                </div>
+                ${!isOwner ? `<div class="progress-bar"><div class="progress" id="progress-${fileInfo.id}" style="width: 0%"></div></div>` : ''}
+            `;
+
+            fileList.appendChild(fileItem);
+        }
+
+        function getFileIcon(fileType) {
+            if (fileType.startsWith('image/')) return '🖼️';
+            if (fileType.startsWith('video/')) return '🎬';
+            if (fileType.startsWith('audio/')) return '🎵';
+            if (fileType.includes('pdf')) return '📕';
+            if (fileType.includes('word')) return '📄';
+            if (fileType.includes('excel')) return '📊';
+            if (fileType.includes('zip')) return '🗜️';
+            return '📄';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function shareFile(fileId) {
+            const fileInfo = files.get(fileId);
+            if (!fileInfo) return;
+
+            connections.forEach(conn => {
+                if (conn.open) {
+                    conn.send(JSON.stringify({
+                        type: 'file_ready',
+                        fileId: fileId,
+                        peerId: myPeerId
+                    }));
+                }
+            });
+
+            showNotification(`正在共享文件: ${fileInfo.name}`, 'info');
+        }
+
+        function downloadFile(fileId) {
+            const fileInfo = files.get(fileId);
+            if (!fileInfo) {
+                // 请求文件
+                connections.forEach(conn => {
+                    if (conn.open) {
+                        conn.send(JSON.stringify({
+                            type: 'file_request',
+                            fileId: fileId,
+                            peerId: myPeerId
+                        }));
+                    }
+                });
+                showNotification('已请求文件下载', 'info');
+                return;
+            }
+
+            // 本地已有文件，直接下载
+            const blob = new Blob([fileInfo.file], { type: fileInfo.type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileInfo.name;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function sendFile(fileInfo, peerId) {
+            const conn = connections.get(peerId);
+            if (!conn) return;
+
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                // 这里简化处理，实际应该分块传输大文件
+                conn.send(JSON.stringify({
+                    type: 'file_data',
+                    fileId: fileInfo.id,
+                    data: e.target.result,
+                    name: fileInfo.name,
+                    type: fileInfo.type,
+                    peerId: myPeerId
+                }));
+            };
+
+            reader.readAsDataURL(fileInfo.file);
+        }
+
+        // ============ 聊天功能 ============
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            addChatMessage(message, myUsername, true);
+
+            // 发送给其他用户
+            connections.forEach(conn => {
+                if (conn.open) {
+                    conn.send(JSON.stringify({
+                        type: 'chat',
+                        message: message,
+                        username: myUsername,
+                        timestamp: Date.now(),
+                        peerId: myPeerId
+                    }));
+                }
+            });
+
+            // 广播给其他标签页
+            broadcastLocalMessage({
+                type: 'chat',
+                message: message,
+                username: myUsername
+            });
+
+            input.value = '';
+            chatMessages++;
+            updateMessageCount();
+        }
+
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendChatMessage();
+            }
+        }
+
+        function addChatMessage(message, username, isSelf) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isSelf ? 'self' : 'other'}`;
+
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            messageDiv.innerHTML = `
+                <div class="message-header">
+                    <span>${username}</span>
+                    <span>${time}</span>
+                </div>
+                <div class="message-text">${escapeHtml(message)}</div>
+            `;
+
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // ============ 本地广播功能 ============
+        function broadcastLocalRoom(token) {
+            broadcastLocalMessage({
+                type: 'room_info',
+                token: token,
+                peerId: myPeerId,
+                isHost: isHost
+            });
+        }
+
+        function broadcastLocalPresence() {
+            if (!isLocalMode || !currentRoom) return;
+
+            const token = currentRoom.replace('local_', '');
+            broadcastLocalMessage({
+                type: 'presence',
+                token: token,
+                peerId: myPeerId,
+                isHost: isHost
+            });
+        }
+
+        function broadcastLocalMessage(message) {
+            // 使用 BroadcastChannel
+            if (broadcastChannel) {
+                broadcastChannel.postMessage({
+                    ...message,
+                    room: currentRoom,
+                    timestamp: Date.now()
+                });
+            }
+
+            // 使用 localStorage 作为备用
+            localStorage.setItem('collab_broadcast', JSON.stringify({
+                ...message,
+                room: currentRoom,
+                timestamp: Date.now(),
+                sender: myPeerId
+            }));
+        }
+
+        function handleBroadcastMessage(event) {
+            try {
+                const data = event.data;
+                if (!data || data.sender === myPeerId) return;
+
+                if (data.room === currentRoom) {
+                    switch(data.type) {
+                        case 'presence':
+                            if (data.isHost && !isHost) {
+                                log(`发现本地主机: ${data.peerId.substring(0, 20)}...`, 'info');
+                                tryConnect(data.peerId);
+                            }
+                            break;
+                        case 'typing':
+                            showTypingIndicator(data.username);
+                            break;
+                        case 'chat':
+                            addChatMessage(data.message, data.username, false);
+                            break;
+                        case 'file_available':
+                            if (!files.has(data.fileInfo.id)) {
+                                files.set(data.fileInfo.id, data.fileInfo);
+                                addFileToList(data.fileInfo, false);
+                            }
+                            break;
+                    }
+                }
+            } catch (e) {
+                log(`处理广播消息失败: ${e.message}`, 'debug');
+            }
+        }
+
+        function handleStorageEvent(event) {
+            if (event.key === 'collab_broadcast') {
+                try {
+                    const data = JSON.parse(event.newValue);
+                    if (data.sender !== myPeerId && data.room === currentRoom) {
+                        handleBroadcastMessage({ data: data });
+                    }
+                } catch (e) {
+                    // 忽略错误
+                }
+            }
+        }
+
+        // ============ UI 更新函数 ============
+        function showRoomInfo() {
+            document.getElementById('roomSetup').style.display = 'none';
+            document.getElementById('roomInfo').style.display = 'block';
+            document.getElementById('roomCode').textContent = currentRoom;
+
+            // 加载保存的文档
+            const saved = localStorage.getItem(`doc_${currentRoom}`);
+            if (saved) {
+                document.getElementById('editor').value = saved;
+                lastContent = saved;
+                updateCharCount();
+            }
+
+            // 加载保存的文件
+            const savedFiles = localStorage.getItem(`files_${currentRoom}`);
+            if (savedFiles) {
+                try {
+                    const filesData = JSON.parse(savedFiles);
+                    filesData.forEach(file => {
+                        if (!files.has(file.id)) {
+                            files.set(file.id, file);
+                            addFileToList(file, true);
+                        }
+                    });
+                    updateFileCount();
+                } catch (e) {
+                    // 忽略错误
+                }
+            }
+
+            updateUserList();
+        }
+
+        function updateStatus(text, status) {
+            const statusEl = document.getElementById('statusText');
+            const dotEl = document.getElementById('statusDot');
+            
+            if (statusEl) statusEl.textContent = text;
+            if (dotEl) {
+                dotEl.className = 'status-dot';
+                if (status === 'connected') dotEl.classList.add('connected');
+                if (status === 'connecting') dotEl.classList.add('connecting');
+            }
+        }
+
+        function updateUserList() {
+            const userList = document.getElementById('userList');
+            userList.innerHTML = '';
+
+            // 添加自己
+            addUserBadge(myPeerId, myUsername, true, true);
+
+            // 添加其他用户
+            connections.forEach((conn, peerId) => {
+                const username = conn.metadata?.username || peerId.split('_')[2] || '用户';
+                const isHostUser = peerId.includes('host');
+                addUserBadge(peerId, username, false, isHostUser);
+            });
+
+            // 更新用户计数
+            document.getElementById('userCount').textContent = connections.size + 1;
+        }
+
+        function addUserBadge(peerId, username, isSelf, isHostUser) {
+            const userList = document.getElementById('userList');
+            const badge = document.createElement('div');
+            badge.className = 'user-badge';
+            if (isSelf) badge.classList.add('self');
+            if (isHostUser) badge.classList.add('host');
+            
+            const icon = isHostUser ? '👑' : (isSelf ? '👤' : '👥');
+            badge.innerHTML = `${icon} ${username}${isSelf ? ' (我)' : ''}`;
+            badge.title = peerId;
+            
+            userList.appendChild(badge);
+        }
+
+        function updateCharCount() {
+            const content = document.getElementById('editor').value;
+            document.getElementById('charCount').textContent = content.length;
+        }
+
+        function updateFileCount() {
+            document.getElementById('fileCount').textContent = files.size;
+        }
+
+        function updateMessageCount() {
+            document.getElementById('msgCount').textContent = chatMessages;
+        }
+
+        // ============ 工具函数 ============
+        function copyRoomLink() {
+            const link = `${window.location.origin}${window.location.pathname}?room=${currentRoom}`;
+            navigator.clipboard.writeText(link).then(() => {
+                showNotification('房间链接已复制到剪贴板', 'success');
+            }).catch(() => {
+                prompt('请手动复制链接:', link);
+            });
+        }
+
+        function downloadDocument() {
+            const content = document.getElementById('editor').value;
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `协作文档_${currentRoom}_${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showNotification('文档已保存', 'success');
+        }
+
+        function leaveRoom() {
+            if (confirm('确定要离开房间吗？')) {
+                log('离开房间...', 'info');
+
+                // 清理连接
+                connections.forEach(conn => {
+                    try {
+                        conn.close();
+                    } catch (e) {
+                        // 忽略错误
+                    }
+                });
+                connections.clear();
+
+                // 清理 Peer
+                if (peer) {
+                    try {
+                        peer.destroy();
+                    } catch (e) {
+                        // 忽略错误
+                    }
+                    peer = null;
+                }
+
+                // 清理定时器
+                if (reconnectTimer) {
+                    clearTimeout(reconnectTimer);
+                    reconnectTimer = null;
+                }
+
+                // 重置状态
+                currentRoom = null;
+                isHost = false;
+                isLocalMode = false;
+                activeHostId = null;
+
+                // 更新 UI
+                document.getElementById('roomSetup').style.display = 'block';
+                document.getElementById('roomInfo').style.display = 'none';
+                document.getElementById('userList').innerHTML = '';
+                document.getElementById('fileList').innerHTML = '';
+                document.getElementById('chatMessages').innerHTML = `
+                    <div class="message system">
+                        <div class="message-header">
+                            <span>系统消息</span>
+                            <span>现在</span>
+                        </div>
+                        <div class="message-text">欢迎使用协作编辑器！开始聊天吧。</div>
+                    </div>
+                `;
+
+                updateStatus('未连接', 'disconnected');
+                updateUserList();
+                updateCharCount();
+                updateFileCount();
+                updateMessageCount();
+
+                showNotification('已离开房间', 'info');
+            }
+        }
+
+        function toggleLogPanel() {
+            const logPanel = document.getElementById('logPanel');
+            const logBtn = document.getElementById('logToggleBtn');
+            
+            if (logPanel.style.display === 'none' || !logPanel.style.display) {
+                logPanel.style.display = 'block';
+                logBtn.innerHTML = '<span>📋</span> 隐藏日志';
+                logEnabled = true;
+            } else {
+                logPanel.style.display = 'none';
+                logBtn.innerHTML = '<span>📋</span> 显示日志';
+                logEnabled = false;
+            }
+        }
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logMessage = `[${timestamp}] ${message}`;
+
+            // 控制台输出
+            const colors = {
+                info: '#68d391',
+                warn: '#f6ad55',
+                error: '#fc8181',
+                debug: '#63b3ed',
+                success: '#48bb78'
+            };
+            
+            console.log(`%c${logMessage}`, `color: ${colors[type] || '#a0aec0'}`);
+
+            // 日志面板输出
+            if (logEnabled) {
+                const logContent = document.getElementById('logContent');
+                const entry = document.createElement('div');
+                entry.className = `log-entry ${type}`;
+                entry.textContent = logMessage;
+                logContent.appendChild(entry);
+                logContent.scrollTop = logContent.scrollHeight;
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = message;
+            
+            document.body.appendChild(notification);
+
+            // 自动移除
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 3000);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ============ 定时任务 ============
+        // 心跳检测
+        setInterval(() => {
+            if (connections.size > 0) {
+                connections.forEach(conn => {
+                    if (conn.open) {
+                        conn.send(JSON.stringify({
+                            type: 'ping',
+                            peerId: myPeerId,
+                            timestamp: Date.now()
+                        }));
+                    }
+                });
+            }
+        }, 30000);
+
+        // 保存文件列表
+        setInterval(() => {
+            if (currentRoom && files.size > 0) {
+                const filesData = Array.from(files.values()).map(file => ({
+                    id: file.id,
+                    name: file.name,
+                    size: file.size,
+                    type: file.type
+                }));
+                localStorage.setItem(`files_${currentRoom}`, JSON.stringify(filesData));
+            }
+        }, 10000);
+
+        // ============ 页面加载 ============
+        window.onload = init;
+
+        // 页面关闭提示
+        window.addEventListener('beforeunload', (e) => {
+            if (connections.size > 0) {
+                e.preventDefault();
+                e.returnValue = '您正在协作编辑中，确定要离开吗？';
+            }
+        });
+    </script>
+</body>
+</html>
